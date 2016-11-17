@@ -1,14 +1,39 @@
-
-# add a minimum cmake version to silence warning. don't think we _actually_ need 3.7 specifically
-cmake_minimum_required(VERSION 3.7)
+# add a minimum cmake version to silence warning. don't think we _actually_ need 3.5 specifically
+cmake_minimum_required(VERSION 3.5)
 
 project(ray)
 
-# see http://blog.alexbeutel.com/285/cmake-opengl-and-glx-on-os-x/
-FIND_LIBRARY(OpenGL_LIBRARY OpenGL)
+####### Compile flags
+# common flags
+set(CMAKE_CXX_FLAGS "-march=native --std=c++1z -Wall -Wextra -fno-rtti -fno-exceptions")
 
-add_executable(ray main.cc)
+# release only
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
+# debug only
+set(CMAKE_CXX_FLAGS_DEBUG "-ggdb")
+
+###### Platform specifics
+if(UNIX)
+    if(APPLE)
+    	FIND_LIBRARY(OpenGL_LIBRARY OpenGL)
+    else()
+	# assume this means linux for now (sorry *bsd)
+    	FIND_LIBRARY(OpenGL_LIBRARY GL)
+    endif()
+elseif(WIN32)
+    MESSAGE(FATAL_ERROR "windows not handled yet")
+else()
+    MESSAGE(FATAL_ERROR "unknown OS")
+endif()
+
+MESSAGE(STATUS "Using OpenGL lib ${OpenGL_LIBRARY}")
+
+# source files
+add_executable(ray 
+    main.cc
+)
+
+# linking
 target_link_libraries(ray SDL2 ${OpenGL_LIBRARY})
-
 
