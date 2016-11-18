@@ -15,7 +15,6 @@ int main(){
     glClearColor(0,0,0,1);
     
     while(true){
-
         // clear screen
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -38,8 +37,8 @@ int main(){
         // handle events
         SDL_Event e;
         SDL_WaitEvent(&e);
-
-        if(e.type==SDL_QUIT) 
-            return 0; 
+        do{ if(e.type==SDL_QUIT) 
+                return 0; 
+        }while(SDL_PollEvent(&e));
     }
 }
