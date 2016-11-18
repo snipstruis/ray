@@ -1,3 +1,5 @@
+#include "linalg.h"
+
 #define GL_GLEXT_PROTOTYPES
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
@@ -13,12 +15,13 @@ int main(){
     glClearColor(0,0,0,1);
     
     while(true){
-        // handle events
-        for(SDL_Event e;SDL_PollEvent(&e);){ if(e.type==SDL_QUIT) return 0; }
 
         // clear screen
         glClear(GL_COLOR_BUFFER_BIT);
-        int w,h; SDL_GL_GetDrawableSize(win,&w,&h);
+
+        int w,h; 
+        SDL_GL_GetDrawableSize(win,&w,&h);
+        
         glViewport(0, 0, w, h);
 
         // draw pixels
@@ -31,5 +34,12 @@ int main(){
         // blit to screen
         glDrawPixels(w,h,GL_RGB,GL_FLOAT,&screenbuffer);
         SDL_GL_SwapWindow(win);
+
+        // handle events
+        SDL_Event e;
+        SDL_WaitEvent(&e);
+
+        if(e.type==SDL_QUIT) 
+            return 0; 
     }
 }
