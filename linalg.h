@@ -3,7 +3,7 @@
 // Linear Algebra
 // from here we bring in the appropriate implementation to the namespace la
 
-#include "linalg.h"
+#include "linalg_ref.h"
 
 namespace la {
 

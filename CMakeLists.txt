@@ -29,6 +29,9 @@ endif()
 
 MESSAGE(STATUS "Using OpenGL lib ${OpenGL_LIBRARY}")
 
+# add the root directory of the project as an include dir
+include_directories(.)
+
 # source files
 add_executable(ray 
     main.cc
@@ -36,4 +39,7 @@ add_executable(ray
 
 # linking
 target_link_libraries(ray SDL2 ${OpenGL_LIBRARY})
+
+# recurse into test
+add_subdirectory(test)
 
