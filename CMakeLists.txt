@@ -35,6 +35,8 @@ include_directories(.)
 # source files
 add_executable(ray 
     main.cc
+    scene.h
+    v3.h
 )
 
 # linking

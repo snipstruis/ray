@@ -32,6 +32,10 @@ BOOST_AUTO_TEST_CASE(v3div){
 
 BOOST_AUTO_TEST_CASE(v3dot){
     BOOST_CHECK_EQUAL(dot(v3(1,2,3),v3(4,5,6)), 32.f);
+
+    // check parallel vectors
+    v3 v(10,11,12);    
+    BOOST_CHECK_EQUAL(dot(v,v), 0);
 }
 
 BOOST_AUTO_TEST_CASE(v3cross){

@@ -1,4 +1,7 @@
 #pragma once
+
+#include <vector>
+
 #include "v3.h"
 
 struct Ray{
@@ -40,7 +43,6 @@ struct Camera{
     v3 eye,screen_center,screen_corner;
 };
 
-#include<vector>
 struct Scene{
     Camera camera;
     std::vector<Object> objects;
