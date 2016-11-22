@@ -3,11 +3,8 @@
 #include "glm/vec3.hpp"
 #include <vector>
 
-#include "v3.h"
-
 struct Ray{
-    v3 origin;
-    v3 direction;
+    glm::vec3 origin, direction;
     int ttl;
 };
 
@@ -17,14 +14,14 @@ struct Color{
 
 struct Material{
     Color color;
-    Color recurse(Ray ray, v3 normal);
+    Color recurse(Ray ray, glm::vec3 normal);
 };
 
 #include "primitive.h"
 
 struct PointLight{
     float r,g,b;
-    v3 pos;
+    glm::vec3 pos;
 };
 
 #include "camera.h"

@@ -1,13 +1,13 @@
 #pragma once
 
 struct Primitive{
-    v3 pos;
+    glm::vec3 pos;
     Material mat;
     virtual float intersects(Ray) = 0;
 };
 
 struct Plane:Primitive{
-    v3 normal;
+    glm::vec3 normal;
     virtual float intersect(Ray r){
         return 9999999999;
     };
