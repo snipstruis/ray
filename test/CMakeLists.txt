@@ -2,6 +2,7 @@
 # add a target to build the tests
 add_executable(test_exec
     test_main.cc
+    camera_tests.cc
     )
     
 target_link_libraries(test_exec boost_test_exec_monitor)
