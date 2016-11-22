@@ -1,7 +1,6 @@
 
 # add a target to build the tests
 add_executable(test_exec
-    v3_test.cc
     test_main.cc
     )
     
