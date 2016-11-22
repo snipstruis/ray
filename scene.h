@@ -1,5 +1,6 @@
 #pragma once
 
+#include "glm/vec3.hpp"
 #include <vector>
 
 #include "v3.h"
@@ -27,6 +28,9 @@ struct PointLight{
 };
 
 #include "camera.h"
+
+struct Object {
+};
 
 struct Scene{
     Camera camera;

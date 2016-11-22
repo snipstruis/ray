@@ -5,7 +5,7 @@ project(ray)
 
 ####### Compile flags
 # common flags
-set(CMAKE_CXX_FLAGS "-march=native -O3 --std=c++1z -Wall -Wextra -fno-rtti -fno-exceptions")
+set(CMAKE_CXX_FLAGS "-march=native -O3 --std=c++1z -Wall -Wextra -fno-rtti -fno-exceptions -Wno-unused-parameter")
 
 # release only
 set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG")
