@@ -1,35 +1,40 @@
 #pragma once
 #include <math.h>
-#include <glm/glm.hpp>
-
-struct Intersection{
-    float distance; // infinite == no hit
-    glm::vec3    normal;
-};
+#include "basics.h"
+#include "stdio.h"
 
 struct Primitive{
     glm::vec3 pos;
-    Material mat;
-    virtual Intersection intersects(Ray) = 0;
+    Material  mat;
+    virtual float distance(Ray) = 0;
 };
 
 struct Plane:Primitive{
     glm::vec3 normal;
-    virtual Intersection intersect(Ray ray){
-        assert(glm::length(ray.direction)==0.f);
-        float denom = glm::dot(normal,ray.direction);
+    virtual float distance(Ray ray){
+        assert(glm::length(ray.direction)<(1+1e-6f));
+        assert(glm::length(ray.direction)>(1-1e-6f));
+        float denom = glm::dot(-normal,ray.direction);
         if(denom> 1e-6f){
-            float dist = glm::dot(ray.origin,normal)/denom;
-            if(dist>=0.f) return {dist,normal};
+            float dist = glm::dot(pos-ray.origin, -normal)/denom;
+            if(dist>0.f) return dist;
         }
-        return {INFINITY,normal};
+        return INFINITY;
     };
 };
 
-struct Sphere:Primitive{
+struct OutSphere:Primitive{
     float radius;
-    virtual Intersection intersect(Ray r){
-        return {INFINITY,glm::vec3(0,0,1)};
+    // stolen from Jacco's slide
+    virtual float distance(Ray ray){
+        glm::vec3 c = pos - ray.origin;
+        float t = glm::dot( c, ray.direction);
+        glm::vec3 q = c - t * ray.direction;
+        float p2 = glm::dot( q, q ); 
+        float r2 = radius*radius;
+        if (p2 > r2) return INFINITY;
+        t -= sqrt( r2 - p2 );
+        return t>0?t:INFINITY; // no hit if behind ray start
     };
 };
 
