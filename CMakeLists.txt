@@ -5,13 +5,17 @@ project(ray)
 
 ####### Compile flags
 # common flags
-set(CMAKE_CXX_FLAGS "-march=native -O3 --std=c++1z -Wall -Wextra -fno-rtti -fno-exceptions -Wno-unused-parameter")
+# explicitly turn on color diags as this doesn't work automatically under ninja 
+set (CMAKE_CXX_FLAGS "-march=native -O3 --std=c++1y -fcolor-diagnostics -Wall -Wextra -fno-rtti -fno-exceptions -Wno-unused-parameter")
 
 # release only
 set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG")
 
 # debug only
 set(CMAKE_CXX_FLAGS_DEBUG "-ggdb")
+
+# quieten warnings in glm - we're using radians
+add_definitions("-DGLM_FORCE_RADIANS")
 
 ###### Platform specifics
 if(UNIX)
