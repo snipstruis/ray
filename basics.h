@@ -1,17 +1,14 @@
 #pragma once
 
 #include "glm/vec3.hpp"
+#include "glm/glm.hpp"
 
 // FIXME: looking for a better name for this file..
 // Basic types, used in most places 
 
 struct Ray{
-    // glm::vec has a default constructor, so just ensure ttl is defined
-    Ray() : ttl(0) {} ;
-
-    Ray(const glm::vec3& origin, const glm::vec3& direction, int ttl) 
-        : origin(origin), direction(direction), ttl(ttl) {} ;
-
+    Ray() = default;
+    Ray(glm::vec3 o, glm::vec3 d, int t=10):origin(o),direction(d),ttl(t){};
     glm::vec3 origin, direction;
     int ttl;
 };
@@ -22,6 +19,5 @@ struct Color{
 
 struct Material{
     Color color;
-    Color recurse(Ray ray, glm::vec3 normal);
 };
 
