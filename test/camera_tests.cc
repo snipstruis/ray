@@ -7,6 +7,7 @@
 
 #include <iostream>
 
+#if 0
 BOOST_AUTO_TEST_CASE(tourist_info)
 {
     // just dump out some basic info and test ostreams
@@ -27,5 +28,10 @@ BOOST_AUTO_TEST_CASE(tourist_info)
 
     Ray r;
     std::cout << r << std::endl;
-	
+}
+#endif
+
+BOOST_AUTO_TEST_CASE(camera_setup_zero)
+{
+    Camera c;
 }

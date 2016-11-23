@@ -11,10 +11,17 @@
 
 struct Rgb{ float r,g,b; };
 
-Rgb screenbuffer[1920*1080];
+
+// fixed size for now
+const int WIDTH = 1920;
+const int HEIGHT = 1080;
+
+Rgb screenbuffer[WIDTH*HEIGHT];
 
 void renderImage(Scene& s)
 {
+    std::cout << "starting render" << std::endl;
+
     for (int y = 0; y < s.camera.height; y++) {
         for (int x = 0; x < s.camera.width; x++) {
             Ray r = s.camera.makeRay(x, y);
@@ -32,6 +39,14 @@ int main(){
                                        SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
     SDL_GL_CreateContext(win);
     glClearColor(0,0,0,1);
+
+    Scene s;
+   // s.camera.width = WIDTH;
+   // s.camera.height = HEIGHT;
+    s.camera.width = 3;
+    s.camera.height = 5;
+
+    renderImage(s);
     
     while(true){
         // clear screen
