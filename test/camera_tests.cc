@@ -7,8 +7,9 @@
 
 #include <iostream>
 
-BOOST_AUTO_TEST_CASE(camera_test)
+BOOST_AUTO_TEST_CASE(tourist_info)
 {
+    // just dump out some basic info and test ostreams
     glm::vec3 foo;
     glm::mat4 bar;
 
@@ -23,5 +24,8 @@ BOOST_AUTO_TEST_CASE(camera_test)
 
     DumpToR(std::cout, bar);
     std::cout << std::endl;
+
+    Ray r;
+    std::cout << r << std::endl;
 	
 }

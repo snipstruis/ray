@@ -1,13 +1,31 @@
 
 #include "scene.h"
+#include "camera.h"
+#include "debug_print.h"
 
 #define GL_GLEXT_PROTOTYPES
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 
+#include <iostream>
+
 struct Rgb{ float r,g,b; };
 
 Rgb screenbuffer[1920*1080];
+
+void renderImage(Scene& s)
+{
+    for (int y = 0; y < s.camera.height; y++) {
+        for (int x = 0; x < s.camera.width; x++) {
+            Ray r = s.camera.makeRay(x, y);
+
+            // print r for now to avoid unnused var warning
+            std::cout << "got ray " << r << "\n";
+
+            // go forth and render..
+        }
+    }
+}
 
 int main(){
     SDL_Window *win = SDL_CreateWindow("Roaytroayzah", 0, 0, 640, 480, 
