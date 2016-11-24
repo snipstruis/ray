@@ -5,6 +5,7 @@
 #include "glm/vec3.hpp"
 #include "glm/gtc/constants.hpp"
 #include "glm/glm.hpp"
+#include "glm/gtx/epsilon.hpp"
 
 #include <cassert>
 
@@ -59,8 +60,8 @@ struct Camera{
         assert(glm::length(v) > 0);
 
         // u & v should be perpendicular
-        // FIXME: using == (naughty)
-        assert(glm::dot(u, v) == 0);
+        // FIXME: really should be epsilon compare
+        assert(glm::dot(u, v) ==  0);
     }
 
     // check an angle is clamped 0 <= angle < 2pi (ie within one rotation)
@@ -87,11 +88,17 @@ struct Camera{
         assert(isAngleInHalfRev(fov));
 
         // start with 3x points around the screen
-        auto tl = glm::vec3(1, 1, -1);
-        auto bl = glm::vec3(1, -1, -1);
+        auto tl = glm::vec3(-1, 1, 1);
+        auto bl = glm::vec3(-1, -1, 1);
         auto tr = glm::vec3(1, 1, 1);
 
-
+        // adjust for fov, keeping dist along z axis const
+        float fov_ratio = glm::tan(fov/2); 
+        auto fov_adj = glm::vec3(fov_ratio, fov_ratio, 1);
+        
+        tl = tl * fov_adj; 
+        bl = bl * fov_adj; 
+        tr = tr * fov_adj; 
 #if 0
 
         // get vector for look angle - ie handle yaw & pitch
@@ -103,14 +110,14 @@ struct Camera{
         // FIXME: don't use ==
         assert(glm::length(look_dir) == 0.0);
 #endif
-        top_left = tl;
+        // now all is said and done, calc relative vectors
         u = tr - tl;
         v = bl - tl;
 
-        // keep a copy of eye
+        // transform top left to world
+        top_left = tl + _eye;
         eye = _eye;
 
-        // top_left is eye 
         sanityCheck();
     }
 };
