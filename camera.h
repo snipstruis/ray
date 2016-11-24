@@ -9,8 +9,6 @@
 
 #include <cassert>
 
-const int STARTING_TTL = 10; // probably should be configurable or dynamically calculated
-
 struct Camera{
     // screen res in pixels
     int width, height;
