@@ -1,4 +1,5 @@
 #include "camera.h"
+#include "utils.h"
 #include "debug_print.h"
 
 #include "glm/gtx/io.hpp"
