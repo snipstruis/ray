@@ -1,8 +1,10 @@
 #pragma once
 
-#include <ostream>
 #include "glm/vec3.hpp"
 #include "glm/mat4x4.hpp"
+#include "glm/gtx/io.hpp"
+
+#include <ostream>
 
 // debug printing stuff
 // keep it all in its own file so it can be un-included in one go
@@ -22,6 +24,11 @@ std::ostream& DumpToR(std::ostream& os, const glm::vec3& m) {
     os << "c(";
     os <<  m[0] << ", " << m[1] << ", " << m[2];
     os << ")";
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const Ray& r) {
+    os << r.origin << " -> " << r.direction << " (ttl=" << r.ttl << ")";
     return os;
 }
 

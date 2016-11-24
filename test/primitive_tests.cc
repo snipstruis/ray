@@ -1,4 +1,5 @@
 #include "primitive.h"
+#include "glm/gtx/io.hpp"
 #include <boost/test/unit_test.hpp>
 #include <iostream>
 
