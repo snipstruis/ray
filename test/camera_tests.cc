@@ -3,8 +3,9 @@
 #include "debug_print.h"
 
 #include "glm/gtx/io.hpp"
-#include "glm/gtc/epsilon.hpp"
+//#include "glm/gtx/epsilon.hpp"
 #include "glm/gtc/constants.hpp"
+#include "glm/gtc/epsilon.hpp"
 
 #include <boost/test/unit_test.hpp>
 
@@ -36,11 +37,12 @@ BOOST_AUTO_TEST_CASE(camera_setup_45fov)
     // half side len is now 1/sqrt(3), and the vectors should be 2/sqrt(3) long
     float len = 1.0f / glm::root_three<float>();
 
-    // these are failing, i suspect, because we're not doing a proper epsilon compare
-    BOOST_CHECK_EQUAL(c.eye, glm::vec3(0, 0, 0));
-    BOOST_CHECK_EQUAL(c.top_left, glm::vec3(-len, len, 1));
-    BOOST_CHECK_EQUAL(c.u, glm::vec3(2 * len , 0, 0));
-    BOOST_CHECK_EQUAL(c.v, glm::vec3(0, -2 * len, 0));
+    float E = 1e-6f;
+
+    BOOST_CHECK(glm::all(glm::epsilonEqual(c.eye, glm::vec3(0, 0, 0), E)));
+    BOOST_CHECK(glm::all(glm::epsilonEqual(c.top_left, glm::vec3(-len, len, 1), E)));
+    BOOST_CHECK(glm::all(glm::epsilonEqual(c.u, glm::vec3(2 * len , 0, 0), E)));
+    BOOST_CHECK(glm::all(glm::epsilonEqual(c.v, glm::vec3(0, -2 * len, 0), E)));
 }
 
 #if 0
