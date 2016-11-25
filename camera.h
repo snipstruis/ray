@@ -7,6 +7,9 @@
 #include "glm/gtc/constants.hpp"
 #include "glm/glm.hpp"
 #include "glm/gtx/epsilon.hpp"
+#include "glm/gtx/rotate_vector.hpp"
+
+#include "test/test_utils.h"
 
 #include <cassert>
 
@@ -98,17 +101,16 @@ struct Camera{
         tl = tl * fov_adj; 
         bl = bl * fov_adj; 
         tr = tr * fov_adj; 
-#if 0
 
-        // get vector for look angle - ie handle yaw & pitch
-        auto look_dir = glm::vec3(
-            glm::cos(yaw) * glm::cos(pitch), // x
-            glm::sin(pitch),                 // y
-            glm::sin(yaw) * glm::cos(pitch));// z
+        // pitch and yaw.. note if done in this order, doesn't require a composed translation
+        glm::rotateX(tl, pitch);
+        glm::rotateX(bl, pitch);
+        glm::rotateX(tr, pitch);
 
-        // FIXME: don't use ==
-        assert(glm::length(look_dir) == 0.0);
-#endif
+        glm::rotateY(tl, yaw);
+        glm::rotateY(bl, yaw);
+        glm::rotateY(tr, yaw);
+
         // now all is said and done, calc relative vectors
         u = tr - tl;
         v = bl - tl;
