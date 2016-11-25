@@ -15,10 +15,19 @@ struct Ray{
 };
 
 struct Color{
+    Color() = default;
+    Color(float rr,float gg,float bb):r(rr),g(gg),b(bb){};
+    // TODO: adjust for color correction
+    Color& operator*=(float f){
+        r*=f; g*=f; b*=f;
+        return *this;
+    }
     float r,g,b;
 };
 
 struct Material{
+    Material() = default;
+    Material(Color c):color(c){};
     Color color;
 };
 

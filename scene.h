@@ -19,7 +19,7 @@ struct Object {
 
 struct Scene{
     Camera camera;
-    std::vector<Object> objects;
+    std::vector<Primitive> primitives;
     std::vector<PointLight> lights;
 };
 

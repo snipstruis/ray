@@ -1,6 +1,7 @@
 
 #include "scene.h"
 #include "camera.h"
+#include "trace.h"
 #include "debug_print.h"
 
 #define GL_GLEXT_PROTOTYPES
@@ -10,7 +11,6 @@
 #include <iostream>
 
 struct Rgb{ float r,g,b; };
-
 
 // fixed size for now
 const int WIDTH = 1920;
@@ -26,10 +26,8 @@ void renderImage(Scene& s)
         for (int x = 0; x < s.camera.width; x++) {
             Ray r = s.camera.makeRay(x, y);
 
-            // print r for now to avoid unnused var warning
-            std::cout << "got ray " << r << "\n";
-
             // go forth and render..
+            trace(r,s.primitives,s.lights);
         }
     }
 }
