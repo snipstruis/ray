@@ -48,6 +48,7 @@ void setupScene(Scene& s)
                                         Material(Color(0.6,0.6,0.6),prop), 
                                         glm::vec3(0,1,0)));
     s.lights.emplace_back(glm::vec3(3,3,10), Color(6,6,6));
+    s.lights.emplace_back(glm::vec3(-4,2,8), Color(10,2,2));
 }
 
 void renderFrame(Scene& s){
