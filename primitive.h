@@ -5,13 +5,15 @@
 #include "stdio.h"
 
 struct Primitive{
+    Primitive(glm::vec3 p, Material m):pos(p),mat(m){};
     glm::vec3 pos;
     Material mat;
     virtual float distance(Ray const&) const = 0;
     virtual glm::vec3 normal(glm::vec3 const& position) const = 0;
 };
 
-struct Plane:Primitive{
+struct Plane:public Primitive{
+    Plane(glm::vec3 p, Material m, glm::vec3 n):Primitive(p,m),norm(n){};
     glm::vec3 norm;
     virtual float distance(Ray const& ray) const{
         assert(glm::length(ray.direction)<(1+1e-6f));
@@ -26,7 +28,8 @@ struct Plane:Primitive{
     virtual glm::vec3 normal(glm::vec3 const& position) const {return norm;}
 };
 
-struct OutSphere:Primitive{
+struct OutSphere:public Primitive{
+    OutSphere(glm::vec3 p, Material m, float r):Primitive(p,m),radius(r){};
     float radius;
     // stolen from Jacco's slide
     virtual float distance(Ray const& ray) const {

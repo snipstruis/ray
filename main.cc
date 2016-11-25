@@ -9,6 +9,7 @@
 #include <SDL2/SDL_opengl.h>
 
 #include <iostream>
+#include <memory>
 
 struct Rgb{ float r,g,b; };
 
@@ -43,6 +44,7 @@ int main(){
    // s.camera.height = HEIGHT;
     s.camera.width = 3;
     s.camera.height = 5;
+    s.primitives.emplace_back(new OutSphere(glm::vec3(0,0,10), Material(Color(0.6,0.5,0.4)), 2));
 
     renderImage(s);
     
