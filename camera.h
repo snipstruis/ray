@@ -17,6 +17,8 @@
 #include <cmath>
 #include <iostream>
 
+const float DEFAULT_FOV = PI/2;
+
 struct Camera{
     // screen res in pixels
     int width, height;
@@ -34,12 +36,19 @@ struct Camera{
     // These are the input-params - ie changed by user input, and rendered into the params above by buildCamera()
     float yaw, pitch, roll, fov;
 
-    Camera() : width(0), height(0), yaw(0), pitch(0), roll(0), fov(PI/2) {
+    Camera() : width(0), height(0), yaw(0), pitch(0), roll(0), fov(DEFAULT_FOV) {
         buildLookForward();
         buildCamera();
         sanityCheck();
     }
 
+    void resetView(){
+        eye = glm::vec3(0, 0, 0);
+        yaw = pitch = roll = 0.0f;
+        fov = DEFAULT_FOV;
+        buildLookForward();
+        // probably should call buildCamera() here, but it gets called every frame regardless
+    }
     // takes a screen co-ord, and returns a ray from the camera through that pixel
     // note that this is in screen space and not world space, the conversion is handled internally
     Ray makeRay(int x, int y)
@@ -149,7 +158,6 @@ struct Camera{
         yaw = std::fmod(yaw + deltaYaw, PI*2);
         // pitch is limited to look directly up / down (ie no upside down)
         pitch = clamp(pitch + deltaPitch, -PI/2, PI/2);
-        std::cout<< "MOUSE " << deltaYaw << " " << yaw << " " << deltaPitch << " " << pitch << std::endl;
         buildLookForward();
     }
 };
