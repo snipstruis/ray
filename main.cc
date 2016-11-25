@@ -98,6 +98,14 @@ int main(){
                     s.camera.moveYawPitch(
                         glm::radians(((float)e.motion.xrel)/5), -glm::radians(((float)e.motion.yrel)/5));
                     break;
+                case SDL_KEYDOWN:
+                    switch(e.key.keysym.sym ){
+                        // consider this a hotkey as camera reset is a one-off, not an ongoing thing
+                        case 'r':  
+                            s.camera.resetView();
+                            break;
+                    }
+                    break;
             };
         }
 
