@@ -21,9 +21,11 @@ Color trace(Ray ray,
             closest_object = &*p;
         }
     }
-    if(dist==INFINITY) return alpha;
 
-    Color color = closest_object->mat.properties & MAT_lit?
+    if(dist==INFINITY) return alpha;
+    unsigned const mode = closest_object->mat.properties;
+
+    Color color = mode & MAT_lit?
         closest_object->mat.color : Color(0, 0, 0);
 
     // shadow
@@ -44,12 +46,11 @@ Color trace(Ray ray,
         }
 
         if(!is_hit){
-            /*if(mode&MODE_diffuse){
+            if(mode & MAT_diffuse){
                 glm::vec3 normal = closest_object->normal(impact);
                 color += (closest_object->mat.color * light.color)
                        * glm::dot(normal, ray.direction);
-            }else */
-            color = closest_object->mat.color * light.color;
+            }else color = closest_object->mat.color * light.color;
         }
     }
 
