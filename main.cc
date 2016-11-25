@@ -22,14 +22,14 @@ void setWindowTitle(Scene const& s, RenderParams const& rp, SDL_Window *win)
     char title[1024];
 
     snprintf(title, sizeof(title) - 1,
-            "Roaytroayzah eye=(%0.3f, %0.3f, %0.3f) " 
-            "top_left=(%0.3f, %0.3f, %0.3f) "
-            "u=(%0.3f, %0.3f, %0.3f) "
-            "v=(%0.3f, %0.3f, %0.3f) ",
+            "Roaytroayzah res=(%d, %d) "
+            "eye=(%0.3f, %0.3f, %0.3f) " 
+            "yaw=%0.3f pitch=%0.3f roll=%0.3f "
+            "fov=%0.3f ",
+            s.camera.width, s.camera.height,
             s.camera.eye[0], s.camera.eye[1], s.camera.eye[2],
-            s.camera.top_left[0], s.camera.top_left[1], s.camera.top_left[2],
-            s.camera.u[0], s.camera.u[1], s.camera.u[2],
-            s.camera.v[0], s.camera.v[1], s.camera.v[2]
+            rp.yaw, rp.pitch, rp.roll,
+            glm::degrees(rp.fov)
             );
 
     SDL_SetWindowTitle(win, title);
@@ -59,6 +59,16 @@ int main(){
         
         glViewport(0, 0, s.camera.width, s.camera.height);
 
+        // draw pixels
+        for (int y = 0; y < s.camera.height; y++) {
+            for (int x = 0; x < s.camera.width; x++) {
+                Ray r = s.camera.makeRay(x, y);
+
+                // go forth and render..
+       	      	screenbuffer[y*s.camera.width+x] = trace(r,s.primitives,s.lights);
+                //screenbuffer[y*w+x] = (Rgb){(float)y/h,(float)x/w,0.f};
+            }
+        }
         // blit to screen
         glDrawPixels(s.camera.width,s.camera.height,GL_RGB,GL_FLOAT,&screenbuffer);
         SDL_GL_SwapWindow(win);
@@ -73,6 +83,5 @@ int main(){
                     return 0;
             };
         }
-
     }
 }
