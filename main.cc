@@ -28,7 +28,7 @@ void setWindowTitle(Scene const& s, SDL_Window *win)
             "fov=%0.3f ",
             s.camera.width, s.camera.height,
             s.camera.eye[0], s.camera.eye[1], s.camera.eye[2],
-            s.camera.yaw, s.camera.pitch, s.camera.roll,
+            glm::degrees(s.camera.yaw), glm::degrees(s.camera.pitch), glm::degrees(s.camera.roll),
             glm::degrees(s.camera.fov)
             );
 
@@ -104,8 +104,10 @@ int main(){
                     s.camera.moveFov(glm::radians((float)-e.wheel.y));
                     break;
                 case SDL_MOUSEMOTION:
+                    // yes - it's "airplane" style at the moment - mouse down = view up.
+                    // I'm going to get a cmdline working soon, make this an option
                     s.camera.moveYawPitch(
-                        -glm::radians(((float)e.motion.xrel)/5), -glm::radians(((float)e.motion.yrel)/5));
+                        glm::radians(((float)e.motion.xrel)/5), -glm::radians(((float)e.motion.yrel)/5));
                     break;
             };
         }
