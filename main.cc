@@ -35,6 +35,32 @@ void setWindowTitle(Scene const& s, RenderParams const& rp, SDL_Window *win)
     SDL_SetWindowTitle(win, title);
 }
 
+void setupScene(Scene& s)
+{
+    unsigned prop = MAT_diffuse | MAT_shadow;
+    s.primitives.emplace_back(new OutSphere(glm::vec3(0,0,10), 
+                                            Material(Color(0.6,0.5,0.4),prop), 
+                                            2));
+    s.primitives.emplace_back(new Plane(glm::vec3(0,-1,0), 
+                                        Material(Color(0.6,0.6,0.6),prop), 
+                                        glm::vec3(0,1,0)));
+    s.lights.emplace_back(glm::vec3(3,3,10), Color(0.6,0.6,0.6));
+}
+
+void renderFrame(Scene& s){
+    // draw pixels
+    for (int y = 0; y < s.camera.height; y++) {
+        for (int x = 0; x < s.camera.width; x++) {
+            Ray r = s.camera.makeRay(x, y);
+
+            // go forth and render..
+            screenbuffer[(s.camera.height-y)*s.camera.width+x] = 
+                trace(r,s.primitives,s.lights,Color(0,0,0));
+                //screenbuffer[y*w+x] = (Rgb){(float)y/h,(float)x/w,0.f};
+        }
+    }
+}
+
 int main(){
     SDL_Window *win = SDL_CreateWindow("Roaytroayzah (initialising)", 0, 0, 640, 640, 
                                        SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
@@ -44,18 +70,10 @@ int main(){
     // clear screen
     glClear(GL_COLOR_BUFFER_BIT);
 
+    RenderParams rp;
     Scene s;
 
-    unsigned prop = MAT_diffuse | MAT_shadow;
-    s.primitives.emplace_back(new OutSphere(glm::vec3(0,0,10), 
-                                            Material(Color(0.6,0.5,0.4),prop), 
-                                            2));
-    s.primitives.emplace_back(new Plane(glm::vec3(0,-1,0), 
-                                        Material(Color(0.6,0.6,0.6),prop), 
-                                        glm::vec3(0,1,0)));
-    s.lights.emplace_back(glm::vec3(3,3,10), Color(0.6,0.6,0.6));
-
-    RenderParams rp;
+    setupScene(s);
 
     Uint8 const * kbd = SDL_GetKeyboardState(NULL);
     while(true){
@@ -68,17 +86,8 @@ int main(){
         
         glViewport(0, 0, s.camera.width, s.camera.height);
 
-        // draw pixels
-        for (int y = 0; y < s.camera.height; y++) {
-            for (int x = 0; x < s.camera.width; x++) {
-                Ray r = s.camera.makeRay(x, y);
+        renderFrame(s);
 
-                // go forth and render..
-                screenbuffer[(s.camera.height-y)*s.camera.width+x] = 
-                    trace(r,s.primitives,s.lights,Color(0,0,0));
-                //screenbuffer[y*w+x] = (Rgb){(float)y/h,(float)x/w,0.f};
-            }
-        }
         // blit to screen
         glDrawPixels(s.camera.width,s.camera.height,GL_RGB,GL_FLOAT,&screenbuffer);
         SDL_GL_SwapWindow(win);
