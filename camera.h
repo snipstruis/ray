@@ -158,7 +158,6 @@ struct Camera{
         yaw = std::fmod(yaw + deltaYaw, PI*2);
         // pitch is limited to look directly up / down (ie no upside down)
         pitch = clamp(pitch + deltaPitch, -PI/2, PI/2);
-        std::cout<< "MOUSE " << deltaYaw << " " << yaw << " " << deltaPitch << " " << pitch << std::endl;
         buildLookForward();
     }
 };
