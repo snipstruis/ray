@@ -17,13 +17,22 @@ struct Ray{
 struct Color{
     Color() = default;
     Color(float rr,float gg,float bb):r(rr),g(gg),b(bb){};
-    // TODO: adjust for color correction
-    Color& operator*=(float f){
-        r*=f; g*=f; b*=f;
+    // TODO: color correction
+    inline Color& operator+=(Color const& c){
+        r+=c.r; g+=c.g; b+=c.b;
+        return *this;
+    };
+    inline Color& operator*=(Color const& c){
+        r*=c.r; g*=c.g; b*=c.b;
         return *this;
     }
+    inline Color& operator*=(float f){ return *this+=Color(f,f,f); }
     float r,g,b;
 };
+
+inline Color operator*(Color a, float        b){ return a*=b; }
+inline Color operator*(Color a, Color const& b){ return a*=b; }
+inline Color operator+(Color a, Color const& b){ return a+=b; }
 
 struct Material{
     Material() = default;

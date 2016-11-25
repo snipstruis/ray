@@ -24,8 +24,9 @@ int main(){
     glClearColor(0,0,0,1);
 
     Scene s;
-    
     s.primitives.emplace_back(new OutSphere(glm::vec3(0,0,10), Material(Color(0.6,0.5,0.4)), 2));
+    s.primitives.emplace_back(new Plane(glm::vec3(0,-1,0), Material(Color(0.6,0.6,0.6)), glm::vec3(0,1,0)));
+    s.lights.emplace_back(glm::vec3(3,3,10), Color(0.6,0.6,0.6));
 
     while(true){
         // clear screen
@@ -41,7 +42,7 @@ int main(){
                 Ray r = s.camera.makeRay(x, y);
 
                 // go forth and render..
-                screenbuffer[y*s.camera.width+x] = trace(r,s.primitives,s.lights);
+                screenbuffer[(s.camera.height-y)*s.camera.width+x] = trace(r,s.primitives,s.lights);
                 //screenbuffer[y*w+x] = (Rgb){(float)y/h,(float)x/w,0.f};
             }
         }

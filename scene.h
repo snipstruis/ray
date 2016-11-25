@@ -9,14 +9,12 @@
 #include <memory>
 
 struct PointLight{
-    float r,g,b;
+    PointLight(glm::vec3 p, Color c):pos(p),color(c){};
     glm::vec3 pos;
+    Color color;
 };
 
 #include "camera.h"
-
-struct Object {
-};
 
 struct Scene{
     Camera camera;

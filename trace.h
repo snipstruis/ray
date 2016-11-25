@@ -17,7 +17,7 @@ enum : unsigned {
 Color trace(Ray ray, 
             std::vector<std::unique_ptr<Primitive>> const& primitives, 
             std::vector<PointLight> const& lights,
-            unsigned mode = 0){
+            unsigned mode = MODE_shadow){
     if(ray.ttl<=0) return Color(0,0,0);
 
     // hit check
@@ -31,7 +31,7 @@ Color trace(Ray ray,
         }
     }
     if(dist==INFINITY) return Color(0, 0, 0);
-    Color color = closest_object->mat.color;
+    Color color = Color(0, 0, 0);//closest_object->mat.color;
 
     // shadow
     glm::vec3 impact = ray.origin + ray.direction * dist;
@@ -41,19 +41,26 @@ Color trace(Ray ray,
             float light_distance = glm::length(impact_to_light);
             glm::vec3 light_direction = glm::normalize(impact_to_light);
             Ray shadowRay = Ray(impact, light_direction, ray.ttl-1);
-            bool hit = true;
+
+            bool is_hit = false;
             for(auto const& primitive: primitives){
-                
+                float d = primitive->distance(shadowRay);
+                is_hit = d>0 && d<light_distance ? true : is_hit;
+            }
+
+            if(!is_hit){
+                color = closest_object->mat.color * light.color;
+            }else{
+                //color = Color(1,0,1);
             }
         }
     }   
-    
+
     // diffuse
     if(mode&MODE_diffuse){
         glm::vec3 normal = closest_object->normal(impact);
         color *= glm::dot(normal, ray.direction);
     }
-
 
     return color;
 }
