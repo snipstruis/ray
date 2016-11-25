@@ -13,6 +13,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <iostream>
 
 struct Camera{
@@ -27,7 +28,7 @@ struct Camera{
     // u (horiz) and v (vertical) vectors from top_left point
     glm::vec3 u, v;
     
-    // These are the input-params - ie changed by user input, and rendered into the params above.
+    // These are the input-params - ie changed by user input, and rendered into the params above by buildCamera()
     float yaw, pitch, roll, fov;
 
     Camera() : width(0), height(0), yaw(0), pitch(0), roll(0), fov(PI/2) {
@@ -128,5 +129,12 @@ struct Camera{
     // move left/right (neg = right)
     void moveRight(float d) {
         eye[0] += d;
+    }
+
+    void moveYawPitch(float deltaYaw, float deltaPitch){
+        yaw = happyfMod(yaw + deltaYaw, PI*2);
+        // pitch is limited to look directly up / down (ie no upside down)
+        pitch = clamp(pitch + deltaPitch, -PI/2, PI/2);
+        std::cout<< "MYP " << yaw << " " << pitch<< std::endl;
     }
 };
