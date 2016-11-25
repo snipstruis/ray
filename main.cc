@@ -89,9 +89,6 @@ int main(){
             {
                 case SDL_QUIT:
                     return 0;
-                case SDL_KEYDOWN:
-                    if(e.key.keysym.scancode==SDL_SCANCODE_ESCAPE) return 0;
-                    break;
                 case SDL_MOUSEWHEEL:
                     s.camera.moveFov(glm::radians((float)-e.wheel.y));
                     break;
@@ -102,10 +99,13 @@ int main(){
                         glm::radians(((float)e.motion.xrel)/5), -glm::radians(((float)e.motion.yrel)/5));
                     break;
                 case SDL_KEYDOWN:
-                    switch(e.key.keysym.sym ){
-                        // consider this a hotkey as camera reset is a one-off, not an ongoing thing
-                        case 'r':  
+                    switch(e.key.keysym.scancode){
+                        case SDL_SCANCODE_ESCAPE:  
+                            return 0;
+                        case SDL_SCANCODE_R:  
                             s.camera.resetView();
+                            break;
+                        default:
                             break;
                     }
                     break;
