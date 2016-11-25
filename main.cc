@@ -47,7 +47,7 @@ void setupScene(Scene& s)
     s.primitives.emplace_back(new Plane(glm::vec3(0,-1,0), 
                                         Material(Color(0.6,0.6,0.6),prop), 
                                         glm::vec3(0,1,0)));
-    s.lights.emplace_back(glm::vec3(3,3,10), Color(0.6,0.6,0.6));
+    s.lights.emplace_back(glm::vec3(3,3,10), Color(6,6,6));
 }
 
 void renderFrame(Scene& s){
