@@ -11,6 +11,7 @@
 
 #include "test/test_utils.h"
 
+#include <algorithm>
 #include <cassert>
 #include <iostream>
 
@@ -20,6 +21,11 @@ struct RenderParams{
     // note: all angles in radians
     RenderParams() :
         yaw(0), pitch(0), roll(0), fov(PI/2) {}
+
+    // safe move fov 
+    void deltaFov(float d) {
+        fov = clamp(fov + d, EPSILON, PI-EPSILON);
+    }
 
     float yaw, pitch, roll, fov;
 };

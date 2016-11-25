@@ -36,7 +36,7 @@ void setWindowTitle(Scene const& s, RenderParams const& rp, SDL_Window *win)
 }
 
 int main(){
-    SDL_Window *win = SDL_CreateWindow("Roaytroayzah (initialising)", 0, 0, 640, 480, 
+    SDL_Window *win = SDL_CreateWindow("Roaytroayzah (initialising)", 0, 0, 640, 640, 
                                        SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
     SDL_GL_CreateContext(win);
     glClearColor(0,0,0,1);
@@ -91,7 +91,7 @@ int main(){
                     return 0;
 
                 case SDL_KEYDOWN:
-                    //std::cout << e.key.keysym.sym << std::endl;
+                    // UGLY, but works!
                     switch(e.key.keysym.sym ){
                         case 'w':
                             s.camera.eye[2] += 1.0;
@@ -106,6 +106,10 @@ int main(){
                             s.camera.eye[0] += 1.0;
                             break;
                     }
+                    break;
+               case SDL_MOUSEWHEEL:
+                    rp.deltaFov(glm::radians((float)-e.wheel.y));
+                    break;
             };
         }
     }
