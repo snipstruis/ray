@@ -76,11 +76,27 @@ int main(){
         // handle events
         SDL_Event e;
         while(SDL_PollEvent(&e)) {
-
             switch(e.type)
             {
                 case SDL_QUIT:
                     return 0;
+
+                case SDL_KEYDOWN:
+                    //std::cout << e.key.keysym.sym << std::endl;
+                    switch(e.key.keysym.sym ){
+                        case 'w':
+                            s.camera.eye[2] += 1.0;
+                            break;
+                        case 's':
+                            s.camera.eye[2] -= 1.0;
+                            break;
+                        case 'a':
+                            s.camera.eye[0] -= 1.0;
+                            break;
+                        case 'd':
+                            s.camera.eye[0] += 1.0;
+                            break;
+                    }
             };
         }
     }
