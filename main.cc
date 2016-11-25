@@ -54,6 +54,7 @@ int main(){
 
     RenderParams rp;
 
+    Uint8 const * kbd = SDL_GetKeyboardState(NULL);
     while(true){
         // FIXME: save a bit of work by only doing this if camera's moved
         s.camera.buildCamera(rp);
@@ -90,27 +91,15 @@ int main(){
                 case SDL_QUIT:
                     return 0;
 
-                case SDL_KEYDOWN:
-                    // UGLY, but works!
-                    switch(e.key.keysym.sym ){
-                        case 'w':
-                            s.camera.eye[2] += 1.0;
-                            break;
-                        case 's':
-                            s.camera.eye[2] -= 1.0;
-                            break;
-                        case 'a':
-                            s.camera.eye[0] -= 1.0;
-                            break;
-                        case 'd':
-                            s.camera.eye[0] += 1.0;
-                            break;
-                    }
-                    break;
-               case SDL_MOUSEWHEEL:
+                case SDL_MOUSEWHEEL:
                     rp.deltaFov(glm::radians((float)-e.wheel.y));
                     break;
             };
         }
+
+        if(kbd[SDL_SCANCODE_W]) s.camera.eye[2] += 0.2;
+        if(kbd[SDL_SCANCODE_S]) s.camera.eye[2] -= 0.2;
+        if(kbd[SDL_SCANCODE_A]) s.camera.eye[0] -= 0.2;
+        if(kbd[SDL_SCANCODE_D]) s.camera.eye[0] += 0.2;
     }
 }
