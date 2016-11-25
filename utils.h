@@ -17,14 +17,19 @@ T clamp(T val, T lo, T hi) {
     return std::min(std::max(val, lo), hi);
 }
 
+// grumble grumble stupid lack of proper fmod
+inline float happyfMod(float v, float modulo){
+    if (v < 0)
+        return v - std::fmod(-v, modulo);
+    return std::fmod(v, modulo);
+}
+
 // check an angle is clamped -2pi < angle < 2pi (ie within one rotation either way)
-inline bool isAngleInOneRev(float angle)
-{
+inline bool isAngleInOneRev(float angle){
     return angle > -2*PI  && angle < 2*PI;
 }
 
-inline bool isAngleInHalfRev(float angle)
-{
+inline bool isAngleInHalfRev(float angle){
     return angle >= 0 && angle < PI;
 }
 

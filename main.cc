@@ -10,6 +10,7 @@
 
 #include <iostream>
 #include <memory>
+#include <chrono>
 
 // fixed size for now
 const int WIDTH = 1920;
@@ -17,16 +18,18 @@ const int HEIGHT = 1080;
 
 Color screenbuffer[WIDTH*HEIGHT];
 
-void setWindowTitle(Scene const& s, SDL_Window *win)
+void setWindowTitle(Scene const& s, SDL_Window *win, float frametime_ms)
 {
     char title[1024];
 
-    snprintf(title, sizeof(title) - 1,
-            "Roaytroayzah res=(%d, %d) "
+    snprintf(title, sizeof(title),
+            "Roaytroayzah %dx%d "
+            "@ %2.3fms(%0.0f) "
             "eye=(%0.3f, %0.3f, %0.3f) " 
             "yaw=%0.3f pitch=%0.3f roll=%0.3f "
             "fov=%0.3f ",
             s.camera.width, s.camera.height,
+            frametime_ms, 1000.f/frametime_ms,
             s.camera.eye[0], s.camera.eye[1], s.camera.eye[2],
             glm::degrees(s.camera.yaw), glm::degrees(s.camera.pitch), glm::degrees(s.camera.roll),
             glm::degrees(s.camera.fov)
@@ -78,21 +81,7 @@ int main(){
     Uint8 const * kbd = SDL_GetKeyboardState(NULL);
 
     while(true){
-        // FIXME: maybe save a bit of work by only doing this if camera's moved
-        s.camera.buildCamera();
-        
-        setWindowTitle(s, win);
-
-        SDL_GL_GetDrawableSize(win, &s.camera.width, &s.camera.height);
-        
-        glViewport(0, 0, s.camera.width, s.camera.height);
-
-        renderFrame(s);
-
-        // blit to screen
-        glDrawPixels(s.camera.width,s.camera.height,GL_RGB,GL_FLOAT,&screenbuffer);
-        SDL_GL_SwapWindow(win);
-
+        auto t_begin = std::chrono::high_resolution_clock::now();
         // handle events
         SDL_Event e;
         while(SDL_PollEvent(&e)) {
@@ -120,5 +109,26 @@ int main(){
             s.camera.moveRight(-0.2);
         if(kbd[SDL_SCANCODE_D])
             s.camera.moveRight(0.2);
+        // FIXME: maybe save a bit of work by only doing this if camera's moved
+        s.camera.buildCamera();
+        
+
+        SDL_GL_GetDrawableSize(win, &s.camera.width, &s.camera.height);
+        
+        glViewport(0, 0, s.camera.width, s.camera.height);
+
+        renderFrame(s);
+
+        // blit to screen
+        glDrawPixels(s.camera.width,s.camera.height,GL_RGB,GL_FLOAT,&screenbuffer);
+
+        auto t_end = std::chrono::high_resolution_clock::now();
+        float frametime = std::chrono::duration_cast<std::chrono::duration<float,std::milli>>(t_end-t_begin).count();
+        static float avg = 16;
+        avg = 0.95*avg + 0.05*frametime;
+        setWindowTitle(s, win, avg);
+        SDL_GL_SwapWindow(win);
+        
+
     }
 }
