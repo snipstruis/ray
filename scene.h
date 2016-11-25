@@ -6,6 +6,7 @@
 #include "primitive.h"
 
 #include <vector>
+#include <memory>
 
 struct PointLight{
     float r,g,b;
@@ -19,7 +20,7 @@ struct Object {
 
 struct Scene{
     Camera camera;
-    std::vector<Primitive> primitives;
+    std::vector<std::unique_ptr<Primitive>> primitives;
     std::vector<PointLight> lights;
 };
 

@@ -3,6 +3,7 @@
 #include "basics.h"
 #include "primitive.h"
 #include "scene.h"
+#include <memory>
 
 // this allows us to toggle rendering features on and off at runtime
 enum : unsigned {
@@ -14,34 +15,46 @@ enum : unsigned {
 };
 
 Color trace(Ray ray, 
-            std::vector<Primitive>  const& primitives, 
+            std::vector<std::unique_ptr<Primitive>> const& primitives, 
             std::vector<PointLight> const& lights,
             unsigned mode = 0){
+    if(ray.ttl<=0) return Color(0,0,0);
 
     // hit check
     Primitive const* closest_object = nullptr;
     float dist = INFINITY;
-    for(Primitive const& p: primitives){
-        float d = p.distance(ray);
+    for(auto const& p: primitives){
+        float d = p->distance(ray);
         if(d<dist){
             dist = d;
-            closest_object = &p;
+            closest_object = &*p;
         }
     }
-    if(dist==INFINITY) return Color(0,0,0);
+    if(dist==INFINITY) return Color(0, 0, 0);
     Color color = closest_object->mat.color;
 
-    // diffuse
+    // shadow
     glm::vec3 impact = ray.origin + ray.direction * dist;
+    if(mode&MODE_shadow){
+        for(PointLight const& light: lights){
+            glm::vec3 impact_to_light = light.pos - impact;
+            float light_distance = glm::length(impact_to_light);
+            glm::vec3 light_direction = glm::normalize(impact_to_light);
+            Ray shadowRay = Ray(impact, light_direction, ray.ttl-1);
+            bool hit = true;
+            for(auto const& primitive: primitives){
+                
+            }
+        }
+    }   
+    
+    // diffuse
     if(mode&MODE_diffuse){
         glm::vec3 normal = closest_object->normal(impact);
         color *= glm::dot(normal, ray.direction);
     }
 
-    // shadow
-    if(mode&MODE_shadow){
 
-    }
     return color;
 }
 
