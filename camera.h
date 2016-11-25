@@ -29,8 +29,8 @@ struct Camera{
     // u (horiz) and v (vertical) vectors from top_left point
     glm::vec3 u, v;
     
-    // direction we're facing - build from yaw/pitch
-    glm::vec3 look_forward;
+    // direction we're facing - build from yaw/pitch, used by moveForward/MoveRight()
+    glm::vec3 look_forward, look_right;
     // These are the input-params - ie changed by user input, and rendered into the params above by buildCamera()
     float yaw, pitch, roll, fov;
 
@@ -122,20 +122,27 @@ struct Camera{
     }
 
     void buildLookForward(){
+        look_forward = glm::rotateX(glm::vec3(0,0,1), pitch);
+        look_forward = glm::rotateY(look_forward, yaw);
+        //TODO - is this right? ie we can ignore pitch for look right
+        look_right = glm::rotateY(glm::vec3(1,0,0), yaw);
     }
+
     // safe delta functions - from user input
     void moveFov(float d) {
         fov = clamp(fov + d, EPSILON, PI-EPSILON);
     }
 
     // move forwards/backwards (neg = right)
+    // TODO could optimise this - use a bool instead of multiplying by d
+    // we only ever move either fwd or back (not varying distances)
     void moveForward(float d) {
-        eye[2] += d;
+        eye += d * look_forward;
     }
 
     // move left/right (neg = right)
     void moveRight(float d) {
-        eye[0] += d;
+        eye += d * look_right;
     }
 
     void moveYawPitch(float deltaYaw, float deltaPitch){
@@ -143,5 +150,6 @@ struct Camera{
         // pitch is limited to look directly up / down (ie no upside down)
         pitch = clamp(pitch + deltaPitch, -PI/2, PI/2);
         std::cout<< "MOUSE " << deltaYaw << " " << yaw << " " << deltaPitch << " " << pitch << std::endl;
+        buildLookForward();
     }
 };
