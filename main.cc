@@ -41,6 +41,9 @@ int main(){
     SDL_GL_CreateContext(win);
     glClearColor(0,0,0,1);
 
+    // clear screen
+    glClear(GL_COLOR_BUFFER_BIT);
+
     Scene s;
 
     unsigned prop = MAT_diffuse | MAT_shadow;
@@ -60,9 +63,6 @@ int main(){
         s.camera.buildCamera(rp);
         
         setWindowTitle(s, rp, win);
-        
-        // clear screen
-        glClear(GL_COLOR_BUFFER_BIT);
 
         SDL_GL_GetDrawableSize(win,&s.camera.width,&s.camera.height);
         
