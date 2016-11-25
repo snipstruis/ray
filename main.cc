@@ -89,6 +89,9 @@ int main(){
             {
                 case SDL_QUIT:
                     return 0;
+                case SDL_KEYDOWN:
+                    if(e.key.keysym.scancode==SDL_SCANCODE_ESCAPE) return 0;
+                    break;
                 case SDL_MOUSEWHEEL:
                     s.camera.moveFov(glm::radians((float)-e.wheel.y));
                     break;
