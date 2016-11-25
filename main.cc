@@ -42,9 +42,17 @@ int main(){
     glClearColor(0,0,0,1);
 
     Scene s;
+
+    unsigned prop = MAT_diffuse | MAT_shadow;
+    s.primitives.emplace_back(new OutSphere(glm::vec3(0,0,10), 
+                                            Material(Color(0.6,0.5,0.4),prop), 
+                                            2));
+    s.primitives.emplace_back(new Plane(glm::vec3(0,-1,0), 
+                                        Material(Color(0.6,0.6,0.6),prop), 
+                                        glm::vec3(0,1,0)));
+    s.lights.emplace_back(glm::vec3(3,3,10), Color(0.6,0.6,0.6));
+
     RenderParams rp;
-    
-    s.primitives.emplace_back(new OutSphere(glm::vec3(0,0,10), Material(Color(0.6,0.5,0.4)), 2));
 
     while(true){
         // FIXME: save a bit of work by only doing this if camera's moved
@@ -65,7 +73,8 @@ int main(){
                 Ray r = s.camera.makeRay(x, y);
 
                 // go forth and render..
-       	      	screenbuffer[y*s.camera.width+x] = trace(r,s.primitives,s.lights);
+                screenbuffer[(s.camera.height-y)*s.camera.width+x] = 
+                    trace(r,s.primitives,s.lights,Color(0,0,0));
                 //screenbuffer[y*w+x] = (Rgb){(float)y/h,(float)x/w,0.f};
             }
         }
