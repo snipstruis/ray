@@ -40,7 +40,7 @@ Color trace(Ray ray,
             glm::vec3 impact_to_light = light.pos - impact;
             float light_distance = glm::length(impact_to_light);
             glm::vec3 light_direction = glm::normalize(impact_to_light);
-            Ray shadowRay = Ray(impact, light_direction, ray.ttl-1);
+            Ray shadowRay = Ray(impact-(light_direction*1e-3f), light_direction, ray.ttl-1);
 
             bool is_hit = false;
             for(auto const& primitive: primitives){
