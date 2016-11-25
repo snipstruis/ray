@@ -105,7 +105,7 @@ int main(){
                     break;
                 case SDL_MOUSEMOTION:
                     s.camera.moveYawPitch(
-                        -glm::radians(((float)e.motion.xrel)/2), -glm::radians(((float)e.motion.yrel)/2));
+                        -glm::radians(((float)e.motion.xrel)/5), -glm::radians(((float)e.motion.yrel)/5));
                     break;
             };
         }
