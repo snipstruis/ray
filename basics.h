@@ -26,7 +26,7 @@ struct Color{
         r*=c.r; g*=c.g; b*=c.b;
         return *this;
     }
-    inline Color& operator*=(float f){ return *this+=Color(f,f,f); }
+    inline Color& operator*=(float f){ return *this*=Color(f,f,f); }
     float r,g,b;
 };
 

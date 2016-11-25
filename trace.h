@@ -9,7 +9,7 @@ Color trace(Ray ray,
             std::vector<std::unique_ptr<Primitive>> const& primitives, 
             std::vector<PointLight> const& lights,
             Color const& alpha){
-    if(ray.ttl<=0) return Color(0,0,0);
+    if(ray.ttl<=0) return alpha;
 
     // hit check
     Primitive const* closest_object = nullptr;
@@ -25,8 +25,9 @@ Color trace(Ray ray,
     if(dist==INFINITY) return alpha;
     unsigned const mode = closest_object->mat.properties;
 
-    Color color = mode & MAT_lit?
-        closest_object->mat.color : Color(0, 0, 0);
+    Color color = Color(0,0,0);
+
+    if(mode & MAT_lit) color += closest_object->mat.color;
 
     // shadow
     glm::vec3 impact = ray.origin + ray.direction * dist;
@@ -58,8 +59,9 @@ Color trace(Ray ray,
         int x = impact.x-EPSILON;
         int y = impact.y-EPSILON;
         int z = impact.z-EPSILON;
-        if((x&1)^(y&1)^(z&1)) color *= 0.9;
+        if((x&1)^(y&1)^(z&1)) color *= 0.8f;
     }
+
     return color;
 }
 
