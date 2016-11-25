@@ -50,7 +50,7 @@ Color trace(Ray ray,
             if(mode & MAT_diffuse){
                 glm::vec3 normal = closest_object->normal(impact);
                 color += (closest_object->mat.color * light.color)
-                       * glm::dot(normal, ray.direction);
+                       * glm::dot(-normal, ray.direction);
             }else color = closest_object->mat.color * light.color;
         }
     }

@@ -40,7 +40,7 @@ void setWindowTitle(Scene const& s, SDL_Window *win, float frametime_ms)
 
 void setupScene(Scene& s)
 {
-    unsigned prop = MAT_checkered | MAT_shadow;
+    unsigned prop = MAT_checkered | MAT_diffuse | MAT_shadow;
     s.primitives.emplace_back(new OutSphere(glm::vec3(0,0,10), 
                                             Material(Color(0.6,0.5,0.4),prop), 
                                             2));
