@@ -12,6 +12,17 @@
 #include "test/test_utils.h"
 
 #include <cassert>
+#include <iostream>
+
+// inputs to a render, but don't really belong in the Camera itself
+// should an input to eye belong here?
+struct RenderParams{
+    // note: all angles in radians
+    RenderParams() :
+        yaw(0), pitch(0), roll(0), fov(PI/2) {}
+
+    float yaw, pitch, roll, fov;
+};
 
 struct Camera{
     // screen res in pixels
@@ -24,7 +35,7 @@ struct Camera{
     glm::vec3 u, v;
 
     Camera() : width(0), height(0){
-        buildCamera(glm::vec3(0, 0, 0), 0, 0, 0, PI/4);
+        buildCamera(RenderParams());
     }
 
     // takes a screen co-ord, and returns a ray from the camera through that pixel
@@ -68,10 +79,10 @@ struct Camera{
         assert(glm::dot(u, v) ==  0);
     }
 
-    // check an angle is clamped 0 <= angle < 2pi (ie within one rotation)
+    // check an angle is clamped -2pi < angle < 2pi (ie within one rotation either way)
     bool isAngleInOneRev(float angle)
     {
-        return angle >= 0 && angle < 2*PI;
+        return angle > -2*PI  && angle < 2*PI;
     }
 
     bool isAngleInHalfRev(float angle)
@@ -82,12 +93,13 @@ struct Camera{
     // FIXME: probably break this into a functon to move the eye and change the other params 
     // separately, as they are triggered from separate inputs
     // y/p/r must be <2pi, fov < pi
-    void buildCamera(const glm::vec3& _eye, float yaw, float pitch, float roll, float fov)
+    //void buildCamera(const glm::vec3& _eye, float yaw, float pitch, float roll, float fov)
+    void buildCamera(RenderParams const& rp)
     {
-        assert(isAngleInOneRev(yaw));
-        assert(isAngleInOneRev(pitch));
-        assert(isAngleInOneRev(roll));
-        assert(isAngleInHalfRev(fov));
+        assert(isAngleInOneRev(rp.yaw));
+        assert(isAngleInOneRev(rp.pitch));
+        assert(isAngleInOneRev(rp.roll));
+        assert(isAngleInHalfRev(rp.fov));
 
         // start with 3x points around the screen
         auto tl = glm::vec3(-1, 1, 1);
@@ -95,29 +107,43 @@ struct Camera{
         auto tr = glm::vec3(1, 1, 1);
 
         // adjust for fov, keeping dist along z axis const
-        float fov_ratio = glm::tan(fov/2); 
+        float fov_ratio = glm::tan(rp.fov/2); 
         auto fov_adj = glm::vec3(fov_ratio, fov_ratio, 1);
         
         tl = tl * fov_adj; 
         bl = bl * fov_adj; 
         tr = tr * fov_adj; 
 
-        // pitch and yaw.. note if done in this order, doesn't require a composed translation
-        glm::rotateX(tl, pitch);
-        glm::rotateX(bl, pitch);
-        glm::rotateX(tr, pitch);
+std::cout << "before"<<std::endl;
+std::cout << "tl"<<tl<<std::endl;
+std::cout << "bl"<<bl<<std::endl;
+std::cout << "tr"<<tr<<std::endl;
 
-        glm::rotateY(tl, yaw);
-        glm::rotateY(bl, yaw);
-        glm::rotateY(tr, yaw);
+        // pitch and yaw.. note if done in this order, doesn't require a composed translation
+        tl = glm::rotateX(tl, rp.pitch);
+        bl = glm::rotateX(bl, rp.pitch);
+        tr = glm::rotateX(tr, rp.pitch);
+
+std::cout << "mid"<<std::endl;
+std::cout << "tl"<<tl<<std::endl;
+std::cout << "bl"<<bl<<std::endl;
+std::cout << "tr"<<tr<<std::endl;
+
+        tl = glm::rotateY(tl, rp.yaw);
+        bl = glm::rotateY(bl, rp.yaw);
+        tr = glm::rotateY(tr, rp.yaw);
+
+std::cout << "after"<<std::endl;
+std::cout << "tl"<<tl<<std::endl;
+std::cout << "bl"<<bl<<std::endl;
+std::cout << "tr"<<tr<<std::endl;
 
         // now all is said and done, calc relative vectors
         u = tr - tl;
         v = bl - tl;
 
         // transform top left to world
-        top_left = tl + _eye;
-        eye = _eye;
+        top_left = tl + eye;
 
         sanityCheck();
     }

@@ -24,3 +24,4 @@ struct Scene{
     std::vector<PointLight> lights;
 };
 
+

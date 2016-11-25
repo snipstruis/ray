@@ -39,17 +39,25 @@ BOOST_AUTO_TEST_CASE(camera_setup_45fov)
     BOOST_CHECK(VEC3_EQ(c.v, glm::vec3(0, -2 * len, 0)));
 }
 
-BOOST_AUTO_TEST_CASE(camera_setup_yaw_right)
+BOOST_AUTO_TEST_CASE(camera_rotation)
 {
     Camera c;
     
     // yaw left 90 degrees
-    c.buildCamera(glm::vec3(0,0,0), PI/4, 0, 0, PI/2);
+    c.buildCamera(glm::vec3(0,0,0), PI/2, 0, 0, PI/2);
 
     BOOST_CHECK(VEC3_EQ(c.eye, glm::vec3(0, 0, 0)));
-    BOOST_CHECK(VEC3_EQ(c.top_left, glm::vec3(1, 1, -1)));
+    BOOST_CHECK(VEC3_EQ(c.top_left, glm::vec3(1, 1, 1)));
     BOOST_CHECK(VEC3_EQ(c.u, glm::vec3(0, 0, -2)));
     BOOST_CHECK(VEC3_EQ(c.v, glm::vec3(0, -2, 0)));
+
+    // pitch up 90
+    c.buildCamera(glm::vec3(0,0,0), 0, -PI/2, 0, PI/2);
+
+    BOOST_CHECK(VEC3_EQ(c.eye, glm::vec3(0, 0, 0)));
+    BOOST_CHECK(VEC3_EQ(c.top_left, glm::vec3(-1, 1, -1)));
+    BOOST_CHECK(VEC3_EQ(c.u, glm::vec3(2, 0, 0)));
+    BOOST_CHECK(VEC3_EQ(c.v, glm::vec3(0, 0, 2)));
 }
 
 #if 0
