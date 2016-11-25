@@ -5,7 +5,7 @@
 #include "scene.h"
 #include <memory>
 
-Color trace(Ray ray, 
+Color trace(Ray ray,
             std::vector<std::unique_ptr<Primitive>> const& primitives, 
             std::vector<PointLight> const& lights,
             Color const& alpha){
@@ -54,6 +54,12 @@ Color trace(Ray ray,
         }
     }
 
+    if(mode & MAT_checkered){
+        int x = impact.x-EPSILON;
+        int y = impact.y-EPSILON;
+        int z = impact.z-EPSILON;
+        if((x&1)^(y&1)^(z&1)) color *= 0.9;
+    }
     return color;
 }
 

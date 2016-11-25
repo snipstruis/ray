@@ -40,6 +40,7 @@ enum : unsigned {
     MAT_shadow       = 1<<2,
     MAT_specular     = 1<<3,
     MAT_transparancy = 1<<4,
+    MAT_checkered    = 1<<5,
 };
 
 struct Material{
