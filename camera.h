@@ -114,29 +114,14 @@ struct Camera{
         bl = bl * fov_adj; 
         tr = tr * fov_adj; 
 
-std::cout << "before"<<std::endl;
-std::cout << "tl"<<tl<<std::endl;
-std::cout << "bl"<<bl<<std::endl;
-std::cout << "tr"<<tr<<std::endl;
-
         // pitch and yaw.. note if done in this order, doesn't require a composed translation
         tl = glm::rotateX(tl, rp.pitch);
         bl = glm::rotateX(bl, rp.pitch);
         tr = glm::rotateX(tr, rp.pitch);
 
-std::cout << "mid"<<std::endl;
-std::cout << "tl"<<tl<<std::endl;
-std::cout << "bl"<<bl<<std::endl;
-std::cout << "tr"<<tr<<std::endl;
-
         tl = glm::rotateY(tl, rp.yaw);
         bl = glm::rotateY(bl, rp.yaw);
         tr = glm::rotateY(tr, rp.yaw);
-
-std::cout << "after"<<std::endl;
-std::cout << "tl"<<tl<<std::endl;
-std::cout << "bl"<<bl<<std::endl;
-std::cout << "tr"<<tr<<std::endl;
 
         // now all is said and done, calc relative vectors
         u = tr - tl;
