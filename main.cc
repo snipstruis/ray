@@ -17,7 +17,7 @@ const int HEIGHT = 1080;
 
 Color screenbuffer[WIDTH*HEIGHT];
 
-void setWindowTitle(Scene const& s, RenderParams const& rp, SDL_Window *win)
+void setWindowTitle(Scene const& s, SDL_Window *win)
 {
     char title[1024];
 
@@ -28,8 +28,8 @@ void setWindowTitle(Scene const& s, RenderParams const& rp, SDL_Window *win)
             "fov=%0.3f ",
             s.camera.width, s.camera.height,
             s.camera.eye[0], s.camera.eye[1], s.camera.eye[2],
-            rp.yaw, rp.pitch, rp.roll,
-            glm::degrees(rp.fov)
+            s.camera.yaw, s.camera.pitch, s.camera.roll,
+            glm::degrees(s.camera.fov)
             );
 
     SDL_SetWindowTitle(win, title);
@@ -70,19 +70,17 @@ int main(){
     // clear screen
     glClear(GL_COLOR_BUFFER_BIT);
 
-    RenderParams rp;
     Scene s;
-
     setupScene(s);
 
     Uint8 const * kbd = SDL_GetKeyboardState(NULL);
     while(true){
-        // FIXME: save a bit of work by only doing this if camera's moved
-        s.camera.buildCamera(rp);
+        // FIXME: maybe save a bit of work by only doing this if camera's moved
+        s.camera.buildCamera();
         
-        setWindowTitle(s, rp, win);
+        setWindowTitle(s, win);
 
-        SDL_GL_GetDrawableSize(win,&s.camera.width,&s.camera.height);
+        SDL_GL_GetDrawableSize(win, &s.camera.width, &s.camera.height);
         
         glViewport(0, 0, s.camera.width, s.camera.height);
 
@@ -101,14 +99,18 @@ int main(){
                     return 0;
 
                 case SDL_MOUSEWHEEL:
-                    rp.deltaFov(glm::radians((float)-e.wheel.y));
+                    s.camera.moveFov(glm::radians((float)-e.wheel.y));
                     break;
             };
         }
 
-        if(kbd[SDL_SCANCODE_W]) s.camera.eye[2] += 0.2;
-        if(kbd[SDL_SCANCODE_S]) s.camera.eye[2] -= 0.2;
-        if(kbd[SDL_SCANCODE_A]) s.camera.eye[0] -= 0.2;
-        if(kbd[SDL_SCANCODE_D]) s.camera.eye[0] += 0.2;
+        if(kbd[SDL_SCANCODE_S])
+            s.camera.moveForward(-0.2);
+        if(kbd[SDL_SCANCODE_W]) 
+            s.camera.moveForward(0.2);
+        if(kbd[SDL_SCANCODE_A])
+            s.camera.moveRight(-0.2);
+        if(kbd[SDL_SCANCODE_D])
+            s.camera.moveRight(0.2);
     }
 }

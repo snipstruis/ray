@@ -16,3 +16,14 @@ T clamp(T val, T lo, T hi) {
     return std::min(std::max(val, lo), hi);
 }
 
+// check an angle is clamped -2pi < angle < 2pi (ie within one rotation either way)
+bool isAngleInOneRev(float angle)
+{
+    return angle > -2*PI  && angle < 2*PI;
+}
+
+bool isAngleInHalfRev(float angle)
+{
+    return angle >= 0 && angle < PI;
+}
+
