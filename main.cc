@@ -65,15 +65,18 @@ int main(){
     SDL_Window *win = SDL_CreateWindow("Roaytroayzah (initialising)", 0, 0, 640, 640, 
                                        SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
     SDL_GL_CreateContext(win);
-    glClearColor(0,0,0,1);
 
-    // clear screen
+    // clear screen (probably not strictly nescessary)
+    glClearColor(0,0,0,1);
     glClear(GL_COLOR_BUFFER_BIT);
 
     Scene s;
     setupScene(s);
 
+    // switch on relative mouse mode - hides the cursor, and kinda makes things... relative.
+    SDL_SetRelativeMouseMode(SDL_TRUE);
     Uint8 const * kbd = SDL_GetKeyboardState(NULL);
+
     while(true){
         // FIXME: maybe save a bit of work by only doing this if camera's moved
         s.camera.buildCamera();
@@ -97,9 +100,12 @@ int main(){
             {
                 case SDL_QUIT:
                     return 0;
-
                 case SDL_MOUSEWHEEL:
                     s.camera.moveFov(glm::radians((float)-e.wheel.y));
+                    break;
+                case SDL_MOUSEMOTION:
+                    s.camera.moveYawPitch(
+                        -glm::radians(((float)e.motion.xrel)/2), -glm::radians(((float)e.motion.yrel)/2));
                     break;
             };
         }
