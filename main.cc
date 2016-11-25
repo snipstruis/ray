@@ -42,10 +42,12 @@ void setupScene(Scene& s)
 {
     unsigned prop = MAT_checkered | MAT_diffuse | MAT_shadow;
     s.primitives.emplace_back(new OutSphere(glm::vec3(0,0,10), 
-                                            Material(Color(0.6,0.5,0.4),prop), 
+                                            Material(Color(0.6,0.5,0.4),
+                                                     prop|MAT_specular,0.7f),
                                             2));
     s.primitives.emplace_back(new Plane(glm::vec3(0,-1,0), 
-                                        Material(Color(0.6,0.6,0.6),prop), 
+                                        Material(Color(0.6,0.6,0.6),
+                                                 prop), 
                                         glm::vec3(0,1,0)));
     s.lights.emplace_back(glm::vec3(3,3,10), Color(6,6,6));
     s.lights.emplace_back(glm::vec3(-4,2,8), Color(10,2,2));
@@ -56,6 +58,7 @@ void renderFrame(Scene& s){
     for (int y = 0; y < s.camera.height; y++) {
         for (int x = 0; x < s.camera.width; x++) {
             Ray r = s.camera.makeRay(x, y);
+            r.ttl=2;
 
             // go forth and render..
             screenbuffer[(s.camera.height-y)*s.camera.width+x] = 

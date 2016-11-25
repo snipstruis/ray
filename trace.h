@@ -24,13 +24,16 @@ Color trace(Ray ray,
 
     if(dist==INFINITY) return alpha;
     unsigned const mode = closest_object->mat.properties;
+    Material mat = closest_object->mat;
+
+    glm::vec3 impact = ray.origin + ray.direction * dist;
+    glm::vec3 normal = closest_object->normal(impact);
 
     Color color = Color(0,0,0);
 
-    if(mode & MAT_lit) color += closest_object->mat.color;
+    if(mode & MAT_lit) color += mat.color;
 
     // shadow
-    glm::vec3 impact = ray.origin + ray.direction * dist;
     for(PointLight const& light: lights){
         glm::vec3 impact_to_light = light.pos - impact;
         float light_distance = glm::length(impact_to_light);
@@ -47,11 +50,17 @@ Color trace(Ray ray,
         }
 
         if(!is_hit){
+            Color addition = mat.color * light.color * (1.f/light_distance);
             if(mode & MAT_diffuse){
-                glm::vec3 normal = closest_object->normal(impact);
-                color += (closest_object->mat.color * light.color * (1.f/light_distance))
-                       * glm::dot(-normal, ray.direction);
-            }else color = closest_object->mat.color * light.color;
+                addition *= glm::dot(-normal, ray.direction);
+            }
+            if(mode & MAT_specular){
+                Ray r = Ray(impact,glm::reflect(ray.direction,normal),ray.ttl-1);
+                addition = mat.specularity * trace(r,primitives,lights,alpha)
+                         + (1.f-mat.specularity) * addition;
+            }
+            color += addition;
+
         }
     }
 
@@ -61,6 +70,7 @@ Color trace(Ray ray,
         int z = impact.z-EPSILON;
         if((x&1)^(y&1)^(z&1)) color *= 0.8f;
     }
+
 
     return color;
 }
