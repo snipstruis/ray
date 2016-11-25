@@ -11,8 +11,6 @@
 
 #include <iostream>
 
-auto PI = glm::pi<float>();
-
 BOOST_AUTO_TEST_CASE(camera_setup_zero)
 {
     Camera c;

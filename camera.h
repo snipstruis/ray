@@ -1,6 +1,7 @@
 #pragma once
 
 #include "basics.h"
+#include "utils.h"
 
 #include "glm/vec3.hpp"
 #include "glm/gtc/constants.hpp"
@@ -19,7 +20,9 @@ struct Camera{
     // u (horiz) and v (vertical) vectors from top_left point
     glm::vec3 u, v;
 
-    Camera() : width(0), height(0) {}
+    Camera() : width(0), height(0){
+        buildCamera(glm::vec3(0, 0, 0), 0, 0, 0, PI/4);
+    }
 
     // takes a screen co-ord, and returns a ray from the camera through that pixel
     // note that this is in screen space and not world space, the conversion is handled internally
@@ -65,14 +68,12 @@ struct Camera{
     // check an angle is clamped 0 <= angle < 2pi (ie within one rotation)
     bool isAngleInOneRev(float angle)
     {
-        const float pi = glm::pi<float>();
-        return angle >= 0 && angle < 2*pi;
+        return angle >= 0 && angle < 2*PI;
     }
 
     bool isAngleInHalfRev(float angle)
     {
-        const float pi = glm::pi<float>();
-        return angle >= 0 && angle < pi;
+        return angle >= 0 && angle < PI;
     }
 
     // FIXME: probably break this into a functon to move the eye and change the other params 
