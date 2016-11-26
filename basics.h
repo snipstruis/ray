@@ -9,8 +9,10 @@
 const int STARTING_TTL = 10; // probably should be configurable or dynamically calculated
 
 struct Ray{
-    Ray(glm::vec3 o, glm::vec3 d, int t):origin(o),direction(d),ttl(t){};
+    Ray(glm::vec3 o, glm::vec3 d, int t, float r=1.f)
+        :origin(o),direction(d),refraction_index(r),ttl(t){};
     glm::vec3 origin, direction;
+    float refraction_index;
     int ttl;
 };
 
@@ -40,15 +42,16 @@ enum : unsigned {
     MAT_diffuse      = 1<<1,
     MAT_shadow       = 1<<2,
     MAT_specular     = 1<<3,
-    MAT_transparant  = 1<<4,
+    MAT_transparent  = 1<<4,
     MAT_checkered    = 1<<5,
 };
 
 struct Material{
     Material() = default;
-    Material(Color c,unsigned p, float spec=0.f):color(c),properties(p),specularity(spec){};
+    Material(Color c,unsigned p, float spec=0.f, float ri=1.f):color(c),properties(p),specularity(spec),refraction_index(ri){};
     Color color;
     unsigned properties;
     float specularity;
+    float refraction_index;
 };
 

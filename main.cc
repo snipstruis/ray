@@ -37,7 +37,7 @@ void setupScene(Scene& s)
 {
     unsigned prop = MAT_checkered | MAT_diffuse | MAT_shadow;
     s.primitives.materials.emplace_back(Material(Color(0.6,0.5,0.4),
-                                       prop|MAT_specular,0.7f));
+                                       prop|MAT_specular|MAT_transparent,0.7f,1.52f));
     s.primitives.materials.emplace_back(Material(Color(0.6,0.6,0.6),
                                        prop));
     s.primitives.spheres.emplace_back(glm::vec3(0,0,10),0, 2.f);
