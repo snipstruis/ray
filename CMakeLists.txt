@@ -6,7 +6,7 @@ project(ray)
 ####### Compile flags
 # common flags
 # explicitly turn on color diags as this doesn't work automatically under ninja 
-set (CMAKE_CXX_FLAGS "-march=native -O3 --std=c++1y -fcolor-diagnostics -Wall -Wextra -fno-rtti -fno-exceptions -Wno-unused-parameter")
+set (CMAKE_CXX_FLAGS "-fopenmp -march=native -O3 --std=c++1y -fcolor-diagnostics -Wall -Wextra -fno-rtti -fno-exceptions -Wno-unused-parameter")
 
 # release only
 set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG")
