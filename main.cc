@@ -26,8 +26,8 @@ void setWindowTitle(Scene const& s, SDL_Window *win, float frametime_ms)
             "Roaytroayzah %dx%d "
             "@ %2.3fms(%0.0f) "
             "eye=(%0.3f, %0.3f, %0.3f) " 
-            "yaw=%0.3f pitch=%0.3f roll=%0.3f "
-            "fov=%0.3f ",
+            "yaw=%0.0f pitch=%0.0f roll=%0.0f "
+            "fov=%0.0f ",
             s.camera.width, s.camera.height,
             frametime_ms, 1000.f/frametime_ms,
             s.camera.eye[0], s.camera.eye[1], s.camera.eye[2],
