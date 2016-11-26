@@ -83,9 +83,12 @@ struct Intersection{
 
 Intersection intersect(Triangle const& t, Ray const& ray){
     auto a=t.v[0], b=t.v[1], c=t.v[2];
+    glm::vec3 normal = glm::normalize(glm::cross(b-a,c-a));
+    if(glm::dot(ray.direction,normal)>0) return Intersection(INFINITY);
+
     float dist = moller_trumbore(a, b, c, ray.origin, ray.direction);
     return dist!=INFINITY?
-        Intersection(dist, ray.origin + ray.direction * dist, t.mat, glm::cross(b-a,c-a))
+        Intersection(dist, ray.origin + ray.direction * dist, t.mat, normal)
       : Intersection(INFINITY);
 }
 
