@@ -4,8 +4,9 @@
 #include "primitive.h"
 #include "scene.h"
 #include <cmath>
+#include <vector>
 
-Color trace(Ray ray,
+inline Color trace(Ray ray,
             Primitives const& primitives,
             std::vector<PointLight> const& lights,
             Color const& alpha){
@@ -62,16 +63,15 @@ Color trace(Ray ray,
 
 // main render starting loop
 // assumes screenbuffer is big enough to handle the width*height pixels (per the camera)
-void renderFrame(Scene& s, Color* screenbuffer){
+inline void renderFrame(Scene& s, std::vector<Color>& screenBuffer){
     // draw pixels
     for (int y = 0; y < s.camera.height; y++) {
         for (int x = 0; x < s.camera.width; x++) {
             Ray r = s.camera.makeRay(x, y);
-//            r.ttl=2;
 
             // go forth and render..
-            screenbuffer[(s.camera.height-y)*s.camera.width+x] = 
-                trace(r,s.primitives,s.lights,Color(0,0,0));
+            int idx = (s.camera.height-y-1) * s.camera.width+ x;
+            screenBuffer[idx] = trace(r,s.primitives,s.lights,Color(0,0,0));
         }
     }
 }
