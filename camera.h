@@ -37,7 +37,7 @@ struct Camera{
     float yaw, pitch, roll, fov;
 
     Camera() : width(0), height(0), yaw(0), pitch(0), roll(0), fov(DEFAULT_FOV) {
-        buildLookForward();
+        buildLookVectors();
         buildCamera();
         sanityCheck();
     }
@@ -46,7 +46,7 @@ struct Camera{
         eye = glm::vec3(0, 0, 0);
         yaw = pitch = roll = 0.0f;
         fov = DEFAULT_FOV;
-        buildLookForward();
+        buildLookVectors();
         // probably should call buildCamera() here, but it gets called every frame regardless
     }
     // takes a screen co-ord, and returns a ray from the camera through that pixel
@@ -130,7 +130,7 @@ struct Camera{
         sanityCheck();
     }
 
-    void buildLookForward(){
+    void buildLookVectors(){
         look_forward = glm::rotateX(glm::vec3(0,0,1), pitch);
         look_forward = glm::rotateY(look_forward, yaw);
         //TODO - is this right? ie we can ignore pitch for look right
@@ -158,6 +158,6 @@ struct Camera{
         yaw = std::fmod(yaw + deltaYaw, PI*2);
         // pitch is limited to look directly up / down (ie no upside down)
         pitch = clamp(pitch + deltaPitch, -PI/2, PI/2);
-        buildLookForward();
+        buildLookVectors();
     }
 };
