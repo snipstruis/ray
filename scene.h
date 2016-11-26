@@ -18,7 +18,7 @@ struct PointLight{
 
 struct Scene{
     Camera camera;
-    std::vector<std::unique_ptr<Primitive>> primitives;
+    Primitives primitives;
     std::vector<PointLight> lights;
 };
 

@@ -3,31 +3,22 @@
 #include "basics.h"
 #include "primitive.h"
 #include "scene.h"
-#include <memory>
+#include <cmath>
 
 Color trace(Ray ray,
-            std::vector<std::unique_ptr<Primitive>> const& primitives, 
+            Primitives const& primitives,
             std::vector<PointLight> const& lights,
             Color const& alpha){
     if(ray.ttl<=0) return alpha;
 
     // hit check
-    Primitive const* closest_object = nullptr;
-    float dist = INFINITY;
-    for(auto const& p: primitives){
-        float d = p->distance(ray);
-        if(d<dist){
-            dist = d;
-            closest_object = &*p;
-        }
-    }
+    Intersection hit = findClosestIntersection(primitives,ray);
+    if(hit.distance==INFINITY) return alpha;
+    Material mat = primitives.materials[hit.mat];
+    unsigned const mode = mat.properties;
 
-    if(dist==INFINITY) return alpha;
-    unsigned const mode = closest_object->mat.properties;
-    Material mat = closest_object->mat;
-
-    glm::vec3 impact = ray.origin + ray.direction * dist;
-    glm::vec3 normal = closest_object->normal(impact);
+    glm::vec3 impact = hit.impact;
+    glm::vec3 normal = hit.normal;
 
     Color color = Color(0,0,0);
 
@@ -40,16 +31,12 @@ Color trace(Ray ray,
         glm::vec3 light_direction = glm::normalize(impact_to_light);
         // TODO: when adding transparancy, fix the shadow epsilon,
         // it only works for one-sided surfaces
-        Ray shadowRay = Ray(impact-(light_direction*1e-3f), 
+        Ray shadow_ray = Ray(impact-(light_direction*1e-3f), 
                 light_direction, 0);
 
-        bool is_hit = false;
-        for(auto const& primitive: primitives){
-            float d = primitive->distance(shadowRay);
-            is_hit = d>0 && d<light_distance ? true : is_hit;
-        }
+        Intersection shadow_hit = findClosestIntersection(primitives, shadow_ray);
 
-        if(!is_hit){
+        if(shadow_hit.distance == INFINITY){
             Color addition = mat.color * light.color * (1.f/light_distance);
             if(mode & MAT_diffuse){
                 addition *= glm::dot(-normal, ray.direction);
@@ -60,7 +47,6 @@ Color trace(Ray ray,
                          + (1.f-mat.specularity) * addition;
             }
             color += addition;
-
         }
     }
 
@@ -70,7 +56,6 @@ Color trace(Ray ray,
         int z = impact.z-EPSILON;
         if((x&1)^(y&1)^(z&1)) color *= 0.8f;
     }
-
 
     return color;
 }

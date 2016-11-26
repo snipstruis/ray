@@ -9,7 +9,7 @@
 #include <SDL2/SDL_opengl.h>
 
 #include <iostream>
-#include <memory>
+#include <cmath>
 #include <chrono>
 
 // fixed size for now
@@ -41,14 +41,12 @@ void setWindowTitle(Scene const& s, SDL_Window *win, float frametime_ms)
 void setupScene(Scene& s)
 {
     unsigned prop = MAT_checkered | MAT_diffuse | MAT_shadow;
-    s.primitives.emplace_back(new OutSphere(glm::vec3(0,0,10), 
-                                            Material(Color(0.6,0.5,0.4),
-                                                     prop|MAT_specular,0.7f),
-                                            2));
-    s.primitives.emplace_back(new Plane(glm::vec3(0,-1,0), 
-                                        Material(Color(0.6,0.6,0.6),
-                                                 prop), 
-                                        glm::vec3(0,1,0)));
+    s.primitives.materials.emplace_back(Material(Color(0.6,0.5,0.4),
+                                       prop|MAT_specular,0.7f));
+    s.primitives.materials.emplace_back(Material(Color(0.6,0.6,0.6),
+                                       prop));
+    s.primitives.spheres.emplace_back(glm::vec3(0,0,10),0, 2.f);
+    s.primitives.planes.emplace_back(Plane(glm::vec3(0,-1,0), 1, glm::vec3(0,1,0)));
     s.lights.emplace_back(glm::vec3(3,3,10), Color(6,6,6));
     s.lights.emplace_back(glm::vec3(-4,2,8), Color(10,2,2));
 }

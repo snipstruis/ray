@@ -1,19 +1,23 @@
 #pragma once
-#include <math.h>
 #include "utils.h"
 #include "basics.h"
 #include "stdio.h"
+#include <vector>
+#include <cmath>
 
-template<int N>
+struct Sphere  {
+    Sphere(glm::vec3 p, int m, float r):pos(p), mat(m), radius(r){};
+    glm::vec3 pos; int mat; float radius;};
+struct Plane   {
+    Plane(glm::vec3 p, int m, glm::vec3 n):pos(p), mat(m), normal(n){};
+    glm::vec3 pos; int mat; glm::vec3 normal;};
+struct Triangle{glm::vec3 pos; int mat; glm::vec3 v[3];};
+
 struct Primitives{
-    size_t sphere_end, plane_end, triangle_end, _padding;
-    float x[N],y[N],z[N];
-    Material mat[N];
-    union{
-        struct{float r[N];} sphere;
-        struct{float nx[N],ny[N],nz[N];} plane;
-        struct{float vx[3][N],vy[3][N],vz[3][N];} triangle;
-    };
+    std::vector<Material> materials;
+    std::vector<Sphere>   spheres;
+    std::vector<Plane>    planes;
+    std::vector<Triangle> triangles;
 };
 
 // adapted from:
@@ -60,114 +64,75 @@ float moller_trumbore( const glm::vec3   v1,  // Triangle vertices
     return INFINITY;
 }
 
-
 struct Intersection{
-    glm::vec3 normal;
+    Intersection() = default;
+    Intersection(float d):distance(d){};
+    Intersection(float d, glm::vec3 i, int m, glm::vec3 n):distance(d),impact(i),mat(m),normal(n){};
+    float distance;
     glm::vec3 impact;
+    int mat;
+    glm::vec3 normal;
 };
 
-template<int N>
-float intersect_triangle(Primitives<N> const& p, 
-                         int id, Ray const& ray, Intersection* out){
- auto a=glm::vec3(p.triangle.vx[0][id], p.triangle.vy[0][id], p.triangle.vz[0][id]),
-      b=glm::vec3(p.triangle.vx[1][id], p.triangle.vy[1][id], p.triangle.vz[1][id]),
-      c=glm::vec3(p.triangle.vx[2][id], p.triangle.vy[2][id], p.triangle.vz[2][id]);
-    float dist = moller_trumbore(a,b,c,ray.origin, ray.direction);
-    if(dist!=INFINITY){
-        out->impact = ray.origin + ray.direction * dist;
-        out->normal = glm::cross(b-a,c-a);
-    }
+Intersection intersect(Triangle const& t, Ray const& ray){
+    auto a=t.v[0], b=t.v[1], c=t.v[2];
+    float dist = moller_trumbore(a, b, c, ray.origin, ray.direction);
+    return dist!=INFINITY?
+        Intersection(dist, ray.origin + ray.direction * dist, t.mat, glm::cross(b-a,c-a))
+      : Intersection(INFINITY);
 }
 
-template<int N>
-float intersect_plane(Primitives<N> const& p, int id, Ray const& ray, Intersection* out){
+Intersection intersect(Plane const& p, Ray const& ray){
     assert(glm::length(ray.direction)<(1+1e-6f));
     assert(glm::length(ray.direction)>(1-1e-6f));
-    glm::vec3 pos  = glm::vec3(p.x[id],p.y[id],p.z[id]);
-    glm::vec3 norm = glm::vec3(p.plane.nx[id],p.plane.ny[id],p.plane.nz[id]);
+    glm::vec3 pos  = p.pos;
+    glm::vec3 norm = p.normal;
     float denom = glm::dot(-norm,ray.direction);
     if(denom> 1e-6f){
         float dist = glm::dot(pos-ray.origin, -norm)/denom;
         if(dist>0.f){
-            out->impact = ray.origin + ray.direction * dist;
-            out->normal = glm::vec3(p.plane.nx[id],p.plane.ny[id],p.plane.nz[id]);
-            return dist;
+            return Intersection(dist,ray.origin + ray.direction * dist, p.mat, norm);
         }
     }
-    return INFINITY;
+    return Intersection(INFINITY);
 }
 
-template<int N>
-float intersect_sphere(Primitives<N> const& p, int id, Ray const& ray, Intersection* out){
-    glm::vec3 pos  = glm::vec3(p.x[id],p.y[id],p.z[id]);
-    float r = p.sphere.r[id];
+Intersection intersect(Sphere const& s, Ray const& ray){
+    glm::vec3 pos  = s.pos;
+    float r = s.radius;
     glm::vec3 c = pos - ray.origin;
     float t = glm::dot( c, ray.direction);
     glm::vec3 q = c - t * ray.direction;
     float p2 = glm::dot( q, q ); 
     float r2 = r*r;
-    if (p2 > r2) return INFINITY;
+    if (p2 > r2) return Intersection(INFINITY);
     t -= sqrt( r2 - p2 );
     if(t>0){
-        out->impact = ray.origin + ray.direction * t;
-        out->normal=glm::normalize(out->impact-pos);
-        return t;
-    }else return INFINITY;
+        glm::vec3 impact = ray.origin + ray.direction * t;
+        glm::vec3 norm = glm::normalize(impact-pos);
+        return Intersection(t,impact,s.mat,norm);
+    }else return Intersection(INFINITY);
 }
 
-template<int N>
-float intersect(Primitives<N> const& p, int id, Ray const& ray, Intersection* out){
-    assert(out);
-    assert(id>0);
-    assert(id<p.triangle_end);
-    if(id>=p.plane_end){
-        return intersect_triangle(p,id,ray,out);
-    }else if(id>=p.sphere_end){
-        return intersect_plane(p,id,ray,out);
-    }else{
-        return intersect_sphere(p,id,ray,out);
-    }
-}
-
-
-struct Primitive{
-    Primitive(glm::vec3 p, Material m):pos(p),mat(m){};
-    glm::vec3 pos;
-    Material mat;
-    virtual float distance(Ray const&) const = 0;
-    virtual glm::vec3 normal(glm::vec3 const& position) const = 0;
-};
-
-struct Plane:public Primitive{
-    Plane(glm::vec3 p, Material m, glm::vec3 n):Primitive(p,m),norm(n){};
-    glm::vec3 norm;
-    virtual float distance(Ray const& ray) const{
-        assert(glm::length(ray.direction)<(1+1e-6f));
-        assert(glm::length(ray.direction)>(1-1e-6f));
-        float denom = glm::dot(-norm,ray.direction);
-        if(denom> 1e-6f){
-            float dist = glm::dot(pos-ray.origin, -norm)/denom;
-            if(dist>0.f) return dist;
+Intersection findClosestIntersection(Primitives const& primitives, Ray const& ray){
+    Intersection hit = Intersection(INFINITY);
+    for(auto const& s: primitives.spheres){
+        auto check = intersect(s,ray);
+        if(check.distance<hit.distance && check.distance>0){
+            hit = check;
         }
-        return INFINITY;
-    };
-    virtual glm::vec3 normal(glm::vec3 const& position) const {return norm;}
+    }
+    for(auto const& p: primitives.planes){
+        auto check = intersect(p,ray);
+        if(check.distance<hit.distance && check.distance>0){
+            hit = check;
+        }
+    }
+    for(auto const& t: primitives.triangles){
+        auto check = intersect(t,ray);
+        if(check.distance<hit.distance && check.distance>0){
+            hit = check;
+        }
+    }
+    return hit;
 };
-
-struct OutSphere:public Primitive{
-    OutSphere(glm::vec3 p, Material m, float r):Primitive(p,m),radius(r){};
-    float radius;
-    // stolen from Jacco's slide
-    virtual float distance(Ray const& ray) const {
-        glm::vec3 c = pos - ray.origin;
-        float t = glm::dot( c, ray.direction);
-        glm::vec3 q = c - t * ray.direction;
-        float p2 = glm::dot( q, q ); 
-        float r2 = radius*radius;
-        if (p2 > r2) return INFINITY;
-        t -= sqrt( r2 - p2 );
-        return t>0?t:INFINITY; // no hit if behind ray start
-    };
-    virtual glm::vec3 normal(glm::vec3 const& position)const{return glm::normalize(position-pos);}
-};
-
