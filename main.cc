@@ -16,7 +16,7 @@
 const int WIDTH = 1920;
 const int HEIGHT = 1080;
 
-Color screenbuffer[WIDTH*HEIGHT];
+Color screen_buffer[WIDTH*HEIGHT];
 
 void setWindowTitle(Scene const& s, SDL_Window *win, float frametime_ms)
 {
@@ -49,21 +49,6 @@ void setupScene(Scene& s)
     s.primitives.planes.emplace_back(Plane(glm::vec3(0,-1,0), 1, glm::vec3(0,1,0)));
     s.lights.emplace_back(glm::vec3(3,3,10), Color(6,6,6));
     s.lights.emplace_back(glm::vec3(-4,2,8), Color(10,2,2));
-}
-
-void renderFrame(Scene& s){
-    // draw pixels
-    for (int y = 0; y < s.camera.height; y++) {
-        for (int x = 0; x < s.camera.width; x++) {
-            Ray r = s.camera.makeRay(x, y);
-            r.ttl=2;
-
-            // go forth and render..
-            screenbuffer[(s.camera.height-y)*s.camera.width+x] = 
-                trace(r,s.primitives,s.lights,Color(0,0,0));
-                //screenbuffer[y*w+x] = (Rgb){(float)y/h,(float)x/w,0.f};
-        }
-    }
 }
 
 int main(){
@@ -125,15 +110,14 @@ int main(){
         // FIXME: maybe save a bit of work by only doing this if camera's moved
         s.camera.buildCamera();
         
-
         SDL_GL_GetDrawableSize(win, &s.camera.width, &s.camera.height);
         
         glViewport(0, 0, s.camera.width, s.camera.height);
 
-        renderFrame(s);
+        renderFrame(s, screen_buffer);
 
         // blit to screen
-        glDrawPixels(s.camera.width,s.camera.height,GL_RGB,GL_FLOAT,&screenbuffer);
+        glDrawPixels(s.camera.width, s.camera.height, GL_RGB, GL_FLOAT, &screen_buffer);
 
         auto t_end = std::chrono::high_resolution_clock::now();
         float frametime = std::chrono::duration_cast<std::chrono::duration<float,std::milli>>(t_end-t_begin).count();

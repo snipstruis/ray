@@ -60,3 +60,19 @@ Color trace(Ray ray,
     return color;
 }
 
+// main render starting loop
+// assumes screenbuffer is big enough to handle the width*height pixels (per the camera)
+void renderFrame(Scene& s, Color* screenbuffer){
+    // draw pixels
+    for (int y = 0; y < s.camera.height; y++) {
+        for (int x = 0; x < s.camera.width; x++) {
+            Ray r = s.camera.makeRay(x, y);
+//            r.ttl=2;
+
+            // go forth and render..
+            screenbuffer[(s.camera.height-y)*s.camera.width+x] = 
+                trace(r,s.primitives,s.lights,Color(0,0,0));
+        }
+    }
+}
+
