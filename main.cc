@@ -8,15 +8,10 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 
-#include <iostream>
 #include <cmath>
 #include <chrono>
+#include <vector>
 
-// fixed size for now
-const int WIDTH = 1920;
-const int HEIGHT = 1080;
-
-Color screen_buffer[WIDTH*HEIGHT];
 
 void setWindowTitle(Scene const& s, SDL_Window *win, float frametime_ms)
 {
@@ -52,6 +47,7 @@ void setupScene(Scene& s)
 }
 
 // process input
+// returns true if app should quit
 bool handleEvents(Scene& s)
 {
     SDL_Event e;
@@ -113,23 +109,28 @@ int main(){
     // switch on relative mouse mode - hides the cursor, and kinda makes things... relative.
     SDL_SetRelativeMouseMode(SDL_TRUE);
 
+    std::vector<Color> screenBuffer; // will be allocated on first loop
+
     while(true){
         auto t_begin = std::chrono::high_resolution_clock::now();
 
         if(handleEvents(s))
-            return 0;
+            break;
+
+        SDL_GL_GetDrawableSize(win, &s.camera.width, &s.camera.height);
 
         // FIXME: maybe save a bit of work by only doing this if camera's moved
         s.camera.buildCamera();
-        
-        SDL_GL_GetDrawableSize(win, &s.camera.width, &s.camera.height);
-        
+
+        // should be a no-op unless the window's resized
+        screenBuffer.resize(s.camera.width * s.camera.height);
+
         glViewport(0, 0, s.camera.width, s.camera.height);
 
-        renderFrame(s, screen_buffer);
+        renderFrame(s, screenBuffer);
 
         // blit to screen
-        glDrawPixels(s.camera.width, s.camera.height, GL_RGB, GL_FLOAT, &screen_buffer);
+        glDrawPixels(s.camera.width, s.camera.height, GL_RGB, GL_FLOAT, screenBuffer.data());
 
         auto t_end = std::chrono::high_resolution_clock::now();
         float frametime = std::chrono::duration_cast<std::chrono::duration<float,std::milli>>(t_end-t_begin).count();
