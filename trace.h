@@ -65,6 +65,7 @@ inline Color trace(Ray ray,
 // assumes screenbuffer is big enough to handle the width*height pixels (per the camera)
 inline void renderFrame(Scene& s, std::vector<Color>& screenBuffer){
     // draw pixels
+    #pragma omp parallel for
     for (int y = 0; y < s.camera.height; y++) {
         for (int x = 0; x < s.camera.width; x++) {
             Ray r = s.camera.makeRay(x, y);
