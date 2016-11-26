@@ -5,8 +5,13 @@ project(ray)
 
 ####### Compile flags
 # common flags
+set(CMAKE_CXX_FLAGS "-march=native -O3 --std=c++1y -Wall -Wextra -fno-rtti -fno-exceptions -Wno-unused-parameter")
+
 # explicitly turn on color diags as this doesn't work automatically under ninja 
-set (CMAKE_CXX_FLAGS "-march=native -O3 --std=c++1y -fcolor-diagnostics -Wall -Wextra -fno-rtti -fno-exceptions -Wno-unused-parameter")
+# set(CMAKE_CXX_FLAGS "$(CMAKE_CXX_FLAGS) -fcolor-diagnostics")
+
+# turn this on to enable bounds checking in the stl, but it hurts perf a lot, it seems
+#add_definitions("-D_GLIBCXX_DEBUG")
 
 # release only
 set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG")
