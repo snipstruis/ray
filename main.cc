@@ -51,6 +51,53 @@ void setupScene(Scene& s)
     s.lights.emplace_back(glm::vec3(-4,2,8), Color(10,2,2));
 }
 
+// process input
+bool handleEvents(Scene& s)
+{
+    SDL_Event e;
+
+    while(SDL_PollEvent(&e)) {
+        switch(e.type)
+        {
+            case SDL_QUIT:
+                return true;
+            case SDL_MOUSEWHEEL:
+                s.camera.moveFov(glm::radians((float)-e.wheel.y));
+                break;
+            case SDL_MOUSEMOTION:
+                // yes - it's "airplane" style at the moment - mouse down = view up.
+                // I'm going to get a cmdline working soon, make this an option
+                s.camera.moveYawPitch(
+                    glm::radians(((float)e.motion.xrel)/5), -glm::radians(((float)e.motion.yrel)/5));
+                break;
+            case SDL_KEYDOWN:
+                switch(e.key.keysym.scancode){
+                    case SDL_SCANCODE_ESCAPE:  
+                        return true;
+                    case SDL_SCANCODE_R:  
+                        s.camera.resetView();
+                        break;
+                    default:
+                        break;
+                }
+                break;
+        };
+    }
+
+    Uint8 const * kbd = SDL_GetKeyboardState(NULL);
+
+    if(kbd[SDL_SCANCODE_S])
+        s.camera.moveForward(-0.2);
+    if(kbd[SDL_SCANCODE_W]) 
+        s.camera.moveForward(0.2);
+    if(kbd[SDL_SCANCODE_A])
+        s.camera.moveRight(-0.2);
+    if(kbd[SDL_SCANCODE_D])
+        s.camera.moveRight(0.2);
+    
+    return false;
+}
+
 int main(){
     SDL_Window *win = SDL_CreateWindow("Roaytroayzah (initialising)", 0, 0, 640, 640, 
                                        SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
@@ -65,48 +112,13 @@ int main(){
 
     // switch on relative mouse mode - hides the cursor, and kinda makes things... relative.
     SDL_SetRelativeMouseMode(SDL_TRUE);
-    Uint8 const * kbd = SDL_GetKeyboardState(NULL);
 
     while(true){
         auto t_begin = std::chrono::high_resolution_clock::now();
-        // handle events
-        SDL_Event e;
-        while(SDL_PollEvent(&e)) {
-            switch(e.type)
-            {
-                case SDL_QUIT:
-                    return 0;
-                case SDL_MOUSEWHEEL:
-                    s.camera.moveFov(glm::radians((float)-e.wheel.y));
-                    break;
-                case SDL_MOUSEMOTION:
-                    // yes - it's "airplane" style at the moment - mouse down = view up.
-                    // I'm going to get a cmdline working soon, make this an option
-                    s.camera.moveYawPitch(
-                        glm::radians(((float)e.motion.xrel)/5), -glm::radians(((float)e.motion.yrel)/5));
-                    break;
-                case SDL_KEYDOWN:
-                    switch(e.key.keysym.scancode){
-                        case SDL_SCANCODE_ESCAPE:  
-                            return 0;
-                        case SDL_SCANCODE_R:  
-                            s.camera.resetView();
-                            break;
-                        default:
-                            break;
-                    }
-                    break;
-            };
-        }
 
-        if(kbd[SDL_SCANCODE_S])
-            s.camera.moveForward(-0.2);
-        if(kbd[SDL_SCANCODE_W]) 
-            s.camera.moveForward(0.2);
-        if(kbd[SDL_SCANCODE_A])
-            s.camera.moveRight(-0.2);
-        if(kbd[SDL_SCANCODE_D])
-            s.camera.moveRight(0.2);
+        if(handleEvents(s))
+            return 0;
+
         // FIXME: maybe save a bit of work by only doing this if camera's moved
         s.camera.buildCamera();
         
@@ -125,7 +137,5 @@ int main(){
         avg = 0.95*avg + 0.05*frametime;
         setWindowTitle(s, win, avg);
         SDL_GL_SwapWindow(win);
-        
-
     }
 }
