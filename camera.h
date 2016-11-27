@@ -75,7 +75,8 @@ struct Camera{
         glm::vec3 look_vec = screen_point - eye;
         
         // build result - note direction is normalised
-        return Ray(eye, glm::normalize(look_vec), STARTING_TTL);
+        // FIXME: assumes origin point is in the material 'air'
+        return Ray(eye, glm::normalize(look_vec), 0, STARTING_TTL);
     };
 
     void sanityCheck() const

@@ -9,10 +9,10 @@
 const int STARTING_TTL = 10; // probably should be configurable or dynamically calculated
 
 struct Ray{
-    Ray(glm::vec3 o, glm::vec3 d, int t, float r=1.f)
-        :origin(o),direction(d),refraction_index(r),ttl(t){};
+    Ray(glm::vec3 o, glm::vec3 d, int m, int t)
+        :origin(o),direction(d),mat(m),ttl(t){};
     glm::vec3 origin, direction;
-    float refraction_index;
+    int mat;
     int ttl;
 };
 
