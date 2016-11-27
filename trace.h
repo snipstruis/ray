@@ -18,7 +18,7 @@ Color diffuse(Ray const& ray,
         float light_distance = glm::length(impact_to_light);
         glm::vec3 light_direction = glm::normalize(impact_to_light);
 
-        Ray shadow_ray = Ray(hit.impact-(light_direction*1e-3f), 
+        Ray shadow_ray = Ray(hit.impact+(hit.normal*1e-4f), 
                 light_direction, 0);
 
         Intersection shadow_hit = findClosestIntersection(primitives, shadow_ray);
@@ -45,9 +45,9 @@ Color trace(Ray const& ray,
 
     Material mat = primitives.materials[hit.mat];
     if(mat.checkered >= 0){
-        int x = hit.impact.x-EPSILON;
-        int y = hit.impact.y-EPSILON;
-        int z = hit.impact.z-EPSILON;
+        int x = hit.impact.x-1e-6f;
+        int y = hit.impact.y-1e-6f;
+        int z = hit.impact.z-1e-6f;
         if((x&1)^(y&1)^(z&1)) 
             mat = primitives.materials[mat.checkered];
     }
@@ -55,7 +55,9 @@ Color trace(Ray const& ray,
     Color color = Color(0,0,0);
 
     if(mat.reflectiveness > 0.f){
-        Ray r = Ray(hit.impact, glm::reflect(ray.direction, hit.normal), ray.ttl-1);
+        Ray r = Ray(hit.impact+hit.normal*1e-4f,
+                    glm::reflect(ray.direction, hit.normal),
+                    ray.ttl-1);
         color += mat.reflectiveness * trace(r,primitives,lights,alpha);
     }
 
@@ -66,8 +68,9 @@ Color trace(Ray const& ray,
 
     if(mat.transparency > 0.f){
         // FIXME: under construction, do not use
-        glm::vec3 refract_direction = glm::refract(ray.direction, hit.normal, 
-                                        ray.refraction_index/mat.refraction_index);
+        glm::vec3 refract_direction = 
+            glm::refract(ray.direction, hit.normal, 
+                    ray.refraction_index/mat.refraction_index);
         Ray refract_ray = Ray(hit.impact-(refract_direction*1e-3f),
                 refract_direction, 
                 ray.ttl-1, 

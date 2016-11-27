@@ -90,22 +90,19 @@ struct Intersection{
     glm::vec3 normal;
 };
 
-Intersection intersect(Triangle const& t, Ray const& ray, bool const inv=false){
+Intersection intersect(Triangle const& t, Ray const& ray){
     auto a=t.v[0], b=t.v[1], c=t.v[2];
-    if(glm::dot(ray.direction,inv?-t.normal:t.normal)>0) 
-        return Intersection(INFINITY);
-
     float dist = moller_trumbore(a, b, c, ray.origin, ray.direction);
-    return dist==INFINITY?  
-          Intersection(INFINITY) 
-        : Intersection(dist, ray.origin + ray.direction * dist, t.mat, t.normal);
+    if(dist==INFINITY) return Intersection(INFINITY);
+    else{
+        glm::vec3 normal = glm::dot(ray.direction,t.normal)>0? -t.normal : t.normal;
+        return Intersection(dist, ray.origin + ray.direction * dist, t.mat, normal);
+    }
 }
 
-Intersection intersect(Plane const& p, Ray const& ray, bool const inv=false){
-    assert(glm::length(ray.direction)<(1+1e-5f));
-    assert(glm::length(ray.direction)>(1-1e-5f));
+Intersection intersect(Plane const& p, Ray const& ray){
     glm::vec3 pos  = p.pos;
-    glm::vec3 norm = inv? -p.normal : p.normal;
+    glm::vec3 norm = glm::dot(ray.direction, p.normal)>0? -p.normal : p.normal;
     float denom = glm::dot(-norm,ray.direction);
     if(denom> 1e-6f){
         float dist = glm::dot(pos-ray.origin, -norm)/denom;
@@ -116,20 +113,29 @@ Intersection intersect(Plane const& p, Ray const& ray, bool const inv=false){
     return Intersection(INFINITY);
 }
 
-Intersection intersect(Sphere const& s, Ray const& ray, bool const inv=false){
+Intersection intersect(Sphere const& s, Ray const& ray){
     glm::vec3 c = s.pos - ray.origin;
     float t = glm::dot( c, ray.direction);
     glm::vec3 q = c - t * ray.direction;
     float p2 = glm::dot( q, q ); 
     float r2 = s.radius*s.radius;
     if (p2 > r2) return Intersection(INFINITY);
-    t = inv? t+sqrt( r2 - p2 )
-           : t-sqrt( r2 - p2 );
-    if(t>0){
-        glm::vec3 impact = ray.origin + ray.direction * t;
-        glm::vec3 norm = glm::normalize(impact-s.pos);
-        return Intersection(t,impact,s.mat,norm);
-    }else return Intersection(INFINITY);
+    float t0 = t + sqrt( r2 - p2 );
+    float t1 = t - sqrt( r2 - p2 );
+
+    // double sided
+    bool inv = false;
+    if(t0>t1){std::swap(t0,t1);}
+    if (t0 < 0) { 
+        inv = true;
+        t0 = t1; 
+        if(t0 < 0) return Intersection(INFINITY);
+    } 
+    t = t0; 
+
+    glm::vec3 impact = ray.origin + ray.direction * t;
+    glm::vec3 norm = glm::normalize(impact-s.pos);
+    return Intersection(t,impact,s.mat,inv?-norm:norm);
 }
 
 Intersection findClosestIntersection(Primitives const& primitives, Ray const& ray){
