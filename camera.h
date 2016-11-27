@@ -33,22 +33,27 @@ struct Camera{
     
     // direction we're facing - build from yaw/pitch, used by moveForward/MoveRight()
     glm::vec3 look_forward, look_right;
+
     // These are the input-params - ie changed by user input, and rendered into the params above by buildCamera()
     float yaw, pitch, roll, fov;
 
-    Camera() : width(0), height(0), eye(1,1,-1), yaw(-PI/4), pitch(PI/6), roll(0), fov(DEFAULT_FOV) {
+    Camera() : width(0), height(0) {
+        resetView();
         buildLookVectors();
         buildCamera();
         sanityCheck();
     }
 
     void resetView(){
-        eye = glm::vec3(0, 0, 0);
-        yaw = pitch = roll = 0.0f;
+        eye = glm::vec3(1, 1, -1);
+        yaw = -PI/6;
+        pitch = PI/6;
+        roll = 0.0f;
         fov = DEFAULT_FOV;
         buildLookVectors();
-        // probably should call buildCamera() here, but it gets called every frame regardless
+        buildCamera();
     }
+
     // takes a screen co-ord, and returns a ray from the camera through that pixel
     // note that this is in screen space and not world space, the conversion is handled internally
     Ray makeRay(int x, int y)
