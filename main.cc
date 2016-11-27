@@ -134,7 +134,7 @@ int main(){
 
         static float avg = frametime;
         avg = 0.95*avg + 0.05*frametime;
-            
+
         setWindowTitle(s, win, avg);
         SDL_GL_SwapWindow(win);
     }
