@@ -12,7 +12,6 @@ Color diffuse(Ray const& ray,
               Intersection const& hit,
               Material const& mat){
     Color color = Color(0,0,0);
-
     for(PointLight const& light: lights){
         glm::vec3 impact_to_light = light.pos - hit.impact;
         float light_distance = glm::length(impact_to_light);
@@ -29,8 +28,6 @@ Color diffuse(Ray const& ray,
                    * glm::dot(-hit.normal, ray.direction);
         }
     }
-
-
     return color;
 }
 
@@ -57,8 +54,7 @@ Color trace(Ray const& ray,
 
     // shadows and lighting
     if(mat.diffuseness > 0.f){
-        Color diffuse_color = diffuse(ray,primitives,lights,hit,mat);
-        color += mat.diffuseness * diffuse_color;
+        color += mat.diffuseness * diffuse(ray,primitives,lights,hit,mat);
     }
 
     // angle-depenent transparancy
@@ -78,15 +74,13 @@ Color trace(Ray const& ray,
     if(transparency>0.f){
         glm::vec3 refract_direction = 
             glm::refract(ray.direction, hit.normal, 
-                    raymat.refraction_index/mat.refraction_index);
+                    raymat.refraction_index/(hit.internal?1.f:mat.refraction_index));
         Ray refract_ray = Ray(hit.impact-(hit.normal*1e-4f),
                 refract_direction, 
                 //FIXME: exiting a primitive will set the material to air
                 hit.internal?0:ray.mat, 
                 ray.ttl-1);
-        Color refract_color = transparency
-                            * trace(refract_ray, primitives, lights, alpha);
-        color += refract_color;
+        color += transparency * trace(refract_ray, primitives, lights, alpha);
     }
     
     // reflection (mirror)
