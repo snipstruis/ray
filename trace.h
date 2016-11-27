@@ -19,7 +19,7 @@ Color diffuse(Ray const& ray,
         glm::vec3 light_direction = glm::normalize(impact_to_light);
 
         Ray shadow_ray = Ray(hit.impact+(hit.normal*1e-4f), 
-                light_direction, 0);
+                light_direction, ray.ttl-1);
 
         Intersection shadow_hit = findClosestIntersection(primitives, shadow_ray);
 
@@ -54,29 +54,30 @@ Color trace(Ray const& ray,
 
     Color color = Color(0,0,0);
 
-    if(mat.reflectiveness > 0.f){
-        Ray r = Ray(hit.impact+hit.normal*1e-4f,
-                    glm::reflect(ray.direction, hit.normal),
-                    ray.ttl-1);
-        color += mat.reflectiveness * trace(r,primitives,lights,alpha);
-    }
-
     if(mat.diffuseness > 0.f){
         Color diffuse_color = diffuse(ray,primitives,lights,hit,mat);
         color += mat.diffuseness * diffuse_color;
     }
 
+    float extra_reflectiveness = 0.f;
     if(mat.transparency > 0.f){
-        // FIXME: under construction, do not use
         glm::vec3 refract_direction = 
             glm::refract(ray.direction, hit.normal, 
                     ray.refraction_index/mat.refraction_index);
-        Ray refract_ray = Ray(hit.impact-(refract_direction*1e-3f),
+        Ray refract_ray = Ray(hit.impact-(hit.normal*1e-4f),
                 refract_direction, 
                 ray.ttl-1, 
-                mat.refraction_index);
-        Color refract_color = trace(refract_ray, primitives, lights, alpha);
+                hit.internal?1.f:mat.refraction_index);
+        Color refract_color = mat.transparency
+                            * trace(refract_ray, primitives, lights, alpha);
         color += refract_color;
+    }
+    
+    if((mat.reflectiveness+extra_reflectiveness) > 0.f){
+        Ray r = Ray(hit.impact+hit.normal*1e-4f,
+                    glm::reflect(ray.direction, hit.normal),
+                    ray.ttl-1);
+        color += mat.reflectiveness * trace(r,primitives,lights,alpha);
     }
 
     return color;
