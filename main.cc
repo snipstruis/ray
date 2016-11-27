@@ -13,7 +13,6 @@
 #include <chrono>
 #include <vector>
 
-
 void setWindowTitle(Scene const& s, SDL_Window *win, float frametime_ms)
 {
     char title[1024];
@@ -83,6 +82,14 @@ bool handleEvents(Scene& s)
 }
 
 int main(){
+    // setup scene first, so we can bail on error without flashing a window briefly (errors are stdout 
+    // for now - maybe should be a dialog box in future).
+    Scene s;
+    if(!setupScene(s)) {
+        std::cout << "failed to setup scene, bailing" << std::endl;
+        return -1;
+    }
+
     SDL_Window *win = SDL_CreateWindow("Roaytroayzah (initialising)", 0, 0, 640, 640, 
                                        SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
     SDL_GL_CreateContext(win);
@@ -90,9 +97,6 @@ int main(){
     // clear screen (probably not strictly nescessary)
     glClearColor(0,0,0,1);
     glClear(GL_COLOR_BUFFER_BIT);
-
-    Scene s;
-    setupScene(s);
 
     // switch on relative mouse mode - hides the cursor, and kinda makes things... relative.
     SDL_SetRelativeMouseMode(SDL_TRUE);
@@ -115,7 +119,9 @@ int main(){
 
         glViewport(0, 0, s.camera.width, s.camera.height);
 
+        std::cout << "render start" << std::endl;
         renderFrame(s, screenBuffer);
+        std::cout << "render end" << std::endl;
 
         // blit to screen
         glDrawPixels(s.camera.width, s.camera.height, GL_RGB, GL_FLOAT, screenBuffer.data());
