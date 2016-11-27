@@ -9,13 +9,13 @@ inline void setupScene(Scene& s)
     const int red_glass = 1, tiles = 2, reflective_blue=3;
 
     // AIR
-    s.primitives.materials.emplace_back(Color(1.f,1.f,1.f),
+    s.primitives.materials.emplace_back(Color(0.f,0.f,0.f),
                                         0.0f, 0.0f, 1.0f,
                                         1.0f);
     // RED GLASS
-    s.primitives.materials.emplace_back(Color(0.8,0.2,0.2),
+    s.primitives.materials.emplace_back(Color(0.2,0.8,0.8),
                                         0.0f, 0.0f, 1.0f,
-                                        1.9f);
+                                        1.5f);
     // WHITE/REFLECTIVE BLUE CHECKERED
     s.primitives.materials.emplace_back(Color(0.6,0.6,0.6),
                                         1.0f, 0.0f, 0.0f,
@@ -32,8 +32,8 @@ inline void setupScene(Scene& s)
                                         glm::vec3(-1,0,24), 
                                         glm::vec3(0,2,24), reflective_blue);
 
-    s.lights.emplace_back(glm::vec3(3,3,10), Color(6,6,6));
-    s.lights.emplace_back(glm::vec3(-4,2,8), Color(10,2,2));
-    s.lights.emplace_back(glm::vec3(2,4,15), Color(2,10,2));
+    s.lights.emplace_back(glm::vec3(3,3,10), Color(10,10,10));
+    s.lights.emplace_back(glm::vec3(-4,2,8), Color(10,10,10));
+    s.lights.emplace_back(glm::vec3(2,4,15), Color(10,10,10));
 }
 
