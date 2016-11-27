@@ -7,10 +7,14 @@
 
 struct Sphere  {
     Sphere(glm::vec3 p, int m, float r):pos(p), mat(m), radius(r){};
-    glm::vec3 pos; int mat; float radius;};
-struct Plane   {
+    glm::vec3 pos; int mat; float radius;
+};
+ 
+struct Plane {
     Plane(glm::vec3 p, int m, glm::vec3 n):pos(p), mat(m), normal(n){};
-    glm::vec3 pos; int mat; glm::vec3 normal;};
+    glm::vec3 pos; int mat; glm::vec3 normal;
+};
+
 struct Triangle{
     Triangle(glm::vec3 a, glm::vec3 b, glm::vec3 c, int m){
         v[0]=a; v[1]=b; v[2]=c; mat=m;
@@ -22,7 +26,8 @@ struct Triangle{
     glm::vec3 normal;
     glm::vec3 pos; 
     int mat; 
-    glm::vec3 v[3];};
+    glm::vec3 v[3];
+};
 
 struct Primitives{
     std::vector<Material> materials;
@@ -85,21 +90,22 @@ struct Intersection{
     glm::vec3 normal;
 };
 
-Intersection intersect(Triangle const& t, Ray const& ray){
+Intersection intersect(Triangle const& t, Ray const& ray, bool const inv=false){
     auto a=t.v[0], b=t.v[1], c=t.v[2];
-    if(glm::dot(ray.direction,t.normal)>0) return Intersection(INFINITY);
+    if(glm::dot(ray.direction,inv?-t.normal:t.normal)>0) 
+        return Intersection(INFINITY);
 
     float dist = moller_trumbore(a, b, c, ray.origin, ray.direction);
-    return dist!=INFINITY?
-        Intersection(dist, ray.origin + ray.direction * dist, t.mat, t.normal)
-      : Intersection(INFINITY);
+    return dist==INFINITY?  
+          Intersection(INFINITY) 
+        : Intersection(dist, ray.origin + ray.direction * dist, t.mat, t.normal);
 }
 
-Intersection intersect(Plane const& p, Ray const& ray){
+Intersection intersect(Plane const& p, Ray const& ray, bool const inv=false){
     assert(glm::length(ray.direction)<(1+1e-5f));
     assert(glm::length(ray.direction)>(1-1e-5f));
     glm::vec3 pos  = p.pos;
-    glm::vec3 norm = p.normal;
+    glm::vec3 norm = inv? -p.normal : p.normal;
     float denom = glm::dot(-norm,ray.direction);
     if(denom> 1e-6f){
         float dist = glm::dot(pos-ray.origin, -norm)/denom;
@@ -110,19 +116,18 @@ Intersection intersect(Plane const& p, Ray const& ray){
     return Intersection(INFINITY);
 }
 
-Intersection intersect(Sphere const& s, Ray const& ray){
-    glm::vec3 pos  = s.pos;
-    float r = s.radius;
-    glm::vec3 c = pos - ray.origin;
+Intersection intersect(Sphere const& s, Ray const& ray, bool const inv=false){
+    glm::vec3 c = s.pos - ray.origin;
     float t = glm::dot( c, ray.direction);
     glm::vec3 q = c - t * ray.direction;
     float p2 = glm::dot( q, q ); 
-    float r2 = r*r;
+    float r2 = s.radius*s.radius;
     if (p2 > r2) return Intersection(INFINITY);
-    t -= sqrt( r2 - p2 );
+    t = inv? t+sqrt( r2 - p2 )
+           : t-sqrt( r2 - p2 );
     if(t>0){
         glm::vec3 impact = ray.origin + ray.direction * t;
-        glm::vec3 norm = glm::normalize(impact-pos);
+        glm::vec3 norm = glm::normalize(impact-s.pos);
         return Intersection(t,impact,s.mat,norm);
     }else return Intersection(INFINITY);
 }

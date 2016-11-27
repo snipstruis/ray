@@ -17,8 +17,7 @@ Color diffuse(Ray const& ray,
         glm::vec3 impact_to_light = light.pos - hit.impact;
         float light_distance = glm::length(impact_to_light);
         glm::vec3 light_direction = glm::normalize(impact_to_light);
-        // TODO: when adding transparancy, fix the shadow epsilon,
-        // it only works for one-sided surfaces
+
         Ray shadow_ray = Ray(hit.impact-(light_direction*1e-3f), 
                 light_direction, 0);
 
@@ -41,7 +40,6 @@ Color trace(Ray const& ray,
             Color const& alpha){
     if(ray.ttl<=0) return alpha;
 
-    // hit check
     Intersection hit = findClosestIntersection(primitives,ray);
     if(hit.distance==INFINITY) return alpha;
 
@@ -66,8 +64,8 @@ Color trace(Ray const& ray,
         color += mat.diffuseness * diffuse_color;
     }
 
-    /*
-    if(mode & MAT_transparent){
+    if(mat.transparency > 0.f){
+        // FIXME: under construction, do not use
         glm::vec3 refract_direction = glm::refract(ray.direction, hit.normal, 
                                         ray.refraction_index/mat.refraction_index);
         Ray refract_ray = Ray(hit.impact-(refract_direction*1e-3f),
@@ -77,7 +75,6 @@ Color trace(Ray const& ray,
         Color refract_color = trace(refract_ray, primitives, lights, alpha);
         color += refract_color;
     }
-    */
 
     return color;
 }
