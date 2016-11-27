@@ -23,9 +23,11 @@ bool loadObject(Scene& s, std::string const& filename, int material){
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
 
+    std::cout << "loading " << filename << std::endl;
+
     bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, filename.c_str());
     if(!ret) {
-        std::cout << "ERROR loading " << filename << " - " << err << std::endl;
+        std::cout << "ERROR loading object - " << err << std::endl;
         return false;
     }
         
@@ -46,7 +48,7 @@ bool loadObject(Scene& s, std::string const& filename, int material){
         }
     }
 
-    std::cout << "load done for " << filename << std::endl;
+    std::cout << "load done" << std::endl;
 
     return true;
 }
@@ -56,7 +58,7 @@ inline bool setupScene(Scene& s)
     const int red_glass = 1, tiles = 2, reflective_blue=3;
 
 #ifdef TEA_TIME_FOR_MRS_NESBIT 
-    std::string filename = "/Users/nick/src/u/ray/obj/wt_teapot.obj";
+    std::string filename = "obj/wt_teapot.obj";
     if(!loadObject(s, filename, reflective_blue)) // reflective_blue = pretty :)
         return false;
 #endif
