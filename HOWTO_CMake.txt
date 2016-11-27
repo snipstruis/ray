@@ -1,0 +1,14 @@
+
+- create a release build -
+
+* make new dir, cd to this dir
+
+cmake -GNinja -DCMAKE_BUILD_TYPE=Release <path_to_src>
+
+- set the compiler -
+cmake uses the CC/CXX envvars, and they stick to the build dir. regardless, it's a good idea to have these set correctly for your current build
+
+export CC=/path/to/somewhere/clang
+export CXX=/path/to/somewhere/clang++
+cmake -GNinja <path_to_src>
+
