@@ -36,7 +36,7 @@ struct Camera{
     // These are the input-params - ie changed by user input, and rendered into the params above by buildCamera()
     float yaw, pitch, roll, fov;
 
-    Camera() : width(0), height(0), yaw(0), pitch(0), roll(0), fov(DEFAULT_FOV) {
+    Camera() : width(0), height(0), eye(1,1,-1), yaw(-PI/4), pitch(PI/6), roll(0), fov(DEFAULT_FOV) {
         buildLookVectors();
         buildCamera();
         sanityCheck();
