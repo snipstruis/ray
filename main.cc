@@ -103,9 +103,9 @@ int main(){
 
     std::vector<Color> screenBuffer; // will be allocated on first loop
 
-    while(true){
-        auto t_begin = std::chrono::high_resolution_clock::now();
+    auto now = std::chrono::high_resolution_clock::now();
 
+    while(true){
         if(handleEvents(s))
             break;
 
@@ -119,17 +119,22 @@ int main(){
 
         glViewport(0, 0, s.camera.width, s.camera.height);
 
-        std::cout << "render start" << std::endl;
         renderFrame(s, screenBuffer);
-        std::cout << "render end" << std::endl;
-
+       
         // blit to screen
         glDrawPixels(s.camera.width, s.camera.height, GL_RGB, GL_FLOAT, screenBuffer.data());
 
-        auto t_end = std::chrono::high_resolution_clock::now();
-        float frametime = std::chrono::duration_cast<std::chrono::duration<float,std::milli>>(t_end-t_begin).count();
-        static float avg = 16;
+        auto last = now;
+        now = std::chrono::high_resolution_clock::now();
+        float frametime = 
+                std::chrono::duration_cast<std::chrono::duration<float,std::milli>>(now - last).count();
+
+        if(frametime > 1000)
+            std::cout << "long render - frametime=" << frametime/1000.0f << "s" << std::endl;
+
+        static float avg = frametime;
         avg = 0.95*avg + 0.05*frametime;
+            
         setWindowTitle(s, win, avg);
         SDL_GL_SwapWindow(win);
     }
