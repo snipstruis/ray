@@ -19,7 +19,7 @@ Color diffuse(Ray const& ray,
         glm::vec3 light_direction = glm::normalize(impact_to_light);
 
         Ray shadow_ray = Ray(hit.impact+(hit.normal*1e-4f), 
-                light_direction, ray.ttl-1);
+                light_direction, ray.mat, ray.ttl-1);
 
         Intersection shadow_hit = findClosestIntersection(primitives, shadow_ray);
 
@@ -44,6 +44,7 @@ Color trace(Ray const& ray,
     if(hit.distance==INFINITY) return alpha;
 
     Material mat = primitives.materials[hit.mat];
+    Material raymat = primitives.materials[ray.mat];
     if(mat.checkered >= 0){
         int x = hit.impact.x-1e-6f;
         int y = hit.impact.y-1e-6f;
@@ -54,15 +55,17 @@ Color trace(Ray const& ray,
 
     Color color = Color(0,0,0);
 
+    // shadows and lighting
     if(mat.diffuseness > 0.f){
         Color diffuse_color = diffuse(ray,primitives,lights,hit,mat);
         color += mat.diffuseness * diffuse_color;
     }
 
+    // angle-depenent transparancy
     float reflectiveness = mat.reflectiveness;
     float transparency   = mat.transparency;
     if(mat.transparency > 0.f){
-        float n1 = ray.refraction_index;
+        float n1 = raymat.refraction_index;
         float n2 = mat.refraction_index;
         float r0 = (n1-n2)/(n1+n2); r0*=r0;
         float pow5 = 1.f-glm::dot(hit.normal,-ray.direction);
@@ -71,22 +74,26 @@ Color trace(Ray const& ray,
         transparency   -= transparency*fr;
     }
        
+    // transparency (refraction)
     if(transparency>0.f){
         glm::vec3 refract_direction = 
             glm::refract(ray.direction, hit.normal, 
-                    ray.refraction_index/mat.refraction_index);
+                    raymat.refraction_index/mat.refraction_index);
         Ray refract_ray = Ray(hit.impact-(hit.normal*1e-4f),
                 refract_direction, 
-                ray.ttl-1, 
-                hit.internal?1.f:mat.refraction_index);
+                //FIXME: exiting a primitive will set the material to air
+                hit.internal?0:ray.mat, 
+                ray.ttl-1);
         Color refract_color = transparency
                             * trace(refract_ray, primitives, lights, alpha);
         color += refract_color;
     }
     
+    // reflection (mirror)
     if(reflectiveness > 0.f){
         Ray r = Ray(hit.impact+hit.normal*1e-4f,
                     glm::reflect(ray.direction, hit.normal),
+                    ray.mat,
                     ray.ttl-1);
         color += reflectiveness * trace(r,primitives,lights,alpha);
     }
