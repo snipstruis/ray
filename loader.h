@@ -6,12 +6,12 @@
 
 inline void setupScene(Scene& s)
 {
+    s.primitives.materials.emplace_back(Color(0.8,0.2,0.2),
+                                        0.0f, 0.0f, 1.0f,
+                                        1.5f,-1);
     s.primitives.materials.emplace_back(Color(0.6,0.5,0.4),
                                         0.3f, 0.7f, 0.0f,
-                                        1.52f, 1);
-    s.primitives.materials.emplace_back(Color(0.8,0.2,0.2),
-                                        0.0f, 0.0f, 1.f,
-                                        1.52f);
+                                        1.5f);
     s.primitives.materials.emplace_back(Color(0.6,0.6,0.6),
                                         1.0f, 0.0f, 0.0f,
                                         1.f, 3);

@@ -59,8 +59,19 @@ Color trace(Ray const& ray,
         color += mat.diffuseness * diffuse_color;
     }
 
-    float extra_reflectiveness = 0.f;
+    float reflectiveness = mat.reflectiveness;
+    float transparency   = mat.transparency;
     if(mat.transparency > 0.f){
+        float n1 = ray.refraction_index;
+        float n2 = mat.refraction_index;
+        float r0 = (n1-n2)/(n1+n2); r0*=r0;
+        float pow5 = 1.f-glm::dot(hit.normal,-ray.direction);
+        float fr = r0+(1.f-r0)*pow5*pow5*pow5*pow5*pow5;
+        reflectiveness += transparency*fr;
+        transparency   -= transparency*fr;
+    }
+       
+    if(transparency>0.f){
         glm::vec3 refract_direction = 
             glm::refract(ray.direction, hit.normal, 
                     ray.refraction_index/mat.refraction_index);
@@ -68,16 +79,16 @@ Color trace(Ray const& ray,
                 refract_direction, 
                 ray.ttl-1, 
                 hit.internal?1.f:mat.refraction_index);
-        Color refract_color = mat.transparency
+        Color refract_color = transparency
                             * trace(refract_ray, primitives, lights, alpha);
         color += refract_color;
     }
     
-    if((mat.reflectiveness+extra_reflectiveness) > 0.f){
+    if(reflectiveness > 0.f){
         Ray r = Ray(hit.impact+hit.normal*1e-4f,
                     glm::reflect(ray.direction, hit.normal),
                     ray.ttl-1);
-        color += mat.reflectiveness * trace(r,primitives,lights,alpha);
+        color += reflectiveness * trace(r,primitives,lights,alpha);
     }
 
     return color;
