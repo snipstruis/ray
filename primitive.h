@@ -96,8 +96,8 @@ Intersection intersect(Triangle const& t, Ray const& ray){
 }
 
 Intersection intersect(Plane const& p, Ray const& ray){
-    assert(glm::length(ray.direction)<(1+1e-6f));
-    assert(glm::length(ray.direction)>(1-1e-6f));
+    assert(glm::length(ray.direction)<(1+1e-5f));
+    assert(glm::length(ray.direction)>(1-1e-5f));
     glm::vec3 pos  = p.pos;
     glm::vec3 norm = p.normal;
     float denom = glm::dot(-norm,ray.direction);

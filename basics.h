@@ -37,21 +37,19 @@ inline Color operator*(float a, Color        b){ return b*a; }
 inline Color operator*(Color a, Color const& b){ return a*=b; }
 inline Color operator+(Color a, Color const& b){ return a+=b; }
 
-enum : unsigned {
-    MAT_lit          = 1<<0,
-    MAT_diffuse      = 1<<1,
-    MAT_shadow       = 1<<2,
-    MAT_specular     = 1<<3,
-    MAT_transparent  = 1<<4,
-    MAT_checkered    = 1<<5,
-};
-
 struct Material{
     Material() = default;
-    Material(Color c,unsigned p, float spec=0.f, float ri=1.f):color(c),properties(p),specularity(spec),refraction_index(ri){};
+    Material(Color c,
+             float d, float r, float t, 
+             float ri=1.f, int check=-1)
+        :color(c),
+        diffuseness(d), reflectiveness(r), transparency(t),
+        refraction_index(ri),checkered(check){};
     Color color;
-    unsigned properties;
-    float specularity;
+    float diffuseness;
+    float reflectiveness;
+    float transparency;
     float refraction_index;
+    int checkered;
 };
 

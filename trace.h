@@ -31,6 +31,7 @@ Color diffuse(Ray const& ray,
         }
     }
 
+
     return color;
 }
 
@@ -43,27 +44,26 @@ Color trace(Ray const& ray,
     // hit check
     Intersection hit = findClosestIntersection(primitives,ray);
     if(hit.distance==INFINITY) return alpha;
+
     Material mat = primitives.materials[hit.mat];
-    unsigned const mode = mat.properties;
-
-    Color color = Color(0,0,0);
-    //if(mode & MAT_lit) color += mat.color;
-
-    Color diffuse_color = diffuse(ray,primitives,lights,hit,mat);
-
-    if(mode & MAT_checkered){
+    if(mat.checkered >= 0){
         int x = hit.impact.x-EPSILON;
         int y = hit.impact.y-EPSILON;
         int z = hit.impact.z-EPSILON;
-        if((x&1)^(y&1)^(z&1)) diffuse_color *= 0.8f;
+        if((x&1)^(y&1)^(z&1)) 
+            mat = primitives.materials[mat.checkered];
     }
 
-    if(mode & MAT_specular){
+    Color color = Color(0,0,0);
+
+    if(mat.reflectiveness > 0.f){
         Ray r = Ray(hit.impact, glm::reflect(ray.direction, hit.normal), ray.ttl-1);
-        color  = mat.specularity * trace(r,primitives,lights,alpha)
-               + (1.f-mat.specularity) * diffuse_color;
-    }else{
-        color = diffuse_color;
+        color += mat.reflectiveness * trace(r,primitives,lights,alpha);
+    }
+
+    if(mat.diffuseness > 0.f){
+        Color diffuse_color = diffuse(ray,primitives,lights,hit,mat);
+        color += mat.diffuseness * diffuse_color;
     }
 
     /*
