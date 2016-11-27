@@ -53,6 +53,10 @@ add_executable(ray
 # linking
 target_link_libraries(ray SDL2 ${OpenGL_LIBRARY})
 
+# create a target to auto load the raytracer 
+# note that it will start this with the wd set to source, so it can find any test objects
+add_custom_target(run-ray ray DEPENDS ray WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} USES_TERMINAL)
+
 # recurse into test
 add_subdirectory(test)
 
