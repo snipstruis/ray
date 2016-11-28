@@ -1,0 +1,18 @@
+{
+    "load_objects" : 
+    {
+        1 : "obj/wt_teapot.obj",
+        4 : "obj/plane.obj"
+    },
+    "world" :
+    {
+        
+    },
+    "camera" : 
+    {
+        "eye_point" : { "x" : -1, "y" : -1, "z" : -1},
+        "eye_angle" : { "yaw" : -30, "pitch" : 30, "roll" : 0},
+        "fov" : 90
+    }
+}
+

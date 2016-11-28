@@ -47,11 +47,12 @@ include_directories(.)
 add_executable(ray 
     main.cc
     tiny_obj_loader.cc
+    jsonxx.cc
     scene.h
 )
 
 # linking
-target_link_libraries(ray SDL2 ${OpenGL_LIBRARY})
+target_link_libraries(ray boost_program_options SDL2 ${OpenGL_LIBRARY})
 
 # create a target to auto load the raytracer 
 # note that it will start this with the wd set to source, so it can find any test objects

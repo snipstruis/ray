@@ -7,6 +7,7 @@
 #include "tiny_obj_loader.h"
 #include "glm/vec3.hpp"
 
+#include <fstream>
 #include <string>
 #include <vector>
 
@@ -55,9 +56,26 @@ bool loadObject(Scene& s, std::string const& filename, int material){
     return true;
 }
 
+inline bool loadScene(Scene& s) {
+    std::ifstream inFile("scene/test1.scene");
+
+    jsonxx::Object o;
+    if(!o.parse(inFile))
+    {
+        std::cout << "scene file parse error" << std::endl;
+        return false;
+    }
+
+    std::cout << o.json() ;
+    exit(0);
+
+    return true;
+}
+
 inline bool setupScene(Scene& s)
 {
     const int red_glass = 1, tiles = 2, reflective_blue=3;
+    loadScene(s);
 
 #ifdef TEA_TIME_FOR_MRS_NESBIT 
     std::string filename = "obj/wt_teapot.obj";
