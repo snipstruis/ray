@@ -35,7 +35,7 @@ void setWindowTitle(Scene const& s, SDL_Window *win, float frametime_ms)
 
 // process input
 // returns true if app should quit
-bool handleEvents(Scene& s)
+bool handleEvents(Scene& s, Visualisation *vis)
 {
     SDL_Event e;
 
@@ -60,6 +60,8 @@ bool handleEvents(Scene& s)
                     case SDL_SCANCODE_R:  
                         s.camera.resetView();
                         break;
+                    case SDL_SCANCODE_0: *vis = Visualisation::None; break;
+                    case SDL_SCANCODE_1: *vis = Visualisation::Microseconds; break;
                     default:
                         break;
                 }
@@ -105,8 +107,9 @@ int main(){
 
     auto now = std::chrono::high_resolution_clock::now();
 
+    Visualisation vis=Visualisation::None;
     while(true){
-        if(handleEvents(s))
+        if(handleEvents(s,&vis))
             break;
 
         SDL_GL_GetDrawableSize(win, &s.camera.width, &s.camera.height);
@@ -119,7 +122,7 @@ int main(){
 
         glViewport(0, 0, s.camera.width, s.camera.height);
 
-        renderFrame(s, screenBuffer);
+        renderFrame(s, screenBuffer,vis);
        
         // blit to screen
         glDrawPixels(s.camera.width, s.camera.height, GL_RGB, GL_FLOAT, screenBuffer.data());

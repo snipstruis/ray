@@ -57,7 +57,7 @@ Color trace(Ray const& ray,
         color += mat.diffuseness * diffuse(ray,primitives,lights,hit,mat);
     }
 
-    // angle-depenent transparancy
+    // angle-depenent transparancy (for dielectric materials)
     float reflectiveness = mat.reflectiveness;
     float transparency   = mat.transparency;
     if(mat.transparency > 0.f){
@@ -101,18 +101,33 @@ Color trace(Ray const& ray,
     return color;
 }
 
+#include<chrono>
+
+enum class Visualisation {
+    None,
+    Microseconds,
+};
+
 // main render starting loop
 // assumes screenbuffer is big enough to handle the width*height pixels (per the camera)
-inline void renderFrame(Scene& s, std::vector<Color>& screenBuffer){
+inline void renderFrame(Scene& s, std::vector<Color>& screenBuffer, Visualisation vis){
     // draw pixels
     #pragma omp parallel for schedule(auto)
     for (int y = 0; y < s.camera.height; y++) {
         for (int x = 0; x < s.camera.width; x++) {
+            auto start = std::chrono::high_resolution_clock::now();
             Ray r = s.camera.makeRay(x, y);
 
             // go forth and render..
             int idx = (s.camera.height-y-1) * s.camera.width+ x;
+
             screenBuffer[idx] = trace(r,s.primitives,s.lights,Color(0,0,0));
+            if(vis==Visualisation::Microseconds){
+                auto end = std::chrono::high_resolution_clock::now();
+                auto frametime = 
+                    std::chrono::duration_cast<std::chrono::duration<float,std::micro>>(end-start).count();
+                screenBuffer[idx].r = frametime;
+            }
         }
     }
 }
