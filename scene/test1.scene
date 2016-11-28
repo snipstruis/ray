@@ -1,20 +1,25 @@
 {
-    "load_objects" : {
+    "load_meshes" : {
         "teapot" : "obj/wt_teapot.obj",
         "plane" : "obj/plane.obj"
     },
     "world" : {
         "objects" : [
             {
+                "kind" : "mesh",
                 "ref" : "teapot",
                 "transform" : {
                     "translate" : { "x" : 2, "y" : 0, "z" : 3},
-                    "rotate" : { "x" : 90, "y": 45 , "z" : 0},
-                    "scale" : { "x" : 90, "y": 45 , "z" : 0}
+                    "rotate" : { "x" : 90, "y" : 45 , "z" : 0},
+                    "scale" : { "x" : 90, "y" : 45 , "z" : 0}
                 }
             },
             {
-
+                "kind" : "sphere",
+                "radius" : 2,
+                "transform" : {
+                    "translate" : { "x" : -3, "y" : 0, "z" : 3}
+                }
             }
         ]
         
