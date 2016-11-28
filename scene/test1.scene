@@ -1,15 +1,25 @@
 {
-    "load_objects" : 
-    {
-        1 : "obj/wt_teapot.obj",
-        4 : "obj/plane.obj"
+    "load_objects" : {
+        "teapot" : "obj/wt_teapot.obj",
+        "plane" : "obj/plane.obj"
     },
-    "world" :
-    {
+    "world" : {
+        "objects" : [
+            {
+                "ref" : "teapot",
+                "transform" : {
+                    "translate" : { "x" : 2, "y" : 0, "z" : 3},
+                    "rotate" : { "x" : 90, "y": 45 , "z" : 0},
+                    "scale" : { "x" : 90, "y": 45 , "z" : 0}
+                }
+            },
+            {
+
+            }
+        ]
         
     },
-    "camera" : 
-    {
+    "camera" : {
         "eye_point" : { "x" : -1, "y" : -1, "z" : -1},
         "eye_angle" : { "yaw" : -30, "pitch" : 30, "roll" : 0},
         "fov" : 90
