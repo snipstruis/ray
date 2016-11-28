@@ -59,4 +59,5 @@ add_custom_target(run-ray ray DEPENDS ray WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} 
 
 # recurse into test
 add_subdirectory(test)
+add_subdirectory(report)
 
