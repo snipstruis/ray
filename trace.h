@@ -103,32 +103,43 @@ Color trace(Ray const& ray,
 
 #include<chrono>
 
-enum class Visualisation {
-    None,
+enum class Mode {
+    Default,
     Microseconds,
 };
 
 // main render starting loop
 // assumes screenbuffer is big enough to handle the width*height pixels (per the camera)
-inline void renderFrame(Scene& s, std::vector<Color>& screenBuffer, Visualisation vis){
+inline void renderFrame(Scene& s, std::vector<Color>& screenBuffer, Mode mode){
     // draw pixels
-    #pragma omp parallel for schedule(auto)
-    for (int y = 0; y < s.camera.height; y++) {
-        for (int x = 0; x < s.camera.width; x++) {
-            auto start = std::chrono::high_resolution_clock::now();
-            Ray r = s.camera.makeRay(x, y);
-
-            // go forth and render..
-            int idx = (s.camera.height-y-1) * s.camera.width+ x;
-
-            screenBuffer[idx] = trace(r,s.primitives,s.lights,Color(0,0,0));
-            if(vis==Visualisation::Microseconds){
+    int const width  = s.camera.width;
+    int const height = s.camera.height;
+    switch(mode){
+    case Mode::Default:
+        #pragma omp parallel for schedule(auto) collapse(2)
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                Ray r = s.camera.makeRay(x, y);
+                int idx = (height-y-1) * width+ x;
+                screenBuffer[idx] = trace(r,s.primitives,s.lights,Color(0,0,0));
+            }
+        }
+        break;
+    case Mode::Microseconds:
+        #pragma omp parallel for schedule(auto) collapse(2)
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                auto start = std::chrono::high_resolution_clock::now();
+                Ray r = s.camera.makeRay(x, y);
+                int idx = (height-y-1) * width+ x;
+                screenBuffer[idx] = trace(r,s.primitives,s.lights,Color(0,0,0));
                 auto end = std::chrono::high_resolution_clock::now();
                 auto frametime = 
                     std::chrono::duration_cast<std::chrono::duration<float,std::micro>>(end-start).count();
                 screenBuffer[idx].r = frametime;
             }
         }
+        break;
     }
 }
 
