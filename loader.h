@@ -62,12 +62,26 @@ inline bool loadScene(Scene& s) {
     jsonxx::Object o;
     if(!o.parse(inFile))
     {
-        std::cout << "scene file parse error" << std::endl;
+        std::cout << "scene file parse error\n";
         return false;
     }
 
-    std::cout << o.json() ;
-    exit(0);
+    // load meshes
+    std::map<std::string, int> t;
+    if(o.has<jsonxx::Object>("load_meshes")) {
+        const auto& meshes = o.get<jsonxx::Object>("load_meshes");
+        for(auto const& m: meshes.kv_map()) {
+            std::string ref = m.first;
+            std::string filename = m.second->get<jsonxx::String>(); 
+            std::cout << ref << " " <<  filename << std::endl;
+
+        }
+    }
+    else
+        std::cout << "no meshes specified in scene\n";
+
+    //std::cout << o.json() ;
+
 
     return true;
 }
@@ -77,6 +91,7 @@ inline bool setupScene(Scene& s)
     const int red_glass = 1, tiles = 2, reflective_blue=3;
     loadScene(s);
 
+    exit(0);
 #ifdef TEA_TIME_FOR_MRS_NESBIT 
     std::string filename = "obj/wt_teapot.obj";
     if(!loadObject(s, filename, reflective_blue)) // reflective_blue = pretty :)
