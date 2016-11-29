@@ -11,8 +11,8 @@
 #include <string>
 #include <vector>
 
-inline bool loadScene(Scene& s) {
-    std::ifstream inFile("scene/test1.scene");
+inline bool loadScene(std::string const& filename ,Scene& s) {
+    std::ifstream inFile(filename);
 
     jsonxx::Object o;
     if(!o.parse(inFile))
@@ -29,14 +29,35 @@ inline bool loadScene(Scene& s) {
             std::string ref = m.first;
             std::string filename = m.second->get<jsonxx::String>(); 
             std::cout << ref << " " <<  filename << std::endl;
-
         }
     }
     else
         std::cout << "no meshes specified in scene\n";
 
-    //std::cout << o.json() ;
+    if(!o.has<jsonxx::Object>("world")) {
+        std::cerr << "ERROR: no world in scene\n";
+        return false;
+    }
 
+    const auto& world = o.get<jsonxx::Object>("world");
+
+    if(!world.has<jsonxx::Array>("objects")) {
+        std::cerr << "ERROR: no objects in scene\n";
+        return false;
+    }
+
+    const auto& objects = world.get<jsonxx::Array>("objects");
+
+    for(size_t i = 0; i < objects.size(); i++){
+        std::cout << objects.get<jsonxx::Object>(i) << std::endl;;
+    }
+
+    if(!world.has<jsonxx::Object>("lights")) {
+        std::cerr << "ERROR: no lights in scene\n";
+        return false;
+    }
+
+    const auto& lights = world.get<jsonxx::Object>("lights");
 
     return true;
 }
@@ -44,7 +65,7 @@ inline bool loadScene(Scene& s) {
 inline bool setupScene(Scene& s)
 {
     const int red_glass = 1, tiles = 2, reflective_blue=3;
-    loadScene(s);
+    loadScene("scene/test1.scene", s);
 
     exit(0);
 #ifdef TEA_TIME_FOR_MRS_NESBIT 
