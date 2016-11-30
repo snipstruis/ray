@@ -11,13 +11,52 @@
 #include <string>
 #include <vector>
 
+inline void handleTransform(jsonxx::Object const& o) {
+
+}
+
+inline bool handleObject(jsonxx::Object const& o) {
+    std::cout << o << std::endl;
+    if (!o.has<jsonxx::String>("kind")) {
+        std::cerr << "ERROR: object missing kind string\n";
+        return false;
+    }
+
+    const std::string& kind = o.get<jsonxx::String>("kind");
+
+    if(kind == "mesh"){
+    }
+    else if(kind == "sphere"){
+        if(!o.has<jsonxx::Number>("radius")){
+            std::cerr << "ERROR: sphere missing radius\n";
+            return false;
+        }
+        float radius = o.get<jsonxx::Number>("radius");
+        std::cerr << "sphere, radius = " << radius << std::endl;
+
+    }
+    else if(kind == "plane"){
+    }
+    else {
+        std::cerr << "ERROR: object kind " << kind << " unknown\n";
+        return false;
+    }
+    
+    // is there a transform for this obj?
+    if (!o.has<jsonxx::Object>("transform")) {
+        handleTransform(o.get<jsonxx::Object>("transform"));
+    }
+
+    return true;
+}
+
 inline bool loadScene(std::string const& filename ,Scene& s) {
     std::ifstream inFile(filename);
 
     jsonxx::Object o;
     if(!o.parse(inFile))
     {
-        std::cout << "scene file parse error\n";
+        std::cerr<< "scene file parse error\n";
         return false;
     }
 
@@ -49,7 +88,7 @@ inline bool loadScene(std::string const& filename ,Scene& s) {
     const auto& objects = world.get<jsonxx::Array>("objects");
 
     for(size_t i = 0; i < objects.size(); i++){
-        std::cout << objects.get<jsonxx::Object>(i) << std::endl;;
+        handleObject(objects.get<jsonxx::Object>(i));
     }
 
     if(!world.has<jsonxx::Object>("lights")) {
