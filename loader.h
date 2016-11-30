@@ -3,7 +3,7 @@
 #include "basics.h"
 #include "scene.h"
 
-#include "jsonxx.h"
+#include "json.hpp"
 #include "loadObject.h"
 #include "glm/vec3.hpp"
 
@@ -11,27 +11,21 @@
 #include <string>
 #include <vector>
 
-inline void handleTransform(jsonxx::Object const& o) {
+using json = nlohmann::json;
+
+
+inline void handleTransform(json const& o) {
 
 }
 
-inline bool handleObject(jsonxx::Object const& o) {
+inline bool handleObject(json const& o) {
     std::cout << o << std::endl;
-    if (!o.has<jsonxx::String>("kind")) {
-        std::cerr << "ERROR: object missing kind string\n";
-        return false;
-    }
-
-    const std::string& kind = o.get<jsonxx::String>("kind");
+    std::string kind = o["kind"];
 
     if(kind == "mesh"){
     }
     else if(kind == "sphere"){
-        if(!o.has<jsonxx::Number>("radius")){
-            std::cerr << "ERROR: sphere missing radius\n";
-            return false;
-        }
-        float radius = o.get<jsonxx::Number>("radius");
+        float radius = o["radius"];
         std::cerr << "sphere, radius = " << radius << std::endl;
 
     }
@@ -43,27 +37,25 @@ inline bool handleObject(jsonxx::Object const& o) {
     }
     
     // is there a transform for this obj?
-    if (!o.has<jsonxx::Object>("transform")) {
-        handleTransform(o.get<jsonxx::Object>("transform"));
+    if (o.find("transform") != o.end()) {
+        handleTransform(o["transform"]);
     }
 
     return true;
 }
 
-inline bool loadScene(std::string const& filename ,Scene& s) {
+inline bool loadScene(std::string const& filename, Scene& s) {
+
     std::ifstream inFile(filename);
+    json o;
+    inFile >> o;
 
-    jsonxx::Object o;
-    if(!o.parse(inFile))
-    {
-        std::cerr<< "scene file parse error\n";
-        return false;
-    }
-
+#if 0
     // load meshes
     std::map<std::string, int> t;
-    if(o.has<jsonxx::Object>("load_meshes")) {
-        const auto& meshes = o.get<jsonxx::Object>("load_meshes");
+    auto const& load_meshes = (o.find("load_meshes");
+    if(o != o.end())) {
+        const auto& meshes = *o;
         for(auto const& m: meshes.kv_map()) {
             std::string ref = m.first;
             std::string filename = m.second->get<jsonxx::String>(); 
@@ -72,31 +64,16 @@ inline bool loadScene(std::string const& filename ,Scene& s) {
     }
     else
         std::cout << "no meshes specified in scene\n";
+#endif 
 
-    if(!o.has<jsonxx::Object>("world")) {
-        std::cerr << "ERROR: no world in scene\n";
-        return false;
+    auto const& world = o["world"];
+    auto const& objects = world["objects"];
+
+    for (auto const& object : objects) {
+        handleObject(object);
     }
 
-    const auto& world = o.get<jsonxx::Object>("world");
-
-    if(!world.has<jsonxx::Array>("objects")) {
-        std::cerr << "ERROR: no objects in scene\n";
-        return false;
-    }
-
-    const auto& objects = world.get<jsonxx::Array>("objects");
-
-    for(size_t i = 0; i < objects.size(); i++){
-        handleObject(objects.get<jsonxx::Object>(i));
-    }
-
-    if(!world.has<jsonxx::Object>("lights")) {
-        std::cerr << "ERROR: no lights in scene\n";
-        return false;
-    }
-
-    const auto& lights = world.get<jsonxx::Object>("lights");
+    auto const& lights = world["lights"];
 
     return true;
 }

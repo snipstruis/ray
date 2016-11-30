@@ -47,7 +47,6 @@ include_directories(.)
 add_executable(ray 
     main.cc
     tiny_obj_loader.cc
-    jsonxx.cc
     scene.h
 )
 
