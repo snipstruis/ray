@@ -6,10 +6,23 @@ project(ray)
 find_package(OpenGL)
 ####### Compile flags
 # common flags
-set(CMAKE_CXX_FLAGS "-fopenmp -march=native -O3 --std=c++1y -Wall -Wextra -fno-rtti -fno-exceptions -Wno-unused-parameter")
 
-# explicitly turn on color diags as this doesn't work automatically under ninja 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcolor-diagnostics")
+if(NOT WIN32)
+    set(CMAKE_CXX_FLAGS "-fopenmp -march=native -O3 --std=c++1y -Wall -Wextra -fno-rtti -fno-exceptions -Wno-unused-parameter")
+
+    # explicitly turn on color diags as this doesn't work automatically under ninja 
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcolor-diagnostics")
+
+    # release only
+    set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG")
+
+    # debug only
+    set(CMAKE_CXX_FLAGS_DEBUG "-ggdb")
+
+ELSE()
+# win32 flags
+
+ENDIF()
 
 # turn this on to enable bounds checking in the stl, but it hurts perf a lot, it seems
 #add_definitions("-D_GLIBCXX_DEBUG")
@@ -20,11 +33,6 @@ if(WIN32)
     include_directories("template/lib/SDL2-2.0.3/include")
 endif()
 
-# release only
-set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG")
-
-# debug only
-set(CMAKE_CXX_FLAGS_DEBUG "-ggdb")
 
 # quieten warnings in glm - we're using radians
 add_definitions("-DGLM_FORCE_RADIANS")
