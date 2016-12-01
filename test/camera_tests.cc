@@ -2,6 +2,8 @@
 #include "utils.h"
 #include "debug_print.h"
 
+#include "test/test_utils.h"
+
 #include "glm/gtx/io.hpp"
 #include "glm/gtc/constants.hpp"
 #include "glm/gtc/epsilon.hpp"
