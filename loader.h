@@ -18,7 +18,7 @@ inline void handleTransform(json const& o) {
 
 }
 
-inline bool handleObject(json const& o) {
+inline void handleObject(json const& o) {
     std::cout << o << std::endl;
     std::string kind = o["kind"];
 
@@ -33,15 +33,17 @@ inline bool handleObject(json const& o) {
     }
     else {
         std::cerr << "ERROR: object kind " << kind << " unknown\n";
-        return false;
     }
     
     // is there a transform for this obj?
     if (o.find("transform") != o.end()) {
         handleTransform(o["transform"]);
     }
+}
 
-    return true;
+inline void handleLight(json const& l) {
+    std::cout << l << std::endl;
+
 }
 
 inline bool loadScene(std::string const& filename, Scene& s) {
@@ -74,6 +76,9 @@ inline bool loadScene(std::string const& filename, Scene& s) {
     }
 
     auto const& lights = world["lights"];
+    for (auto const& light: lights) {
+        handleLight(light);
+    }
 
     return true;
 }
