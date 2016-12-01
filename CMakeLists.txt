@@ -49,5 +49,7 @@ target_link_libraries(ray SDL2 ${OPENGL_gl_LIBRARY})
 add_custom_target(run-ray ray DEPENDS ray WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} USES_TERMINAL)
 
 # recurse into test
-add_subdirectory(test)
+if(NOT WIN32)
+    add_subdirectory(test)
+endif()
 
