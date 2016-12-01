@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.5)
 
 project(ray)
 
+find_package(OpenGL)
 ####### Compile flags
 # common flags
 set(CMAKE_CXX_FLAGS "-fopenmp -march=native -O3 --std=c++1y -Wall -Wextra -fno-rtti -fno-exceptions -Wno-unused-parameter")
@@ -24,20 +25,6 @@ set(CMAKE_CXX_FLAGS_DEBUG "-ggdb")
 # quieten warnings in glm - we're using radians
 add_definitions("-DGLM_FORCE_RADIANS")
 
-###### Platform specifics
-if(UNIX)
-    if(APPLE)
-    	FIND_LIBRARY(OpenGL_LIBRARY OpenGL)
-    else()
-	# assume this means linux for now (sorry *bsd)
-    	FIND_LIBRARY(OpenGL_LIBRARY GL)
-    endif()
-elseif(WIN32)
-    MESSAGE(FATAL_ERROR "windows not handled yet")
-else()
-    MESSAGE(FATAL_ERROR "unknown OS")
-endif()
-
 MESSAGE(STATUS "Using OpenGL lib ${OpenGL_LIBRARY}")
 
 # add the root directory of the project as an include dir
@@ -51,7 +38,7 @@ add_executable(ray
 )
 
 # linking
-target_link_libraries(ray SDL2 ${OpenGL_LIBRARY})
+target_link_libraries(ray SDL2 ${OPENGL_gl_LIBRARY})
 
 # create a target to auto load the raytracer 
 # note that it will start this with the wd set to source, so it can find any test objects
