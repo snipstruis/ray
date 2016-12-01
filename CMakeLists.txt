@@ -4,8 +4,13 @@ cmake_minimum_required(VERSION 3.5)
 project(ray)
 
 find_package(OpenGL)
+
 ####### Compile flags
 # common flags
+
+message("SDL include dir ${SDL_INCLUDE_DIR}")
+message("SDL lib ${SDL_LIBRARY}")
+message("SDL found ${SDL_FOUND}")
 
 if(NOT WIN32)
     set(CMAKE_CXX_FLAGS "-fopenmp -march=native -O3 --std=c++1y -Wall -Wextra -fno-rtti -fno-exceptions -Wno-unused-parameter")
@@ -31,6 +36,7 @@ ENDIF()
 
 if(WIN32)
     include_directories("template/lib/SDL2-2.0.3/include")
+    link_directories("template/lib/SDL2-2.0.3/lib/x64")
 endif()
 
 
