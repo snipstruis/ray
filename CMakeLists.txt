@@ -36,7 +36,7 @@ ENDIF()
 
 if(WIN32)
     include_directories("template/lib/SDL2-2.0.3/include")
-    link_directories("template/lib/SDL2-2.0.3/lib/x64")
+    link_directories("template/lib/SDL2-2.0.3/lib/x86")
 endif()
 
 
