@@ -56,7 +56,7 @@ add_executable(ray
 )
 
 # linking
-target_link_libraries(ray SDL2 ${OPENGL_gl_LIBRARY})
+target_link_libraries(ray SDL2 SDL2main ${OPENGL_gl_LIBRARY})
 
 # create a target to auto load the raytracer 
 # note that it will start this with the wd set to source, so it can find any test objects
