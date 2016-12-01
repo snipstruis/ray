@@ -8,6 +8,7 @@
 #define GL_GLEXT_PROTOTYPES
 #include <SDL.h>
 #include <SDL_opengl.h>
+#undef main
 
 #include <cmath>
 #include <chrono>
