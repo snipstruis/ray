@@ -16,6 +16,10 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcolor-diagnostics")
 
 #add_definitions("-DTEA_TIME_FOR_MRS_NESBIT")
 
+if(WIN32)
+    include_directories("template/lib/SDL2-2.0.3/include")
+endif()
+
 # release only
 set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG")
 
