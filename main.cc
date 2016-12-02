@@ -74,13 +74,13 @@ bool handleEvents(Scene& s, Mode *vis)
     Uint8 const * kbd = SDL_GetKeyboardState(NULL);
 
     if(kbd[SDL_SCANCODE_S])
-        s.camera.moveForward(-0.2);
+        s.camera.moveForward(-0.2f);
     if(kbd[SDL_SCANCODE_W]) 
-        s.camera.moveForward(0.2);
+        s.camera.moveForward(0.2f);
     if(kbd[SDL_SCANCODE_A])
-        s.camera.moveRight(-0.2);
+        s.camera.moveRight(-0.2f);
     if(kbd[SDL_SCANCODE_D])
-        s.camera.moveRight(0.2);
+        s.camera.moveRight(0.2f);
     
     return false;
 }
@@ -146,7 +146,7 @@ int main(int argc, char* argv[]){
             std::cout << "long render - frametime=" << frametime/1000.0f << "s" << std::endl;
 
         static float avg = frametime;
-        avg = 0.95*avg + 0.05*frametime;
+        avg = 0.95f*avg + 0.05f*frametime;
 
         setWindowTitle(s, win, avg);
         SDL_GL_SwapWindow(win);
