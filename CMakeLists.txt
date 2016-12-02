@@ -35,7 +35,7 @@ ENDIF()
 #add_definitions("-DTEA_TIME_FOR_MRS_NESBIT")
 
 if(WIN32)
-    include_directories("lib/winOnly/SDL2-2.0.3/SDL2")
+    include_directories("lib/winOnly/SDL2-2.0.3")
     link_directories("lib/winOnly/SDL2-2.0.3/lib/x86")
 endif()
 
