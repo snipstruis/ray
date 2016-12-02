@@ -64,19 +64,19 @@ inline bool setupScene(Scene& s)
 #endif
 
     // AIR
-    s.primitives.materials.emplace_back(Color(0.f,0.f,0.f),
+    s.primitives.materials.emplace_back(Color(0.f, 0.f,0.f),
                                         0.0f, 0.0f, 1.0f,
                                         1.0f);
     // RED GLASS
-    s.primitives.materials.emplace_back(Color(0.2,0.8,0.8),
+    s.primitives.materials.emplace_back(Color(0.2f, 0.8f, 0.8f),
                                         0.0f, 0.0f, 1.0f,
                                         1.5f);
     // WHITE/REFLECTIVE BLUE CHECKERED
-    s.primitives.materials.emplace_back(Color(0.6,0.6,0.6),
+    s.primitives.materials.emplace_back(Color(0.6f, 0.6f, 0.6f),
                                         1.0f, 0.0f, 0.0f,
                                         1.f, reflective_blue);
     // REFLECTIVE BLUE
-    s.primitives.materials.emplace_back(Color(0.2,0.6,0.9),
+    s.primitives.materials.emplace_back(Color(0.2f, 0.6f, 0.9f),
                                         0.8f, 0.2f, 0.0f,
                                         1.f);
 

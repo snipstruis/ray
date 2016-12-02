@@ -43,14 +43,14 @@ Color trace(Ray const& ray,
     Material mat = primitives.materials[hit.mat];
     Material raymat = primitives.materials[ray.mat];
     if(mat.checkered >= 0){
-        int x = hit.impact.x-1e-6f;
-        int y = hit.impact.y-1e-6f;
-        int z = hit.impact.z-1e-6f;
+        int x = (int)(hit.impact.x - EPSILON);
+        int y = (int)(hit.impact.y - EPSILON);
+        int z = (int)(hit.impact.z - EPSILON);
         if((x&1)^(y&1)^(z&1)) 
             mat = primitives.materials[mat.checkered];
     }
-
-    Color color = Color(0,0,0);
+	
+    Color color = Color(0, 0, 0);
 
     // shadows and lighting
     if(mat.diffuseness > 0.f){
