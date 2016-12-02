@@ -8,10 +8,6 @@ find_package(OpenGL)
 ####### Compile flags
 # common flags
 
-message("SDL include dir ${SDL_INCLUDE_DIR}")
-message("SDL lib ${SDL_LIBRARY}")
-message("SDL found ${SDL_FOUND}")
-
 if(NOT WIN32)
     set(CMAKE_CXX_FLAGS "-fopenmp -march=native -O3 --std=c++1y -Wall -Wextra -fno-rtti -fno-exceptions -Wno-unused-parameter")
 
@@ -39,12 +35,13 @@ if(WIN32)
     link_directories("lib/winOnly/SDL2-2.0.3/lib/x86")
 endif()
 
+# make the library dir a root include path
 include_directories("lib")
 
 # quieten warnings in glm - we're using radians
 add_definitions("-DGLM_FORCE_RADIANS")
 
-MESSAGE(STATUS "Using OpenGL lib ${OpenGL_LIBRARY}")
+MESSAGE(STATUS "Using OpenGL lib ${OPENGL_gl_LIBRARY}")
 
 # add the root directory of the project as an include dir
 include_directories(.)
