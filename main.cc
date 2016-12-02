@@ -93,7 +93,7 @@ int main(){
         return -1;
     }
 
-    SDL_Window *win = SDL_CreateWindow("Roaytroayzah (initialising)", 0, 0, 640, 640, 
+    SDL_Window *win = SDL_CreateWindow("Roaytroayzah (initialising)", 100, 100, 640, 640, 
                                        SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
     SDL_GL_CreateContext(win);
 

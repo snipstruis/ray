@@ -35,10 +35,11 @@ ENDIF()
 #add_definitions("-DTEA_TIME_FOR_MRS_NESBIT")
 
 if(WIN32)
-    include_directories("template/lib/SDL2-2.0.3/include")
-    link_directories("template/lib/SDL2-2.0.3/lib/x86")
+    include_directories("lib/winOnly/SDL2-2.0.3/SDL2")
+    link_directories("lib/winOnly/SDL2-2.0.3/lib/x86")
 endif()
 
+include_directories("lib")
 
 # quieten warnings in glm - we're using radians
 add_definitions("-DGLM_FORCE_RADIANS")
