@@ -88,7 +88,7 @@ bool handleEvents(Scene& s, Mode *vis)
 void handleCmdLine(int argc, char* argv[]){
     namespace po = boost::program_options;
 
-    po::options_description desc("Allowed options");
+    //po::options_description desc("Allowed options");
 
 }
 
