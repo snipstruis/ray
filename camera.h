@@ -10,8 +10,6 @@
 #include "glm/gtx/rotate_vector.hpp"
 #include "glm/gtx/vector_query.hpp"
 
-#include "test/test_utils.h"
-
 #include <algorithm>
 #include <cassert>
 #include <cmath>

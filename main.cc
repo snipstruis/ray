@@ -8,6 +8,7 @@
 #define GL_GLEXT_PROTOTYPES
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
+#undef main
 
 #include <cmath>
 #include <chrono>
@@ -101,7 +102,7 @@ int main(int argc, char* argv[]){
         return -1;
     }
 
-    SDL_Window *win = SDL_CreateWindow("Roaytroayzah (initialising)", 0, 0, 640, 640, 
+    SDL_Window *win = SDL_CreateWindow("Roaytroayzah (initialising)", 100, 100, 640, 640, 
                                        SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
     SDL_GL_CreateContext(win);
 
