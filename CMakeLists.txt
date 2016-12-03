@@ -28,7 +28,7 @@ ELSE()
 ENDIF()
 
 # turn this on to enable bounds checking in the stl, but it hurts perf a lot, it seems
-add_definitions("-D_GLIBCXX_DEBUG")
+#add_definitions("-D_GLIBCXX_DEBUG")
 
 #add_definitions("-DTEA_TIME_FOR_MRS_NESBIT")
 

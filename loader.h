@@ -6,6 +6,8 @@
 #include "json.hpp"
 #include "loadObject.h"
 #include "glm/vec3.hpp"
+#include "glm/mat4x4.hpp"
+#include "glm/gtx/io.hpp"
 
 #include <fstream>
 #include <string>
@@ -13,14 +15,46 @@
 
 using json = nlohmann::json;
 
+inline glm::vec3 readXYZ(json const& o) {
+    glm::vec3 result;
+    result[0] = o["x"];
+    result[1] = o["y"];
+    result[2] = o["z"];
+    return result;
+}
 
-inline void handleTransform(json const& o) {
+inline glm::mat4 handleTransform(json const& o) {
+    glm::mat4 result; // is initialised to identity
 
+    if(o.find("translate") != o.end()){
+        auto const& translate = readXYZ(o["translate"]);
+        std::cout << "GOT TRANS " << translate << std::endl;
+        result = glm::translate(result, translate);
+    }
+
+    if(o.find("rotate") != o.end()){
+        auto const& rotate = readXYZ(o["rotate"]);
+        std::cout << "GOT ROTATE" << rotate << std::endl;
+    }
+
+    if(o.find("scale") != o.end()){
+        auto const& scale = readXYZ(o["scale"]);
+        std::cout << "GOT SCALE " << scale << std::endl;
+    }
+
+    return result;
 }
 
 inline void handleObject(Scene& s, json const& o) {
     std::cout << o << std::endl;
     std::string kind = o["kind"];
+
+    glm::mat4x4 transform; // initialised to identity
+    // is there a transform for this obj?
+    if (o.find("transform") != o.end()) {
+        transform = handleTransform(o["transform"]);
+        std::cout << "got transform " << transform << std::endl;
+    }
 
     if(kind == "mesh"){
 
@@ -29,7 +63,12 @@ inline void handleObject(Scene& s, json const& o) {
         float radius = o["radius"];
         std::cerr << "sphere, radius = " << radius << std::endl;
 
-        s.primitives.spheres.emplace_back(Sphere(glm::vec3(0, 0, 0), 1, radius));
+        glm::vec4 starting(0, 0, 0, 1);
+        glm::vec4 transformed = transform * starting;
+        std::cout << "transformed " << transformed <<std::endl;
+        glm::vec3 centre(transformed[0], transformed[1], transformed[2]);
+
+    s.primitives.spheres.emplace_back(Sphere(centre, 3, radius));
 
     }
     else if(kind == "plane"){
@@ -39,10 +78,6 @@ inline void handleObject(Scene& s, json const& o) {
         std::cerr << "ERROR: object kind " << kind << " unknown\n";
     }
     
-    // is there a transform for this obj?
-    if (o.find("transform") != o.end()) {
-        handleTransform(o["transform"]);
-    }
 }
 
 inline void handleLight(json const& l) {
@@ -90,7 +125,13 @@ inline bool loadScene(std::string const& filename, Scene& s) {
 inline bool setupScene(Scene& s)
 {
     const int red_glass = 1, tiles = 2, reflective_blue=3;
-    loadScene("scene/test1.scene", s);
+
+    try{
+        loadScene("scene/test1.scene", s);
+    } catch (std::exception const& e) {
+        std::cerr << "exception loading scene - " << e.what() << std::endl;
+        return false;
+    }
 
 #ifdef TEA_TIME_FOR_MRS_NESBIT 
     std::string filename = "obj/wt_teapot.obj";
