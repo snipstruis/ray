@@ -7,12 +7,17 @@
 
 struct Sphere  {
     Sphere(glm::vec3 p, int m, float r):pos(p), mat(m), radius(r){};
-    glm::vec3 pos; int mat; float radius;
+
+    glm::vec3 pos; 
+    int mat; 
+    float radius;
 };
  
 struct Plane {
     Plane(glm::vec3 p, int m, glm::vec3 n):pos(p), mat(m), normal(n){};
-    glm::vec3 pos; int mat; glm::vec3 normal;
+    glm::vec3 pos; 
+    int mat; 
+    glm::vec3 normal;
 };
 
 struct Triangle{
@@ -23,6 +28,7 @@ struct Triangle{
                       (a.z+b.z+c.z)/3.f);
         normal = glm::normalize(glm::cross(b-a,c-a));
     }
+
     glm::vec3 normal;
     glm::vec3 pos; 
     int mat; 
@@ -46,12 +52,17 @@ float moller_trumbore( const glm::vec3   v1,  // Triangle vertices
     //Find vectors for two edges sharing V1
     glm::vec3 e1 = v2 - v1;
     glm::vec3 e2 = v3 - v1;
+
     //Begin calculating determinant - also used to calculate u parameter
     glm::vec3 p = glm::cross(d, e2);
-    //if determinant is near zero, ray lies in plane of triangle or ray is parallel to plane of triangle
+
+    // if determinant is near zero, ray lies in plane of triangle or ray is parallel 
+    // to plane of triangle
     float det = glm::dot(e1, p);
+
     //NOT CULLING
     if(det > -EPSILON && det < EPSILON) return INFINITY;
+
     float inv_det = 1.f / det;
 
     //calculate distance from V1 to ray origin
@@ -67,6 +78,7 @@ float moller_trumbore( const glm::vec3   v1,  // Triangle vertices
 
     //Calculate V parameter and test bound
     float v = glm::dot(d, q) * inv_det;
+
     //The intersection lies outside of the triangle
     if(v < 0.f || u + v  > 1.f) return INFINITY;
 

@@ -85,15 +85,8 @@ bool handleEvents(Scene& s, Mode *vis)
     return false;
 }
 
-void handleCmdLine(int argc, char* argv[]){
-    namespace po = boost::program_options;
-
-    //po::options_description desc("Allowed options");
-
-}
 
 int main(int argc, char* argv[]){
-    handleCmdLine(argc, argv);
     // setup scene first, so we can bail on error without flashing a window briefly (errors are stdout 
     // for now - maybe should be a dialog box in future).
     Scene s;

@@ -18,7 +18,7 @@ inline void handleTransform(json const& o) {
 
 }
 
-inline void handleObject(json const& o) {
+inline void handleObject(Scene& s, json const& o) {
     std::cout << o << std::endl;
     std::string kind = o["kind"];
 
@@ -27,6 +27,8 @@ inline void handleObject(json const& o) {
     else if(kind == "sphere"){
         float radius = o["radius"];
         std::cerr << "sphere, radius = " << radius << std::endl;
+
+        s.primitives.spheres.emplace_back(Sphere(glm::vec3(0, 0, 0), 1, radius));
 
     }
     else if(kind == "plane"){
@@ -72,7 +74,7 @@ inline bool loadScene(std::string const& filename, Scene& s) {
     auto const& objects = world["objects"];
 
     for (auto const& object : objects) {
-        handleObject(object);
+        handleObject(s, object);
     }
 
     auto const& lights = world["lights"];
@@ -87,8 +89,8 @@ inline bool setupScene(Scene& s)
 {
     const int red_glass = 1, tiles = 2, reflective_blue=3;
     loadScene("scene/test1.scene", s);
+    return true;
 
-    exit(0);
 #ifdef TEA_TIME_FOR_MRS_NESBIT 
     std::string filename = "obj/wt_teapot.obj";
     if(!loadObject(s, filename, reflective_blue)) // reflective_blue = pretty :)
