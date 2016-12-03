@@ -40,7 +40,9 @@ Color trace(Ray const& ray,
     Intersection hit = findClosestIntersection(primitives,ray);
     if(hit.distance==INFINITY) return alpha;
 
+    assert(hit.mat < primatives.materials.size());
     Material mat = primitives.materials[hit.mat];
+
     Material raymat = primitives.materials[ray.mat];
     if(mat.checkered >= 0){
         int x = (int)(hit.impact.x - EPSILON);
