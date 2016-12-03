@@ -2,6 +2,7 @@
 
 #include "glm/vec3.hpp"
 
+#include "camera.h"
 #include "basics.h"
 #include "primitive.h"
 
@@ -14,12 +15,14 @@ struct PointLight{
     Color color;
 };
 
-#include "camera.h"
+struct Lights {
+    std::vector<PointLight> pointLights;
+};
 
 struct Scene{
     Camera camera;
     Primitives primitives;
-    std::vector<PointLight> lights;
+    Lights lights;
 };
 
 

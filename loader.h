@@ -157,9 +157,9 @@ inline bool setupScene(Scene& s)
                                         1.f);
 
 
-    s.lights.emplace_back(glm::vec3(3,3,10), Color(10,10,10));
-    s.lights.emplace_back(glm::vec3(-4,2,8), Color(10,10,10));
-    s.lights.emplace_back(glm::vec3(2,4,15), Color(10,10,10));
+    s.lights.pointLights.emplace_back(glm::vec3(3,3,10), Color(10,10,10));
+    s.lights.pointLights.emplace_back(glm::vec3(-4,2,8), Color(10,10,10));
+    s.lights.pointLights.emplace_back(glm::vec3(2,4,15), Color(10,10,10));
 
     s.primitives.planes.emplace_back(glm::vec3(0,-1,0),  tiles, glm::vec3(0,1,0));
 

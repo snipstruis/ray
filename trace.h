@@ -11,12 +11,12 @@
 
 Color diffuse(Ray const& ray,
               Primitives const& primitives,
-              std::vector<PointLight> const& lights,
+              Lights const& lights,
               Intersection const& hit,
               Material const& mat){
     Color color = Color(0,0,0);
 
-    for(PointLight const& light: lights){
+    for(PointLight const& light: lights.pointLights){
         glm::vec3 impact_to_light = light.pos - hit.impact;
         float light_distance = glm::length(impact_to_light);
         glm::vec3 light_direction = glm::normalize(impact_to_light);
@@ -37,11 +37,12 @@ Color diffuse(Ray const& ray,
 
 Color trace(Ray const& ray,
             Primitives const& primitives,
-            std::vector<PointLight> const& lights,
+            Lights const& lights,
             Color const& alpha){
+
     if(ray.ttl<=0) return alpha;
 
-    Intersection hit = findClosestIntersection(primitives,ray);
+    Intersection hit = findClosestIntersection(primitives, ray);
     if(hit.distance==INFINITY) return alpha;
 
     Material mat = primitives.materials[hit.mat];
@@ -126,7 +127,7 @@ inline void renderFrame(Scene& s, std::vector<Color>& screenBuffer, Mode mode){
             for (int x = 0; x < width; x++) {
                 Ray r = s.camera.makeRay(x, y);
                 int idx = (height-y-1) * width+ x;
-                screenBuffer[idx] = trace(r,s.primitives,s.lights,Color(0,0,0));
+                screenBuffer[idx] = trace(r, s.primitives, s.lights, Color(0,0,0));
             }
         }
         break;
