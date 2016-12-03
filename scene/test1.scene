@@ -16,7 +16,7 @@
             },
             {
                 "kind" : "sphere",
-                "radius" : 2,
+                "radius" : 0.5,
                 "transform" : {
                     "translate" : { "x" : -3, "y" : 0, "z" : 3}
                 }

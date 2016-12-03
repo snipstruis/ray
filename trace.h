@@ -1,9 +1,12 @@
 #pragma once
+
 #include "utils.h"
 #include "basics.h"
 #include "primitive.h"
 #include "scene.h"
+
 #include <cmath>
+#include <chrono>
 #include <vector>
 
 Color diffuse(Ray const& ray,
@@ -12,12 +15,13 @@ Color diffuse(Ray const& ray,
               Intersection const& hit,
               Material const& mat){
     Color color = Color(0,0,0);
+
     for(PointLight const& light: lights){
         glm::vec3 impact_to_light = light.pos - hit.impact;
         float light_distance = glm::length(impact_to_light);
         glm::vec3 light_direction = glm::normalize(impact_to_light);
 
-        Ray shadow_ray = Ray(hit.impact+(hit.normal*1e-4f), 
+        Ray shadow_ray = Ray(hit.impact + (hit.normal*1e-4f), 
                 light_direction, ray.mat, ray.ttl-1);
 
         Intersection shadow_hit = findClosestIntersection(primitives, shadow_ray);
@@ -40,7 +44,6 @@ Color trace(Ray const& ray,
     Intersection hit = findClosestIntersection(primitives,ray);
     if(hit.distance==INFINITY) return alpha;
 
-    assert(hit.mat < primatives.materials.size());
     Material mat = primitives.materials[hit.mat];
 
     Material raymat = primitives.materials[ray.mat];
@@ -61,7 +64,8 @@ Color trace(Ray const& ray,
 
     // angle-depenent transparancy (for dielectric materials)
     float reflectiveness = mat.reflectiveness;
-    float transparency   = mat.transparency;
+    float transparency = mat.transparency;
+
     if(mat.transparency > 0.f){
         float n1 = raymat.refraction_index;
         float n2 = mat.refraction_index;
@@ -103,7 +107,6 @@ Color trace(Ray const& ray,
     return color;
 }
 
-#include<chrono>
 
 enum class Mode {
     Default,

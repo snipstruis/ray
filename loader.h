@@ -23,6 +23,7 @@ inline void handleObject(Scene& s, json const& o) {
     std::string kind = o["kind"];
 
     if(kind == "mesh"){
+
     }
     else if(kind == "sphere"){
         float radius = o["radius"];
@@ -32,6 +33,7 @@ inline void handleObject(Scene& s, json const& o) {
 
     }
     else if(kind == "plane"){
+
     }
     else {
         std::cerr << "ERROR: object kind " << kind << " unknown\n";
@@ -89,7 +91,6 @@ inline bool setupScene(Scene& s)
 {
     const int red_glass = 1, tiles = 2, reflective_blue=3;
     loadScene("scene/test1.scene", s);
-    return true;
 
 #ifdef TEA_TIME_FOR_MRS_NESBIT 
     std::string filename = "obj/wt_teapot.obj";
@@ -115,15 +116,19 @@ inline bool setupScene(Scene& s)
                                         1.f);
 
 
-    s.primitives.spheres.emplace_back(glm::vec3(0,1,10), red_glass, 1.9f);
+    s.lights.emplace_back(glm::vec3(3,3,10), Color(10,10,10));
+    s.lights.emplace_back(glm::vec3(-4,2,8), Color(10,10,10));
+    s.lights.emplace_back(glm::vec3(2,4,15), Color(10,10,10));
+
     s.primitives.planes.emplace_back(glm::vec3(0,-1,0),  tiles, glm::vec3(0,1,0));
+
+    return true;
+
+    s.primitives.spheres.emplace_back(glm::vec3(0,1,10), red_glass, 1.9f);
     s.primitives.triangles.emplace_back(glm::vec3(1,0,24), 
                                         glm::vec3(-1,0,24), 
                                         glm::vec3(0,2,24), reflective_blue);
 
-    s.lights.emplace_back(glm::vec3(3,3,10), Color(10,10,10));
-    s.lights.emplace_back(glm::vec3(-4,2,8), Color(10,10,10));
-    s.lights.emplace_back(glm::vec3(2,4,15), Color(10,10,10));
 
     return true;
 }

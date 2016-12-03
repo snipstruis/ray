@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.5)
 
 project(ray)
 
+message(STATUS "build type ${CMAKE_BUILD_TYPE}")
+
 find_package(OpenGL)
 
 ####### Compile flags

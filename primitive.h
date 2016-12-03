@@ -15,6 +15,7 @@ struct Sphere  {
  
 struct Plane {
     Plane(glm::vec3 p, int m, glm::vec3 n):pos(p), mat(m), normal(n){};
+
     glm::vec3 pos; 
     int mat; 
     glm::vec3 normal;
@@ -70,6 +71,7 @@ float moller_trumbore( const glm::vec3   v1,  // Triangle vertices
 
     //Calculate u parameter and test bound
     float u = glm::dot(t, p) * inv_det;
+
     //The intersection lies outside of the triangle
     if(u < 0.f || u > 1.f) return INFINITY;
 
@@ -106,8 +108,11 @@ struct Intersection{
 
 Intersection intersect(Triangle const& t, Ray const& ray){
     float dist = moller_trumbore(t.v[0], t.v[1], t.v[2], ray.origin, ray.direction);
-    if(dist==INFINITY) return Intersection(INFINITY);
-    else{
+
+    if(dist==INFINITY) {
+        return Intersection(INFINITY);
+    }
+    else {
         bool internal = glm::dot(ray.direction,t.normal)>0;
         glm::vec3 normal = internal? -t.normal : t.normal;
         return Intersection(dist, ray.origin + ray.direction * dist, t.mat, normal, internal);
@@ -115,15 +120,14 @@ Intersection intersect(Triangle const& t, Ray const& ray){
 }
 
 Intersection intersect(Plane const& p, Ray const& ray){
-    glm::vec3 pos  = p.pos;
+    glm::vec3 pos = p.pos;
     bool internal = glm::dot(ray.direction, p.normal)>0;
-    glm::vec3 norm =  internal? -p.normal : p.normal;
+    glm::vec3 norm = internal ? -p.normal : p.normal;
     float denom = glm::dot(-norm,ray.direction);
-    if(denom> 1e-6f){
+    if(denom > EPSILON){
         float dist = glm::dot(pos-ray.origin, -norm)/denom;
-        if(dist>0.f){
-            return Intersection(dist,ray.origin + ray.direction * dist, 
-                                p.mat, norm, internal);
+        if(dist > 0.f){
+            return Intersection(dist,ray.origin + ray.direction * dist, p.mat, norm, internal);
         }
     }
     return Intersection(INFINITY);
@@ -131,11 +135,14 @@ Intersection intersect(Plane const& p, Ray const& ray){
 
 Intersection intersect(Sphere const& s, Ray const& ray){
     glm::vec3 c = s.pos - ray.origin;
-    float t = glm::dot( c, ray.direction);
+    float t = glm::dot(c, ray.direction);
     glm::vec3 q = c - t * ray.direction;
+
     float p2 = glm::dot( q, q ); 
     float r2 = s.radius*s.radius;
+
     if (p2 > r2) return Intersection(INFINITY);
+
     float t0 = t + sqrt( r2 - p2 );
     float t1 = t - sqrt( r2 - p2 );
 
@@ -151,26 +158,26 @@ Intersection intersect(Sphere const& s, Ray const& ray){
 
     glm::vec3 impact = ray.origin + ray.direction * t;
     glm::vec3 norm = glm::normalize(impact-s.pos);
-    return Intersection(t,impact,s.mat,internal?-norm:norm,internal);
+    return Intersection(t, impact, s.mat, internal ? -norm : norm, internal);
 }
 
 Intersection findClosestIntersection(Primitives const& primitives, Ray const& ray){
     Intersection hit = Intersection(INFINITY);
     for(auto const& s: primitives.spheres){
         auto check = intersect(s,ray);
-        if(check.distance<hit.distance && check.distance>0){
+        if(check.distance < hit.distance && check.distance > 0){
             hit = check;
         }
     }
     for(auto const& p: primitives.planes){
         auto check = intersect(p,ray);
-        if(check.distance<hit.distance && check.distance>0){
+        if(check.distance < hit.distance && check.distance > 0){
             hit = check;
         }
     }
     for(auto const& t: primitives.triangles){
         auto check = intersect(t,ray);
-        if(check.distance<hit.distance && check.distance>0){
+        if(check.distance < hit.distance && check.distance > 0){
             hit = check;
         }
     }
