@@ -1,0 +1,48 @@
+{
+    "load_meshes" : {
+        "teapot" : "obj/wt_teapot.obj",
+        "plane" : "obj/plane.obj"
+    },
+    "world" : {
+        "objects" : [
+            {
+                "kind" : "mesh",
+                "ref" : "teapot",
+                "transform" : {
+                    "translate" : { "x" : 2, "y" : 0, "z" : 3},
+                    "rotate" : { "x" : 90, "y" : 45 , "z" : 0},
+                    "scale" : { "x" : 90, "y" : 45 , "z" : 0}
+                }
+            },
+            {
+                "kind" : "sphere",
+                "radius" : 0.5,
+                "transform" : {
+                    "translate" : { "x" : -3, "y" : 0, "z" : 3}
+                }
+            },
+            {
+                "kind" : "sphere",
+                "radius" : 2,
+                "transform" : {
+                    "translate" : { "x" : -0, "y" : 0, "z" : 8}
+                }
+            }
+        ],
+        "lights" : [
+            {
+                "kind" : "point",
+                "intensity" : 0.5,
+                "color" : {"red" : 0.8, "green" : 0.7, "blue" : 0.6 },
+                "translate" : { "x" : -3, "y" : 10, "z" : 3}
+            }
+        ]
+        
+    },
+    "camera" : {
+        "eye_point" : { "x" : -1, "y" : -1, "z" : -1},
+        "eye_angle" : { "yaw" : -30, "pitch" : 30, "roll" : 0},
+        "fov" : 90
+    }
+}
+
