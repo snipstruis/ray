@@ -9,14 +9,23 @@
 #include <chrono>
 #include <vector>
 
-Color diffuse(Ray const& ray,
+inline Color calcLightColor(PointLight const& light, 
+                     float distance, 
+                     Ray const& ray, 
+                     Intersection const& hit, 
+                     Material const& mat) {
+    return mat.color * light.color * (1.f/distance) * glm::dot(-hit.normal, ray.direction);
+}
+
+template <class LightsType>
+inline Color diffuse(Ray const& ray,
               Primitives const& primitives,
-              Lights const& lights,
+              LightsType const& lights,
               Intersection const& hit,
               Material const& mat){
     Color color = Color(0,0,0);
 
-    for(PointLight const& light: lights.pointLights){
+    for(auto const& light : lights){
         glm::vec3 impact_to_light = light.pos - hit.impact;
         float light_distance = glm::length(impact_to_light);
         glm::vec3 light_direction = glm::normalize(impact_to_light);
@@ -27,11 +36,19 @@ Color diffuse(Ray const& ray,
         bool shadow_hit = findAnyIntersection(primitives, shadow_ray);
 
         if(!shadow_hit){
-            color += mat.color 
-                   * light.color * (1.f/light_distance)
-                   * glm::dot(-hit.normal, ray.direction);
+            color += calcLightColor(light, light_distance, ray, hit, mat);
         }
     }
+    return color;
+}
+
+inline Color calcTotalDiffuse(Ray const& ray,
+              Primitives const& primitives,
+              Lights const& lights,
+              Intersection const& hit,
+              Material const& mat){
+    Color color = Color(0,0,0);
+    color += diffuse(ray, primitives, lights.pointLights, hit, mat);
     return color;
 }
 
@@ -60,7 +77,7 @@ Color trace(Ray const& ray,
 
     // shadows and lighting
     if(mat.diffuseness > 0.f){
-        color += mat.diffuseness * diffuse(ray,primitives,lights,hit,mat);
+        color += mat.diffuseness * calcTotalDiffuse(ray,primitives, lights, hit, mat);
     }
 
     // angle-depenent transparancy (for dielectric materials)
