@@ -84,8 +84,9 @@ void handleObject(Scene& s, json const& o) {
     
 }
 
-void handleLight(json const& l) {
+void handleLight(Scene& s, json const& l) {
     std::cout << "LIGHT" << l << std::endl;
+
 
 }
 
@@ -131,7 +132,7 @@ bool setupScene(Scene& s)
     const int red_glass = 1, tiles = 2, reflective_blue=3;
 
     try{
-        loadScene("scene/test1.scene", s);
+        loadScene("scene/classic.scene", s);
     } catch (std::exception const& e) {
         std::cerr << "exception loading scene - " << e.what() << std::endl;
         return false;
@@ -161,6 +162,7 @@ bool setupScene(Scene& s)
                                         1.f);
 
 
+    return true;
     s.lights.pointLights.emplace_back(glm::vec3(3,3,10), Color(10,10,10));
     s.lights.pointLights.emplace_back(glm::vec3(-4,12,8), Color(10,10,10));
     s.lights.pointLights.emplace_back(glm::vec3(2,4,15), Color(10,10,10));
