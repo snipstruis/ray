@@ -10,7 +10,7 @@
 #include <vector>
 
 // calculate point light colour output
-inline Color calcLightColor(PointLight const& light, 
+inline Color calcLightOutput(PointLight const& light, 
                      float distance, 
                      Ray const& ray, 
                      Intersection const& hit, 
@@ -20,14 +20,14 @@ inline Color calcLightColor(PointLight const& light,
 }
 
 // calculate spot light colour output
-inline Color calcLightColor(SpotLight const& light, 
+inline Color calcLightOutput(SpotLight const& light, 
                      float distance, 
                      Ray const& ray, 
                      Intersection const& hit, 
                      Material const& mat) {
 
-    float ratio = glm::dot(-hit.normal, ray.direction);
-    return mat.color * light.color * (1.f/distance) * ratio;
+    // unimplemented - return black for now
+    return Color(0,0,0);
 }
 
 template <class LightsType>
@@ -49,7 +49,7 @@ inline Color diffuse(Ray const& ray,
         bool shadow_hit = findAnyIntersection(primitives, shadow_ray);
 
         if(!shadow_hit){
-            color += calcLightColor(light, light_distance, ray, hit, mat);
+            color += calcLightOutput(light, light_distance, ray, hit, mat);
         }
     }
     return color;

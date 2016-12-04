@@ -280,8 +280,10 @@ bool setupScene(Scene& s, std::string const& filename)
                                         1.f, reflective_blue);
     // REFLECTIVE BLUE
     s.primitives.materials.emplace_back(Color(0.2f, 0.6f, 0.9f),
-                                        0.8f, 0.2f, 0.0f,
-                                        1.f);
+                                        0.8f, // diffuse 
+                                        0.0f, // reflective
+                                        0.0f, // transparency
+                                        1.f); // refractive index
     return true;
 }
 

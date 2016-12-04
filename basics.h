@@ -50,8 +50,11 @@ struct Material{
              float d, float r, float t, 
              float ri=1.f, int check=-1)
         : color(c),
-        diffuseness(d), reflectiveness(r), transparency(t),
-        refraction_index(ri),checkered(check){};
+        diffuseness(d), 
+        reflectiveness(r), 
+        transparency(t),
+        refraction_index(ri),
+        checkered(check){};
 
     Color color;
     float diffuseness;
