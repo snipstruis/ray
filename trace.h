@@ -9,12 +9,25 @@
 #include <chrono>
 #include <vector>
 
+// calculate point light colour output
 inline Color calcLightColor(PointLight const& light, 
                      float distance, 
                      Ray const& ray, 
                      Intersection const& hit, 
                      Material const& mat) {
+
     return mat.color * light.color * (1.f/distance) * glm::dot(-hit.normal, ray.direction);
+}
+
+// calculate spot light colour output
+inline Color calcLightColor(SpotLight const& light, 
+                     float distance, 
+                     Ray const& ray, 
+                     Intersection const& hit, 
+                     Material const& mat) {
+
+    float ratio = glm::dot(-hit.normal, ray.direction);
+    return mat.color * light.color * (1.f/distance) * ratio;
 }
 
 template <class LightsType>
@@ -48,7 +61,10 @@ inline Color calcTotalDiffuse(Ray const& ray,
               Intersection const& hit,
               Material const& mat){
     Color color = Color(0,0,0);
+
     color += diffuse(ray, primitives, lights.pointLights, hit, mat);
+    color += diffuse(ray, primitives, lights.spotLights, hit, mat);
+
     return color;
 }
 
@@ -102,7 +118,7 @@ Color trace(Ray const& ray,
         Ray refract_ray = Ray(hit.impact-(hit.normal*1e-4f),
                 refract_direction, 
                 //FIXME: exiting a primitive will set the material to air
-                hit.internal?0:hit.mat, 
+                hit.internal ? 0 : hit.mat, 
                 ray.ttl-1);
         color += transparency * trace(refract_ray, primitives, lights, alpha);
     }
