@@ -134,21 +134,21 @@ bool loadScene(Scene& s, std::string const& filename)  {
     json o;
     inFile >> o;
 
-#if 0
     // load meshes
     std::map<std::string, int> t;
-    auto const& load_meshes = (o.find("load_meshes");
-    if(o != o.end())) {
-        const auto& meshes = *o;
-        for(auto const& m: meshes.kv_map()) {
-            std::string ref = m.first;
-            std::string filename = m.second->get<jsonxx::String>(); 
-            std::cout << ref << " " <<  filename << std::endl;
+    auto const& loadMeshes = o.find("load_meshes");
+    if(loadMeshes != o.end()) {
+        std::cout << *loadMeshes << std::endl;
+
+        for(auto const& m: *loadMeshes) {
+            std::cout << m << std::endl;
         }
     }
-    else
+    else {
         std::cout << "no meshes specified in scene\n";
-#endif 
+    }
+
+    exit(0);
 
     auto const& world = o["world"];
     auto const& objects = world["objects"];
