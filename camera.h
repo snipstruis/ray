@@ -137,7 +137,7 @@ struct Camera{
     void buildLookVectors(){
         look_forward = glm::rotateX(glm::vec3(0,0,1), pitch);
         look_forward = glm::rotateY(look_forward, yaw);
-        //TODO - is this right? ie we can ignore pitch for look right
+
         look_right = glm::rotateY(glm::vec3(1,0,0), yaw);
     }
 
@@ -146,14 +146,14 @@ struct Camera{
         fov = clamp(fov + d, EPSILON, PI-EPSILON);
     }
 
-    // move forwards/backwards (neg = right)
+    // move forwards/backwards (positive = forwards)
     // TODO could optimise this - use a bool instead of multiplying by d
     // we only ever move either fwd or back (not varying distances)
     void moveForward(float d) {
         eye += d * look_forward;
     }
 
-    // move left/right (neg = right)
+    // move left/right (positive = right)
     void moveRight(float d) {
         eye += d * look_right;
     }

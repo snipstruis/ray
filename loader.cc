@@ -21,8 +21,28 @@ glm::vec3 readXYZ(json const& o) {
     return res;
 }
 
+// read pitch/yaw, and convert to a normlised vector
+glm::vec3 readPY(json const& o) {
+    float pitch = o["pitch"];
+    float yaw = o["yaw"];
+
+    glm::vec3 res = glm::rotateX(glm::vec3(0,0,1), glm::radians(yaw));
+    res = glm::rotateY(res, glm::radians(pitch));
+
+    return res;
+}
+
 Color readColor(json const& o) {
     return Color(o["red"], o["green"], o["blue"]);
+}
+
+FalloffKind readFalloffKind(std::string const& s) {
+    if(s == "log")
+        return FK_LOG;
+    else if (s == "linear")
+        return FK_LINEAR;
+    else
+        throw std::runtime_error("unknown falloff kind");
 }
 
 glm::mat4 handleTransform(json const& o) {
@@ -67,7 +87,7 @@ void handleObject(Scene& s, json const& o) {
 
         glm::vec4 starting(0, 0, 0, 1);
         glm::vec4 transformed = transform * starting;
-        std::cout << "transformed " << transformed <<std::endl;
+        std::cout << "transformed " << transformed << std::endl;
         glm::vec3 center(transformed[0], transformed[1], transformed[2]);
 
         s.primitives.spheres.emplace_back(Sphere(center, 3, radius));
@@ -94,6 +114,13 @@ void handleLight(Scene& s, json const& l) {
         s.lights.pointLights.emplace_back(position, color);
     }
     else if(kind == "spot"){
+        const glm::vec3 pointDirection = readPY(l["point_direction"]);
+        float coneAngleDegrees = l["cone_angle"];
+        float coneAngle = glm::radians(coneAngleDegrees);
+        FalloffKind falloff = readFalloffKind(l["falloff"]);
+
+        s.lights.spotLights.emplace_back(position, pointDirection, color, falloff, coneAngle);
+
         std::cout << "warning spot lights not supported yet "<< std::endl;
     }
     else {

@@ -1,0 +1,52 @@
+{
+    "load_meshes" : {
+        "teapot" : "obj/wt_teapot.obj",
+        "plane" : "obj/plane.obj"
+    },
+    "world" : {
+        "objects" : [
+            {
+                "kind" : "sphere",
+                "radius" : 2,
+                "transform" : {
+                    "translate" : { "x" : -0, "y" : 0, "z" : 8}
+                }
+            },
+            {
+                "kind" : "plane",
+                "normal" : { "x" : 0, "y" : 1, "z" : 0},
+                "center" : { "x" : 0, "y" : -1, "z" : 0}
+            }
+        ],
+        "lights" : [
+            {
+                "kind" : "point",
+                "intensity" : 0.5,
+                "color" : {"red" : 10, "green" : 10, "blue" : 10},
+                "position" : { "x" : -3, "y" : 3, "z" : 10}
+            },
+            {
+                "kind" : "point",
+                "intensity" : 0.5,
+                "color" : {"red" : 10, "green" : 10, "blue" : 10},
+                "position" : { "x" : -4, "y" : 12, "z" : 8}
+            },
+            {
+                "kind" : "spot",
+                "intensity" : 0.5,
+                "cone_angle" : 30,
+                "falloff" : "linear",
+                "color" : {"red" : 10, "green" : 10, "blue" : 10},
+                "position" : { "x" : 2, "y" : 4, "z" : 15},
+                "point_direction" : {"yaw" : 90, "pitch" : -45}
+            }
+        ]
+        
+    },
+    "camera" : {
+        "eye_point" : { "x" : -1, "y" : -1, "z" : -1},
+        "eye_angle" : { "yaw" : -30, "pitch" : 30, "roll" : 0},
+        "fov" : 90
+    }
+}
+
