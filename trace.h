@@ -14,9 +14,9 @@ inline Color calcLightOutput(PointLight const& light,
                      float distance, 
                      Ray const& ray, 
                      Intersection const& hit, 
-                     Material const& mat) {
-
-    return mat.color * light.color * (1.f/distance) * glm::dot(-hit.normal, ray.direction);
+                     Material const& mat,
+                     glm::vec3 light_dir) {
+    return mat.color * light.color * (1.f/distance) * glm::dot(-hit.normal, -light_dir);
 }
 
 // calculate spot light colour output
@@ -24,7 +24,8 @@ inline Color calcLightOutput(SpotLight const& light,
                      float distance, 
                      Ray const& ray, 
                      Intersection const& hit, 
-                     Material const& mat) {
+                     Material const& mat,
+                     glm::vec3 light_dir) {
 
     // unimplemented - return black for now
     return Color(0,0,0);
@@ -49,7 +50,7 @@ inline Color diffuse(Ray const& ray,
         bool shadow_hit = findAnyIntersection(primitives, shadow_ray);
 
         if(!shadow_hit){
-            color += calcLightOutput(light, light_distance, ray, hit, mat);
+            color += calcLightOutput(light, light_distance, ray, hit, mat, light_direction);
         }
     }
     return color;
