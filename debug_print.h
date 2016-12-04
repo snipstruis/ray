@@ -1,5 +1,7 @@
 #pragma once
 
+#include "primitive.h"
+
 #include "glm/vec3.hpp"
 #include "glm/mat4x4.hpp"
 #include "glm/gtx/io.hpp"
@@ -10,7 +12,7 @@
 // keep it all in its own file so it can be un-included in one go
 // note that glm already has operator<< for its types in glm/gtx/io.hpp
 
-std::ostream& DumpToR(std::ostream& os, const glm::mat4& m) {
+inline std::ostream& DumpToR(std::ostream& os, const glm::mat4& m) {
     os << "matrix(c(";
     os <<  m[0][0] << ", " << m[1][0] << ", " << m[2][0] << ", " <<  m[3][0] << ", ";
     os <<  m[0][1] << ", " << m[1][1] << ", " << m[2][1] << ", " <<  m[3][1] << ", ";
@@ -20,15 +22,24 @@ std::ostream& DumpToR(std::ostream& os, const glm::mat4& m) {
     return os;
 }
 
-std::ostream& DumpToR(std::ostream& os, const glm::vec3& m) {
+inline std::ostream& DumpToR(std::ostream& os, const glm::vec3& m) {
     os << "c(";
     os <<  m[0] << ", " << m[1] << ", " << m[2];
     os << ")";
     return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const Ray& r) {
+inline std::ostream& operator<<(std::ostream& os, const Ray& r) {
     os << r.origin << " -> " << r.direction << " (ttl=" << r.ttl << ")";
+    return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const Intersection& i) {
+    os << "dist " << i.distance;
+    os << " impact " << i.impact;
+    os << " normal " << i.normal;
+    os << " internal " << i.internal;
+
     return os;
 }
 
