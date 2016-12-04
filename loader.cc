@@ -140,8 +140,8 @@ bool loadScene(Scene& s, std::string const& filename)  {
     if(loadMeshes != o.end()) {
         std::cout << *loadMeshes << std::endl;
 
-        for(auto const& m: *loadMeshes) {
-            std::cout << m << std::endl;
+        for(auto it = o["load_meshes"].begin(); it != o["load_meshes"].end(); ++it) {
+            std::cout << it.key() << " " << it.value() << std::endl;
         }
     }
     else {
