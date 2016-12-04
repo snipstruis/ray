@@ -22,8 +22,8 @@ struct Camera{
     int width, height;
 
     // These are the render-time params - ie calculated once per frame(max) to save work
-    // eye pos in world space
-    glm::vec3 eye;
+    // origin position in world space
+    glm::vec3 origin;
     // point at top left of screen in world space
     glm::vec3 top_left;
     // u (horiz) and v (vertical) vectors from top_left point
@@ -43,7 +43,7 @@ struct Camera{
     }
 
     void resetView(){
-        eye = glm::vec3(1, 1, -1);
+        origin= glm::vec3(1, 1, -1);
         yaw = -PI/6;
         pitch = PI/6;
         roll = 0.0f;
@@ -75,11 +75,11 @@ struct Camera{
         glm::vec3 screen_point = top_left + (px * u) + (py * v);
 
         // and a vector from the eye to the screen point
-        glm::vec3 look_vec = screen_point - eye;
+        glm::vec3 look_vec = screen_point - origin;
         
         // build result - note direction is normalised
         // FIXME: assumes origin point is in the material 'air'
-        return Ray(eye, glm::normalize(look_vec), 0, STARTING_TTL);
+        return Ray(origin, glm::normalize(look_vec), 0, STARTING_TTL);
     };
 
     void sanityCheck() const
@@ -92,7 +92,7 @@ struct Camera{
         // u & v should be perpendicular
         assert(feq(glm::dot(u, v), 0.0f));
     }
-    // FIXME: probably break this into a functon to move the eye and change the other params 
+    // FIXME: probably break this into a functon to move the origin and change the other params 
     // separately, as they are triggered from separate inputs
     // y/p/r must be <2pi, fov < pi
     void buildCamera()
@@ -129,7 +129,7 @@ struct Camera{
         v = bl - tl;
 
         // transform top left to world
-        top_left = tl + eye;
+        top_left = tl + origin;
 
         sanityCheck();
     }
@@ -150,12 +150,12 @@ struct Camera{
     // TODO could optimise this - use a bool instead of multiplying by d
     // we only ever move either fwd or back (not varying distances)
     void moveForward(float d) {
-        eye += d * look_forward;
+        origin += d * look_forward;
     }
 
     // move left/right (positive = right)
     void moveRight(float d) {
-        eye += d * look_right;
+        origin += d * look_right;
     }
 
     void moveYawPitch(float deltaYaw, float deltaPitch){
