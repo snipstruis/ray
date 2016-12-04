@@ -45,7 +45,7 @@ struct Primitives{
 
 // adapted from:
 // https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
-float moller_trumbore( const glm::vec3   v1,  // Triangle vertices
+inline float moller_trumbore( const glm::vec3   v1,  // Triangle vertices
                        const glm::vec3   v2,
                        const glm::vec3   v3,
                        const glm::vec3    o,  //Ray origin
@@ -106,7 +106,7 @@ struct Intersection{
     bool internal;
 };
 
-Intersection intersect(Triangle const& t, Ray const& ray){
+inline Intersection intersect(Triangle const& t, Ray const& ray){
     float dist = moller_trumbore(t.v[0], t.v[1], t.v[2], ray.origin, ray.direction);
 
     if(dist==INFINITY) {
@@ -119,7 +119,7 @@ Intersection intersect(Triangle const& t, Ray const& ray){
     }
 }
 
-Intersection intersect(Plane const& p, Ray const& ray){
+inline Intersection intersect(Plane const& p, Ray const& ray){
     glm::vec3 pos = p.pos;
     bool internal = glm::dot(ray.direction, p.normal)>0;
     glm::vec3 norm = internal ? -p.normal : p.normal;
@@ -133,7 +133,7 @@ Intersection intersect(Plane const& p, Ray const& ray){
     return Intersection(INFINITY);
 }
 
-Intersection intersect(Sphere const& s, Ray const& ray){
+inline Intersection intersect(Sphere const& s, Ray const& ray){
     glm::vec3 c = s.pos - ray.origin;
     float t = glm::dot(c, ray.direction);
     glm::vec3 q = c - t * ray.direction;
@@ -161,7 +161,7 @@ Intersection intersect(Sphere const& s, Ray const& ray){
     return Intersection(t, impact, s.mat, internal ? -norm : norm, internal);
 }
 
-Intersection findClosestIntersection(Primitives const& primitives, Ray const& ray){
+inline Intersection findClosestIntersection(Primitives const& primitives, Ray const& ray){
     Intersection hit = Intersection(INFINITY);
     for(auto const& s: primitives.spheres){
         auto check = intersect(s,ray);
@@ -183,3 +183,4 @@ Intersection findClosestIntersection(Primitives const& primitives, Ray const& ra
     }
     return hit;
 };
+

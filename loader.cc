@@ -1,5 +1,3 @@
-#pragma once
-
 #include "basics.h"
 #include "scene.h"
 
@@ -15,7 +13,7 @@
 
 using json = nlohmann::json;
 
-inline glm::vec3 readXYZ(json const& o) {
+glm::vec3 readXYZ(json const& o) {
     glm::vec3 res;
     res[0] = o["x"];
     res[1] = o["y"];
@@ -23,11 +21,11 @@ inline glm::vec3 readXYZ(json const& o) {
     return res;
 }
 
-inline Color readColor(json const& o) {
+Color readColor(json const& o) {
     return Color(o["red"], o["green"], o["blue"]);
 }
 
-inline glm::mat4 handleTransform(json const& o) {
+glm::mat4 handleTransform(json const& o) {
     glm::mat4 result; // is initialised to identity
 
     if(o.find("translate") != o.end()){
@@ -49,7 +47,7 @@ inline glm::mat4 handleTransform(json const& o) {
     return result;
 }
 
-inline void handleObject(Scene& s, json const& o) {
+void handleObject(Scene& s, json const& o) {
     std::cout << o << std::endl;
     std::string kind = o["kind"];
 
@@ -86,12 +84,12 @@ inline void handleObject(Scene& s, json const& o) {
     
 }
 
-inline void handleLight(json const& l) {
+void handleLight(json const& l) {
     std::cout << "LIGHT" << l << std::endl;
 
 }
 
-inline bool loadScene(std::string const& filename, Scene& s) {
+bool loadScene(std::string const& filename, Scene& s) {
 
     std::ifstream inFile(filename);
     json o;
@@ -128,7 +126,7 @@ inline bool loadScene(std::string const& filename, Scene& s) {
     return true;
 }
 
-inline bool setupScene(Scene& s)
+bool setupScene(Scene& s)
 {
     const int red_glass = 1, tiles = 2, reflective_blue=3;
 

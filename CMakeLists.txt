@@ -51,6 +51,7 @@ include_directories(.)
 # source files
 add_executable(ray 
     main.cc
+    loader.cc
     tiny_obj_loader.cc
     scene.h
 )
