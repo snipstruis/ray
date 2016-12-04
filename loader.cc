@@ -116,6 +116,7 @@ Mesh loadMesh(std::string const& filename){
     return mesh;
 }
 
+// apply the matrix transform to v
 glm::vec3 transformV3(glm::vec3 v, glm::mat4x4 transform) {
     // FIXME: ugly, remove temp objects
     glm::vec4 a(v[0], v[1], v[2], 1);
