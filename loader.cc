@@ -116,6 +116,13 @@ Mesh loadMesh(std::string const& filename){
     return mesh;
 }
 
+void transformMeshIntoScene(Scene& s, Mesh const& mesh, glm::mat4x4 const& transform) {
+    for(auto const& mt : mesh.triangles) {
+        Triangle t(mt.v1, mt.v2, mt.v3, 3);
+        s.primitives.triangles.emplace_back(t);
+    }
+}
+
 void handleObject(Scene& s, MeshMap const& meshes, json const& o) {
 
     std::cout << o << std::endl;
@@ -129,7 +136,13 @@ void handleObject(Scene& s, MeshMap const& meshes, json const& o) {
     }
 
     if(kind == "mesh"){
+        // find already loaded mesh
+        std::string meshName = o["mesh_name"];
+        auto it = meshes.find(meshName);
+        if(it == meshes.end())
+            throw std::runtime_error("unknown mesh");
 
+        transformMeshIntoScene(s, it->second, transform);
     }
     else if(kind == "sphere"){
         float radius = o["radius"];
@@ -202,6 +215,8 @@ bool loadScene(Scene& s, std::string const& filename)  {
     else {
         std::cout << "no meshes specified in scene\n";
     }
+
+    std::cout << meshMap.size() << " meshes loaded " << std::endl;
 
     auto const& world = o["world"];
     auto const& objects = world["objects"];
