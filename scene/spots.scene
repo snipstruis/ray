@@ -1,22 +1,49 @@
 {
     "load_meshes" : {
-        "teapot" : "obj/wt_teapot.obj",
-        "plane" : "obj/plane.obj"
+        "cube" : "obj/cube.obj"
     },
     "world" : {
         "objects" : [
             {
-                "kind" : "sphere",
-                "radius" : 2,
+                "kind" : "mesh",
+                "mesh_name" : "cube",
                 "transform" : {
-                    "translate" : { "x" : -0, "y" : 0, "z" : 8}
+                    "translate" : { "x" : -0, "y" : 0, "z" : 0}
                 }
             },
             {
                 "kind" : "mesh",
-                "mesh_name" : "plane",
+                "mesh_name" : "cube",
                 "transform" : {
-                    "translate" : { "x" : -0, "y" : 1, "z" : 0}
+                    "translate" : { "x" : -0, "y" : 0, "z" : 5}
+                }
+            },
+            {
+                "kind" : "mesh",
+                "mesh_name" : "cube",
+                "transform" : {
+                    "translate" : { "x" : -0, "y" : 0, "z" : 10}
+                }
+            },
+            {
+                "kind" : "mesh",
+                "mesh_name" : "cube",
+                "transform" : {
+                    "translate" : { "x" : -2, "y" : 0, "z" : 0}
+                }
+            },
+            {
+                "kind" : "mesh",
+                "mesh_name" : "cube",
+                "transform" : {
+                    "translate" : { "x" : -2, "y" : 0, "z" : 5}
+                }
+            },
+            {
+                "kind" : "mesh",
+                "mesh_name" : "cube",
+                "transform" : {
+                    "translate" : { "x" : -2, "y" : 0, "z" : 10}
                 }
             },
             {

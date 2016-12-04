@@ -116,9 +116,24 @@ Mesh loadMesh(std::string const& filename){
     return mesh;
 }
 
+glm::vec3 transformV3(glm::vec3 v, glm::mat4x4 transform) {
+    // FIXME: ugly, remove temp objects
+    glm::vec4 a(v[0], v[1], v[2], 1);
+    glm::vec4 b = transform * a;
+    glm::vec3 res(b[0], b[1], b[2]);
+
+    std::cout << " TTT " << v << " -> " << res << std::endl;
+
+    return res;
+}
+
 void transformMeshIntoScene(Scene& s, Mesh const& mesh, glm::mat4x4 const& transform) {
     for(auto const& mt : mesh.triangles) {
-        Triangle t(mt.v1, mt.v2, mt.v3, 3);
+        Triangle t(
+            transformV3(mt.v1, transform), 
+            transformV3(mt.v2, transform), 
+            transformV3(mt.v3, transform), 
+            3);
         s.primitives.triangles.emplace_back(t);
     }
 }
