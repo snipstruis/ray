@@ -1,11 +1,13 @@
 #pragma once
+
 #include "utils.h"
 #include "basics.h"
 #include "stdio.h"
+
 #include <vector>
 #include <cmath>
 
-struct Sphere  {
+struct Sphere {
     Sphere(glm::vec3 p, int m, float r):pos(p), mat(m), radius(r){};
 
     glm::vec3 pos; 
@@ -25,8 +27,8 @@ struct Triangle{
     Triangle(glm::vec3 a, glm::vec3 b, glm::vec3 c, int m){
         v[0]=a; v[1]=b; v[2]=c; mat=m;
 //        pos=glm::vec3((a.x+b.x+c.x)/3.f,
- //                     (a.y+b.y+c.y)/3.f,
-  //                    (a.z+b.z+c.z)/3.f);
+//                      (a.y+b.y+c.y)/3.f,
+//                      (a.z+b.z+c.z)/3.f);
         normal = glm::normalize(glm::cross(b-a,c-a));
     }
 
@@ -43,62 +45,13 @@ struct Primitives{
     std::vector<Triangle> triangles;
 };
 
-// adapted from:
-// https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
-inline float moller_trumbore( const glm::vec3   v1,  // Triangle vertices
-                       const glm::vec3   v2,
-                       const glm::vec3   v3,
-                       const glm::vec3    o,  //Ray origin
-                       const glm::vec3    d  ) { // Ray direction
-    //Find vectors for two edges sharing V1
-    glm::vec3 e1 = v2 - v1;
-    glm::vec3 e2 = v3 - v1;
-
-    //Begin calculating determinant - also used to calculate u parameter
-    glm::vec3 p = glm::cross(d, e2);
-
-    // if determinant is near zero, ray lies in plane of triangle or ray is parallel 
-    // to plane of triangle
-    float det = glm::dot(e1, p);
-
-    //NOT CULLING
-    if(det > -EPSILON && det < EPSILON) return INFINITY;
-
-    float inv_det = 1.f / det;
-
-    //calculate distance from V1 to ray origin
-    glm::vec3 t = o - v1;
-
-    //Calculate u parameter and test bound
-    float u = glm::dot(t, p) * inv_det;
-
-    //The intersection lies outside of the triangle
-    if(u < 0.f || u > 1.f) return INFINITY;
-
-    //Prepare to test v parameter
-    glm::vec3 q = glm::cross(t, e1);
-
-    //Calculate V parameter and test bound
-    float v = glm::dot(d, q) * inv_det;
-
-    //The intersection lies outside of the triangle
-    if(v < 0.f || u + v  > 1.f) return INFINITY;
-
-    float ret = glm::dot(e2, q) * inv_det;
-
-    if(ret > EPSILON) { //ray intersection
-        return ret;
-    }
-
-    // No hit, no win
-    return INFINITY;
-}
-
+// result of an intersection calculation
 struct Intersection{
     Intersection() = default;
     Intersection(float d):distance(d){};
     Intersection(float d, glm::vec3 i, int m, glm::vec3 n, bool intr)
         :distance(d),impact(i),mat(m),normal(n),internal(intr){};
+
     float distance;
     glm::vec3 impact;
     int mat;
@@ -106,6 +59,61 @@ struct Intersection{
     bool internal;
 };
 
+// adapted from:
+// https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
+inline float moller_trumbore( 
+                       const glm::vec3   v1,  // Triangle vertices
+                       const glm::vec3   v2,
+                       const glm::vec3   v3,
+                       const glm::vec3    o,   // Ray origin
+                       const glm::vec3    d) { // Ray direction
+    // Find vectors for two edges sharing V1
+    glm::vec3 e1 = v2 - v1;
+    glm::vec3 e2 = v3 - v1;
+
+    // Begin calculating determinant - also used to calculate u parameter
+    glm::vec3 p = glm::cross(d, e2);
+
+    // if determinant is near zero, ray lies in plane of triangle or ray is parallel 
+    // to plane of triangle
+    float det = glm::dot(e1, p);
+
+    // NOT CULLING
+    if(det > -EPSILON && det < EPSILON) 
+        return INFINITY;
+
+    float inv_det = 1.f / det;
+
+    // calculate distance from V1 to ray origin
+    glm::vec3 t = o - v1;
+
+    // Calculate u parameter and test bound
+    float u = glm::dot(t, p) * inv_det;
+
+    // The intersection lies outside of the triangle
+    if(u < 0.f || u > 1.f) 
+        return INFINITY;
+
+    // Prepare to test v parameter
+    glm::vec3 q = glm::cross(t, e1);
+
+    // Calculate V parameter and test bound
+    float v = glm::dot(d, q) * inv_det;
+
+    // The intersection lies outside of the triangle
+    if(v < 0.f || u + v  > 1.f) 
+        return INFINITY;
+
+    float ret = glm::dot(e2, q) * inv_det;
+
+    if(ret > EPSILON)  // ray intersection
+        return ret;
+
+    // No hit, no win
+    return INFINITY;
+}
+
+// compute triangle/ray intersection
 inline Intersection intersect(Triangle const& t, Ray const& ray){
     float dist = moller_trumbore(t.v[0], t.v[1], t.v[2], ray.origin, ray.direction);
 
@@ -119,6 +127,7 @@ inline Intersection intersect(Triangle const& t, Ray const& ray){
     }
 }
 
+// compute plane/ray intersection
 inline Intersection intersect(Plane const& p, Ray const& ray){
     glm::vec3 pos = p.pos;
     bool internal = glm::dot(ray.direction, p.normal)>0;
@@ -133,6 +142,7 @@ inline Intersection intersect(Plane const& p, Ray const& ray){
     return Intersection(INFINITY);
 }
 
+// compute spehere/ray intersection
 inline Intersection intersect(Sphere const& s, Ray const& ray){
     glm::vec3 c = s.pos - ray.origin;
     float t = glm::dot(c, ray.direction);
@@ -141,14 +151,17 @@ inline Intersection intersect(Sphere const& s, Ray const& ray){
     float p2 = glm::dot( q, q ); 
     float r2 = s.radius*s.radius;
 
-    if (p2 > r2) return Intersection(INFINITY);
+    if (p2 > r2) 
+        return Intersection(INFINITY);
 
-    float t0 = t + sqrt( r2 - p2 );
-    float t1 = t - sqrt( r2 - p2 );
+    float t0 = t + sqrt(r2 - p2);
+    float t1 = t - sqrt(r2 - p2);
 
     // double sided
     bool internal = false;
-    if(t0>t1){std::swap(t0,t1);}
+    if(t0 > t1) {
+        std::swap(t0,t1);
+    }
     if (t0 < 0) { 
         internal = true;
         t0 = t1; 
@@ -161,7 +174,8 @@ inline Intersection intersect(Sphere const& s, Ray const& ray){
     return Intersection(t, impact, s.mat, internal ? -norm : norm, internal);
 }
 
-inline Intersection findClosestIntersection(Primitives const& primitives, Ray const& ray){
+// find closest intersection with any geometry
+inline Intersection findClosestIntersection(Primitives const& primitives, Ray const& ray) {
     Intersection hit = Intersection(INFINITY);
     for(auto const& s: primitives.spheres){
         auto check = intersect(s,ray);
@@ -184,3 +198,25 @@ inline Intersection findClosestIntersection(Primitives const& primitives, Ray co
     return hit;
 };
 
+// does ray intersect any geometry ? (stops after first hit)
+inline bool findAnyIntersection(Primitives const& primitives, Ray const& ray) {
+    for(auto const& s: primitives.spheres){
+        auto check = intersect(s, ray);
+        if(check.distance > 0 && check.distance < INFINITY)
+            return true;
+    }
+
+    for(auto const& p: primitives.planes){
+        auto check = intersect(p, ray);
+        if(check.distance > 0 && check.distance < INFINITY)
+            return true;
+    }
+
+    for(auto const& t: primitives.triangles){
+        auto check = intersect(t, ray);
+        if(check.distance > 0 && check.distance < INFINITY)
+            return true;
+    }
+
+    return false;
+};

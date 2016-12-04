@@ -21,12 +21,12 @@ Color diffuse(Ray const& ray,
         float light_distance = glm::length(impact_to_light);
         glm::vec3 light_direction = glm::normalize(impact_to_light);
 
-        Ray shadow_ray = Ray(hit.impact + (hit.normal*1e-4f), 
-                light_direction, ray.mat, ray.ttl-1);
+        Ray shadow_ray = Ray(hit.impact + (hit.normal*1e-4f), light_direction, ray.mat, ray.ttl-1);
 
-        Intersection shadow_hit = findClosestIntersection(primitives, shadow_ray);
+        // does this shadow ray hit any geometry?
+        bool shadow_hit = findAnyIntersection(primitives, shadow_ray);
 
-        if(shadow_hit.distance == INFINITY){
+        if(!shadow_hit){
             color += mat.color 
                    * light.color * (1.f/light_distance)
                    * glm::dot(-hit.normal, ray.direction);
