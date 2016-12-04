@@ -16,11 +16,15 @@
 using json = nlohmann::json;
 
 inline glm::vec3 readXYZ(json const& o) {
-    glm::vec3 result;
-    result[0] = o["x"];
-    result[1] = o["y"];
-    result[2] = o["z"];
-    return result;
+    glm::vec3 res;
+    res[0] = o["x"];
+    res[1] = o["y"];
+    res[2] = o["z"];
+    return res;
+}
+
+inline Color readColor(json const& o) {
+    return Color(o["red"], o["green"], o["blue"]);
 }
 
 inline glm::mat4 handleTransform(json const& o) {
@@ -66,13 +70,15 @@ inline void handleObject(Scene& s, json const& o) {
         glm::vec4 starting(0, 0, 0, 1);
         glm::vec4 transformed = transform * starting;
         std::cout << "transformed " << transformed <<std::endl;
-        glm::vec3 centre(transformed[0], transformed[1], transformed[2]);
+        glm::vec3 center(transformed[0], transformed[1], transformed[2]);
 
-    s.primitives.spheres.emplace_back(Sphere(centre, 3, radius));
+        s.primitives.spheres.emplace_back(Sphere(center, 3, radius));
 
     }
     else if(kind == "plane"){
-
+        glm::vec3 center = readXYZ(o["center"]);
+        glm::vec3 normal = glm::normalize(readXYZ(o["normal"]));
+        s.primitives.planes.emplace_back(Plane(center, 2, normal));
     }
     else {
         std::cerr << "ERROR: object kind " << kind << " unknown\n";
@@ -81,7 +87,7 @@ inline void handleObject(Scene& s, json const& o) {
 }
 
 inline void handleLight(json const& l) {
-    std::cout << l << std::endl;
+    std::cout << "LIGHT" << l << std::endl;
 
 }
 
@@ -140,7 +146,7 @@ inline bool setupScene(Scene& s)
 #endif
 
     // AIR
-    s.primitives.materials.emplace_back(Color(0.f, 0.f,0.f),
+    s.primitives.materials.emplace_back(Color(0.f, 0.f, 0.f),
                                         0.0f, 0.0f, 1.0f,
                                         1.0f);
     // RED GLASS
@@ -161,9 +167,9 @@ inline bool setupScene(Scene& s)
     s.lights.pointLights.emplace_back(glm::vec3(-4,12,8), Color(10,10,10));
     s.lights.pointLights.emplace_back(glm::vec3(2,4,15), Color(10,10,10));
 
-    s.primitives.planes.emplace_back(glm::vec3(0,-1,0),  tiles, glm::vec3(0,1,0));
-
     return true;
+
+    s.primitives.planes.emplace_back(glm::vec3(0,-1,0),  tiles, glm::vec3(0,1,0));
 
     s.primitives.spheres.emplace_back(glm::vec3(0,1,10), red_glass, 1.9f);
     s.primitives.triangles.emplace_back(glm::vec3(1,0,24), 
