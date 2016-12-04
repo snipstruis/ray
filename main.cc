@@ -13,7 +13,6 @@
 #include <cmath>
 #include <chrono>
 #include <vector>
-#include <boost/program_options.hpp>
 
 void setWindowTitle(Scene const& s, SDL_Window *win, float frametime_ms)
 {
