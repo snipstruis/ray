@@ -1,6 +1,6 @@
 #include "basics.h"
+#include "mesh.h"
 #include "scene.h"
-#include "loadObject.h"
 
 #include "json.hpp"
 #include "glm/vec3.hpp"
@@ -77,7 +77,7 @@ glm::vec3 makeVec3FromVerticies(tinyobj::attrib_t const& attrib, int index) {
     return result;
 }
 
-bool loadObject(Scene& s, std::string const& filename, int material){
+Mesh loadMesh(std::string const& filename){
     std::string err;
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
@@ -87,10 +87,13 @@ bool loadObject(Scene& s, std::string const& filename, int material){
 
     bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, filename.c_str());
     if(!ret) {
-        std::cout << "ERROR loading object - " << err << std::endl;
-        return false;
+        std::stringstream ss;
+        ss << "ERROR loading object - " << err;
+        throw std::runtime_error(ss.str());
     }
         
+    Mesh mesh;
+
     for(auto const& shape : shapes) {
         // tinyobj should tesselate for us.
         assert(shape.mesh.indices.size() % 3 == 0);
@@ -99,18 +102,18 @@ bool loadObject(Scene& s, std::string const& filename, int material){
 
         for (int i = 0; i < ntriangles; i++) {
             int base = i * 3; 
-            Triangle t(
+
+            MeshTriangle t(
                 makeVec3FromVerticies(attrib, shape.mesh.indices[base].vertex_index),
                 makeVec3FromVerticies(attrib, shape.mesh.indices[base + 1].vertex_index),
-                makeVec3FromVerticies(attrib, shape.mesh.indices[base + 2].vertex_index),
-                material);
-            s.primitives.triangles.emplace_back(t);
+                makeVec3FromVerticies(attrib, shape.mesh.indices[base + 2].vertex_index));
+
+            mesh.triangles.emplace_back(t);
         }
     }
 
     std::cout << "load done" << std::endl;
-
-    return true;
+    return mesh;
 }
 
 void handleObject(Scene& s, json const& o) {
@@ -181,13 +184,10 @@ bool loadScene(Scene& s, std::string const& filename)  {
     inFile >> o;
 
     // load meshes
-    std::map<std::string, int> t;
-    auto const& loadMeshes = o.find("load_meshes");
-    if(loadMeshes != o.end()) {
-        std::cout << *loadMeshes << std::endl;
-
+    if(o.find("load_meshes") != o.end()) {
         for(auto it = o["load_meshes"].begin(); it != o["load_meshes"].end(); ++it) {
             std::cout << it.key() << " " << it.value() << std::endl;
+            Mesh m = loadMesh(it.value());
         }
     }
     else {
@@ -213,7 +213,7 @@ bool loadScene(Scene& s, std::string const& filename)  {
 
 bool setupScene(Scene& s, std::string const& filename)
 {
-    const int red_glass = 1, tiles = 2, reflective_blue=3;
+    const int reflective_blue=3;
 
     try{
         loadScene(s, filename);

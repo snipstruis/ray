@@ -24,14 +24,14 @@ struct Plane {
 struct Triangle{
     Triangle(glm::vec3 a, glm::vec3 b, glm::vec3 c, int m){
         v[0]=a; v[1]=b; v[2]=c; mat=m;
-        pos=glm::vec3((a.x+b.x+c.x)/3.f,
-                      (a.y+b.y+c.y)/3.f,
-                      (a.z+b.z+c.z)/3.f);
+//        pos=glm::vec3((a.x+b.x+c.x)/3.f,
+ //                     (a.y+b.y+c.y)/3.f,
+  //                    (a.z+b.z+c.z)/3.f);
         normal = glm::normalize(glm::cross(b-a,c-a));
     }
 
     glm::vec3 normal;
-    glm::vec3 pos; 
+ //   glm::vec3 pos; 
     int mat; 
     glm::vec3 v[3];
 };
