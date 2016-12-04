@@ -112,11 +112,12 @@ Mesh loadMesh(std::string const& filename){
         }
     }
 
-    std::cout << "load done" << std::endl;
+    std::cout << "load done, triangles = " << mesh.triangles.size() << std::endl;
     return mesh;
 }
 
-void handleObject(Scene& s, json const& o) {
+void handleObject(Scene& s, MeshMap const& meshes, json const& o) {
+
     std::cout << o << std::endl;
     const std::string kind = o["kind"];
 
@@ -183,24 +184,30 @@ bool loadScene(Scene& s, std::string const& filename)  {
     json o;
     inFile >> o;
 
+    MeshMap meshMap;
+
     // load meshes
     if(o.find("load_meshes") != o.end()) {
         for(auto it = o["load_meshes"].begin(); it != o["load_meshes"].end(); ++it) {
             std::cout << it.key() << " " << it.value() << std::endl;
-            Mesh m = loadMesh(it.value());
+            
+            // check for dup key
+            if(meshMap.find(it.key()) != meshMap.end()) {
+                throw std::runtime_error("duplicate mesh key");
+            }
+
+            meshMap[it.key()] = loadMesh(it.value());
         }
     }
     else {
         std::cout << "no meshes specified in scene\n";
     }
 
-    exit(0);
-
     auto const& world = o["world"];
     auto const& objects = world["objects"];
 
     for (auto const& object : objects) {
-        handleObject(s, object);
+        handleObject(s, meshMap, object);
     }
 
     auto const& lights = world["lights"];
