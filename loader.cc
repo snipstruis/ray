@@ -49,7 +49,7 @@ glm::mat4 handleTransform(json const& o) {
 
 void handleObject(Scene& s, json const& o) {
     std::cout << o << std::endl;
-    std::string kind = o["kind"];
+    const std::string kind = o["kind"];
 
     glm::mat4x4 transform; // initialised to identity
     // is there a transform for this obj?
@@ -79,18 +79,29 @@ void handleObject(Scene& s, json const& o) {
         s.primitives.planes.emplace_back(Plane(center, 2, normal));
     }
     else {
-        std::cerr << "ERROR: object kind " << kind << " unknown\n";
+        throw std::runtime_error("object kind unknown");
     }
-    
 }
 
 void handleLight(Scene& s, json const& l) {
     std::cout << "LIGHT" << l << std::endl;
+    const std::string kind = l["kind"];
 
+    const glm::vec3 position = readXYZ(l["position"]);
+    const Color color = readColor(l["color"]);
 
+    if(kind == "point"){
+        s.lights.pointLights.emplace_back(position, color);
+    }
+    else if(kind == "spot"){
+        std::cout << "warning spot lights not supported yet "<< std::endl;
+    }
+    else {
+        throw std::runtime_error("light kind unknown");
+    }
 }
 
-bool loadScene(std::string const& filename, Scene& s) {
+bool loadScene(Scene& s, std::string const& filename)  {
 
     std::ifstream inFile(filename);
     json o;
@@ -121,18 +132,18 @@ bool loadScene(std::string const& filename, Scene& s) {
 
     auto const& lights = world["lights"];
     for (auto const& light: lights) {
-        handleLight(light);
+        handleLight(s, light);
     }
 
     return true;
 }
 
-bool setupScene(Scene& s)
+bool setupScene(Scene& s, std::string const& filename)
 {
     const int red_glass = 1, tiles = 2, reflective_blue=3;
 
     try{
-        loadScene("scene/classic.scene", s);
+        loadScene(s, filename);
     } catch (std::exception const& e) {
         std::cerr << "exception loading scene - " << e.what() << std::endl;
         return false;
@@ -160,13 +171,6 @@ bool setupScene(Scene& s)
     s.primitives.materials.emplace_back(Color(0.2f, 0.6f, 0.9f),
                                         0.8f, 0.2f, 0.0f,
                                         1.f);
-
-
-    return true;
-    s.lights.pointLights.emplace_back(glm::vec3(3,3,10), Color(10,10,10));
-    s.lights.pointLights.emplace_back(glm::vec3(-4,12,8), Color(10,10,10));
-    s.lights.pointLights.emplace_back(glm::vec3(2,4,15), Color(10,10,10));
-
     return true;
 }
 
