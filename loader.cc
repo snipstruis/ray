@@ -166,15 +166,5 @@ bool setupScene(Scene& s)
     s.lights.pointLights.emplace_back(glm::vec3(2,4,15), Color(10,10,10));
 
     return true;
-
-    s.primitives.planes.emplace_back(glm::vec3(0,-1,0),  tiles, glm::vec3(0,1,0));
-
-    s.primitives.spheres.emplace_back(glm::vec3(0,1,10), red_glass, 1.9f);
-    s.primitives.triangles.emplace_back(glm::vec3(1,0,24), 
-                                        glm::vec3(-1,0,24), 
-                                        glm::vec3(0,2,24), reflective_blue);
-
-
-    return true;
 }
 
