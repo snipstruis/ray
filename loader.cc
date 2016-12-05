@@ -22,14 +22,16 @@ glm::vec3 readXYZ(json const& o) {
     return res;
 }
 
+// read angle as degrees, convert to radians
+float readAngle(json const& o, const char* name) {
+    float value = o[name];
+    return glm::radians(value);
+}
+
 // read pitch/yaw, and convert to a normlised vector
 glm::vec3 readPY(json const& o) {
-    float pitch = o["pitch"];
-    float yaw = o["yaw"];
-
-    glm::vec3 res = glm::rotateX(glm::vec3(0,0,1), glm::radians(yaw));
-    res = glm::rotateY(res, glm::radians(pitch));
-
+    glm::vec3 res = glm::rotateX(glm::vec3(0,0,1), readAngle(o, "yaw"));
+    res = glm::rotateY(res, readAngle(o, "pitch"));
     return res;
 }
 
@@ -209,6 +211,18 @@ void handleLight(Scene& s, json const& l) {
     }
 }
 
+void handleCamera(Scene& s, json const& c) {
+    std::cout << "got camera "<< c << std::endl;
+    s.camera.startingOrigin = readXYZ(c["origin"]);
+
+    auto const& lookAngle = c["look_angle"];
+    s.camera.startingYaw = readAngle(lookAngle, "yaw");
+    s.camera.startingPitch = readAngle(lookAngle, "pitch");
+
+    s.camera.startingFov = readAngle(c, "fov");
+    s.camera.resetView();
+}
+
 bool loadScene(Scene& s, std::string const& filename)  {
 
     std::ifstream inFile(filename);
@@ -246,6 +260,10 @@ bool loadScene(Scene& s, std::string const& filename)  {
     auto const& lights = world["lights"];
     for (auto const& light: lights) {
         handleLight(s, light);
+    }
+
+    if(o.find("camera") != o.end()) {
+        handleCamera(s, o["camera"]);
     }
 
     return true;
