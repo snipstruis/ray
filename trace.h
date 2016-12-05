@@ -57,7 +57,7 @@ inline Color diffuse(Ray const& ray,
         Ray shadow_ray = Ray(hit.impact + (hit.normal*1e-4f), light_direction, ray.mat, ray.ttl-1);
 
         // does this shadow ray hit any geometry?
-        bool shadow_hit = findAnyIntersection(primitives, shadow_ray);
+        bool shadow_hit = findAnyIntersection(primitives, shadow_ray, light_distance);
 
         if(!shadow_hit){
             color += calcLightOutput(light, light_distance, ray, hit, mat, light_direction);
