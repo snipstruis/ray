@@ -74,18 +74,18 @@ macro(add_scene key scenefile)
     add_custom_target(${N}
         COMMAND ray ${scenefile} 
         DEPENDS ray 
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} 
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/data
         USES_TERMINAL
         )
 endmacro(add_scene)    
 
 # so, this first line creates a new target run-ray-point for the file scene/point.scene
-add_scene("classic" "scene/classic.scene")
-add_scene("point" "scene/point.scene")
-add_scene("lone-sphere" "scene/lone-sphere.scene")
-add_scene("spots" "scene/spots.scene")
-add_scene("teapot" "scene/teapot.scene")
-add_scene("col-lights" "scene/col-lights.scene")
-add_scene("tree" "scene/tree.scene")
-add_scene("sportscar" "scene/sportscar.scene")
+add_scene("classic" "classic.scene")
+add_scene("point" "point.scene")
+add_scene("lone-sphere" "lone-sphere.scene")
+add_scene("spots" "spots.scene")
+add_scene("teapot" "teapot.scene")
+add_scene("col-lights" "col-lights.scene")
+add_scene("tree" "tree.scene")
+add_scene("sportscar" "sportscar.scene")
 
