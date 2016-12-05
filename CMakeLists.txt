@@ -63,7 +63,7 @@ if(NOT WIN32)
     add_subdirectory(test)
 endif()
 
-add_subdirectory(report)
+3add_subdirectory(report)
 
 # create a target to auto load the raytracer 
 # note that it will start this with the wd set to source, so it can find any test objects
