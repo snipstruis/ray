@@ -160,7 +160,7 @@ void transformMeshIntoScene(Scene& s, Mesh const& mesh, glm::mat4x4 const& trans
             transformV3(mt.v1, transform), 
             transformV3(mt.v2, transform), 
             transformV3(mt.v3, transform), 
-            3);
+            mt.material);
         s.primitives.triangles.emplace_back(t);
     }
 }
