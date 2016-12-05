@@ -88,4 +88,5 @@ add_scene("teapot" "teapot.scene")
 add_scene("col-lights" "col-lights.scene")
 add_scene("tree" "tree.scene")
 add_scene("sportscar" "sportscar.scene")
+add_scene("cubes" "cubes.scene")
 
