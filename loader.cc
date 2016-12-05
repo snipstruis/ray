@@ -87,11 +87,11 @@ int createMaterial(Scene& s, tinyobj::material_t const& m){
             0.0f, // reflective
             (1.0f - m.dissolve), // transparency - note 1==opaque in the mat files.
             m.ior,  // refractive index
-            -1,   // no checkerboard
-            0.0,  // specular highlight
-            32.f);  // shinyness
+            -1,     // no checkerboard
+            Color(m.specular[0], m.specular[1], m.specular[2]), //specular highlight
+            m.shininess);  // shininess
 
-    std::cout << " dissolve " << m.dissolve << std::endl;
+    std::cout << " shininess " << m.shininess<< std::endl;
     // return the index of this newly created material.
     return s.primitives.materials.size() - 1;       
 }

@@ -19,11 +19,12 @@ inline Color calcLightOutput(PointLight const& light,
     float diff = glm::dot(hit.normal, light_dir);
     float falloff = 1.f/distance;
     Color ret = mat.diffuseColor * light.color * falloff * diff;
-    if(mat.specular_highlight>0.f){
+
+    if(!mat.specular_highlight.isBlack()){
         glm::vec3 refl = glm::reflect(light_dir,hit.normal);
         float dot = glm::dot(ray.direction,refl);
         if(dot>0.f){
-            ret += powf(dot,mat.shininess) * mat.specular_highlight * light.color * falloff;
+            ret += powf(dot, mat.shininess) * mat.specular_highlight * light.color * falloff;
         } 
     }
     return ret;

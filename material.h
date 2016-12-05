@@ -3,6 +3,8 @@
 #include "basics.h"
 #include <vector>
 
+const Color BLACK(0.f, 0.f, 0.f);
+
 struct Material{
     Material() = default;
 
@@ -11,7 +13,7 @@ struct Material{
              float t, 
              float ri=1.f, 
              int check=-1, 
-             float highlight=0.f, 
+             Color highlight=BLACK, 
              float shi=20.0f) :
         diffuseColor(_diffuseColor),
         reflectiveness(r), 
@@ -26,7 +28,7 @@ struct Material{
     float transparency;
     float refraction_index;
     int checkered;
-    float specular_highlight; // bightness of specular highlight
+    Color specular_highlight; // brightness of specular highlight
     float shininess;          // the power to which te spec. highlight is raised
 };
 
@@ -54,7 +56,7 @@ inline void buildFixedMaterials(std::vector<Material>& v){
                    0.0f, // transparency
                    1.f,  // refractive index
                    -1,   // no checkerboard
-                   0.8,  // specular highlight
+                   Color(0.8f, 0.8f, 0.8f),  // specular highlight
                    32.f);  // shinyness
 }
 
