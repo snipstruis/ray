@@ -22,12 +22,13 @@ void setWindowTitle(Scene const& s, SDL_Window *win, float frametime_ms)
             "Roaytroayzah %dx%d "
             "@ %2.3fms(%0.0f) "
             "origin=(%0.3f, %0.3f, %0.3f) " 
-            "yaw=%0.0f pitch=%0.0f roll=%0.0f "
+            "yaw=%0.0f "
+            "pitch=%0.0f "
             "fov=%0.0f ",
             s.camera.width, s.camera.height,
             frametime_ms, 1000.f/frametime_ms,
             s.camera.origin[0], s.camera.origin[1], s.camera.origin[2],
-            glm::degrees(s.camera.yaw), glm::degrees(s.camera.pitch), glm::degrees(s.camera.roll),
+            glm::degrees(s.camera.yaw), glm::degrees(s.camera.pitch), 
             glm::degrees(s.camera.fov)
             );
 

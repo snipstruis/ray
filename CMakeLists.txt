@@ -85,4 +85,5 @@ endmacro(add_scene)
 add_scene("point" "scene/point.scene")
 add_scene("lone-sphere" "scene/lone-sphere.scene")
 add_scene("spot" "scene/spot.scene")
+add_scene("teapot" "scene/teapot.scene")
 

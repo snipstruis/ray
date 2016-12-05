@@ -32,10 +32,23 @@ struct Camera{
     // direction we're facing - build from yaw/pitch, used by moveForward/MoveRight()
     glm::vec3 look_forward, look_right;
 
-    // These are the input-params - ie changed by user input, and rendered into the params above by buildCamera()
-    float yaw, pitch, roll, fov;
+    // These are the input-params - ie changed by user input, and rendered into the params 
+    // above by buildCamera()
+    float yaw, pitch, fov;
 
-    Camera() : width(0), height(0) {
+    // these are the starting params - optionally loaded from the scenefile
+    // pressing 'r' at runtime will return to these values
+    glm::vec3 startingOrigin;
+    float startingPitch, startingYaw, startingFov;
+
+    Camera() : 
+        width(0), 
+        height(0), 
+        startingOrigin(1.0f, 1.0f, -1.0f),
+        startingPitch(PI/6), 
+        startingYaw(-PI/6), 
+        startingFov(DEFAULT_FOV) {
+
         resetView();
         buildLookVectors();
         buildCamera();
@@ -43,11 +56,10 @@ struct Camera{
     }
 
     void resetView(){
-        origin= glm::vec3(1, 1, -1);
-        yaw = -PI/6;
-        pitch = PI/6;
-        roll = 0.0f;
-        fov = DEFAULT_FOV;
+        origin = startingOrigin;
+        yaw = startingYaw;
+        pitch = startingPitch;
+        fov = startingFov;
         buildLookVectors();
         buildCamera();
     }
@@ -99,7 +111,6 @@ struct Camera{
     {
         assert(isAngleInOneRev(yaw));
         assert(isAngleInOneRev(pitch));
-        assert(isAngleInOneRev(roll));
         assert(isAngleInHalfRev(fov));
 
         // start with 3x points around the screen
