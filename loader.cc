@@ -79,7 +79,11 @@ glm::vec3 makeVec3FromVerticies(tinyobj::attrib_t const& attrib, int index) {
     return result;
 }
 
-Mesh loadMesh(std::string const& filename){
+int createMaterial(Scene& s, tinyobj::material_t const& material){
+    return 0;
+}
+
+Mesh loadMesh(Scene& s, std::string const& filename){
     std::string err;
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
@@ -97,6 +101,11 @@ Mesh loadMesh(std::string const& filename){
     std::cout << "material count " << materials.size() << std::endl;
     Mesh mesh;
 
+    // we need to map local to global material number - track that here. 
+    // this is local->global.
+    // if a number is not in this map, it doesn't exist globally yet.
+    std::map<int, int> matMap;
+
     for(auto const& shape : shapes) {
         // tinyobj should tesselate for us.
         assert(shape.mesh.indices.size() % 3 == 0);
@@ -106,13 +115,27 @@ Mesh loadMesh(std::string const& filename){
         for (int i = 0; i < ntriangles; i++) {
             int base = i * 3; 
 
-            int mat = shape.mesh.material_ids[i];
-            std::cout << mat << std::endl;
+            // map the local material id to the global number.
+            // have we created/mapped this material yet?
+            int localMatID = shape.mesh.material_ids[i];
+
+            int globalMatID;    
+            auto it = matMap.find(localMatID);
+            if(it == matMap.end()) {
+                // nope, need to create it.
+                globalMatID = createMaterial(s, materials[localMatID]);
+                matMap[localMatID] = globalMatID;
+            }
+            else {
+                globalMatID = it->second;
+                std::cout << " existing mapping " << localMatID << " -> " << globalMatID << std::endl;
+            }
 
             MeshTriangle t(
                 makeVec3FromVerticies(attrib, shape.mesh.indices[base].vertex_index),
                 makeVec3FromVerticies(attrib, shape.mesh.indices[base + 1].vertex_index),
-                makeVec3FromVerticies(attrib, shape.mesh.indices[base + 2].vertex_index));
+                makeVec3FromVerticies(attrib, shape.mesh.indices[base + 2].vertex_index),
+                globalMatID);
 
             mesh.triangles.emplace_back(t);
         }
@@ -215,7 +238,6 @@ void handleCamera(Scene& s, json const& c) {
 
     s.camera.startingFov = readAngle(c, "fov");
     s.camera.resetView();
-
 }
 
 bool loadScene(Scene& s, std::string const& filename)  {
@@ -232,7 +254,7 @@ bool loadScene(Scene& s, std::string const& filename)  {
             if(meshMap.find(it.key()) != meshMap.end()) {
                 throw std::runtime_error("duplicate mesh key");
             }
-            meshMap[it.key()] = loadMesh(it.value());
+            meshMap[it.key()] = loadMesh(s, it.value());
         }
     }
     else {
