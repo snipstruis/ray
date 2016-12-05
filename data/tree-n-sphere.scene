@@ -60,7 +60,7 @@
     "camera" : {
         "origin" : { "x" : 3.6, "y" : 2, "z" : 15},
         "look_angle" : { "yaw" : 200, "pitch" : -4},
-        "fov" : 40
+        "fov" : 50
     }
 }
 
