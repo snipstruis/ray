@@ -14,6 +14,10 @@
 #include <chrono>
 #include <vector>
 
+void DoScreenshot(int x, int y, std::vector<Color>& screenBuffer) {
+
+}
+
 void setWindowTitle(Scene const& s, SDL_Window *win, float frametime_ms)
 {
     char title[1024];
@@ -35,9 +39,14 @@ void setWindowTitle(Scene const& s, SDL_Window *win, float frametime_ms)
     SDL_SetWindowTitle(win, title);
 }
 
+enum GuiAction {
+    GA_NONE,
+    GA_QUIT,
+    GA_SCREENSHOT
+};
 // process input
-// returns true if app should quit
-bool handleEvents(Scene& s, Mode *vis)
+// returns action to be performed
+GuiAction handleEvents(Scene& s, Mode *vis)
 {
     SDL_Event e;
 
@@ -45,7 +54,7 @@ bool handleEvents(Scene& s, Mode *vis)
         switch(e.type)
         {
             case SDL_QUIT:
-                return true;
+                return GA_QUIT;
             case SDL_MOUSEWHEEL:
                 s.camera.moveFov(glm::radians((float)-e.wheel.y));
                 break;
@@ -57,11 +66,9 @@ bool handleEvents(Scene& s, Mode *vis)
                 break;
             case SDL_KEYDOWN:
                 switch(e.key.keysym.scancode){
-                    case SDL_SCANCODE_ESCAPE:  
-                        return true;
-                    case SDL_SCANCODE_R:  
-                        s.camera.resetView();
-                        break;
+                    case SDL_SCANCODE_ESCAPE:  return GA_QUIT;
+                    case SDL_SCANCODE_P:  return GA_SCREENSHOT;
+                    case SDL_SCANCODE_R:  s.camera.resetView(); break;
                     case SDL_SCANCODE_0: *vis = Mode::Default; break;
                     case SDL_SCANCODE_1: *vis = Mode::Microseconds; break;
                     default:
@@ -82,7 +89,7 @@ bool handleEvents(Scene& s, Mode *vis)
     if(kbd[SDL_SCANCODE_D])
         s.camera.moveRight(0.2f);
     
-    return false;
+    return GA_NONE;
 }
 
 int main(int argc, char* argv[]){
@@ -116,10 +123,13 @@ int main(int argc, char* argv[]){
 
     Mode mode=Mode::Default;
     while(true){
-        if(handleEvents(s,&mode))
-            break;
-
         SDL_GL_GetDrawableSize(win, &s.camera.width, &s.camera.height);
+
+        GuiAction a = handleEvents(s,&mode);
+        if (a==GA_QUIT)
+            break;
+        else if (a==GA_SCREENSHOT)
+            DoScreenshot(s.camera.width, s.camera.height, screenBuffer);
 
         // FIXME: maybe save a bit of work by only doing this if camera's moved
         s.camera.buildCamera();
