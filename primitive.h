@@ -2,7 +2,7 @@
 
 #include "utils.h"
 #include "basics.h"
-#include "stdio.h"
+#include "material.h"
 
 #include <vector>
 #include <cmath>

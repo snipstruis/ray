@@ -1,4 +1,5 @@
 #include "basics.h"
+#include "material.h"
 #include "mesh.h"
 #include "scene.h"
 
@@ -79,9 +80,10 @@ glm::vec3 makeVec3FromVerticies(tinyobj::attrib_t const& attrib, int index) {
     return result;
 }
 
-int createMaterial(Scene& s, tinyobj::material_t const& material){
+int createMaterial(Scene& s, tinyobj::material_t const& m){
     // create a new mat on the back of the existing array.
-    s.primitives.materials.emplace_back(Color(0.2f, 0.6f, 0.9f),
+    s.primitives.materials.emplace_back(
+            Color(m.diffuse[0], m.diffuse[1], m.diffuse[2]),
                                         0.8f, // diffuse 
                                         0.0f, // reflective
                                         0.0f, // transparency
@@ -208,7 +210,7 @@ void handleObject(Scene& s, MeshMap const& meshes, json const& o) {
     else if(kind == "plane"){
         glm::vec3 center = readXYZ(o["center"]);
         glm::vec3 normal = glm::normalize(readXYZ(o["normal"]));
-        s.primitives.planes.emplace_back(Plane(center, 2, normal));
+        s.primitives.planes.emplace_back(Plane(center, MATERIAL_CHECKER, normal));
     }
     else {
         throw std::runtime_error("object kind unknown");
@@ -295,7 +297,10 @@ bool loadScene(Scene& s, std::string const& filename)  {
 
 bool setupScene(Scene& s, std::string const& filename)
 {
-    const int reflective_blue=3;
+    buildFixedMaterials(s.primitives.materials);
+
+    // sanity check - the fixed materials should now be created
+    assert(s.primitives.materials.size() > 2);
 
     std::cout << "loading scene " << filename << std::endl;
 
@@ -306,27 +311,6 @@ bool setupScene(Scene& s, std::string const& filename)
         return false;
     }
 
-    // AIR
-    s.primitives.materials.emplace_back(Color(0.f, 0.f, 0.f),
-                                        0.0f, 0.0f, 1.0f,
-                                        1.0f);
-    // RED GLASS
-    s.primitives.materials.emplace_back(Color(0.2f, 0.8f, 0.8f),
-                                        0.0f, 0.0f, 1.0f,
-                                        1.5f);
-    // WHITE/REFLECTIVE BLUE CHECKERED
-    s.primitives.materials.emplace_back(Color(0.6f, 0.6f, 0.6f),
-                                        1.0f, 0.0f, 0.0f,
-                                        1.f, reflective_blue);
-    // REFLECTIVE BLUE
-    s.primitives.materials.emplace_back(Color(0.2f, 0.6f, 0.9f),
-                                        0.8f, // diffuse 
-                                        0.0f, // reflective
-                                        0.0f, // transparency
-                                        1.f,  // refractive index
-                                        -1,   // no checkerboard
-                                        0.8,  // specular highlight
-                                        32.f);  // shinyness
     return true;
 }
 
