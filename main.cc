@@ -71,6 +71,7 @@ GuiAction handleEvents(Scene& s, Mode *vis)
                     case SDL_SCANCODE_R:  s.camera.resetView(); break;
                     case SDL_SCANCODE_0: *vis = Mode::Default; break;
                     case SDL_SCANCODE_1: *vis = Mode::Microseconds; break;
+                    case SDL_SCANCODE_2: *vis = Mode::Normal; break;
                     default:
                         break;
                 }

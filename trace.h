@@ -156,6 +156,7 @@ Color trace(Ray const& ray,
 enum class Mode {
     Default,
     Microseconds,
+    Normal,
 };
 
 // main render starting loop
@@ -187,6 +188,17 @@ inline void renderFrame(Scene& s, std::vector<Color>& screenBuffer, Mode mode){
                 auto frametime = 
                     std::chrono::duration_cast<std::chrono::duration<float,std::micro>>(end-start).count();
                 screenBuffer[idx].r = frametime;
+            }
+        }
+        break;
+    case Mode::Normal:
+        #pragma omp parallel for schedule(auto) collapse(2)
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                Ray r = s.camera.makeRay(x,y);
+                int idx = (height-y-1) * width+ x;
+                auto hit = findClosestIntersection(s.primitives,r);
+                screenBuffer[idx] = Color(hit.normal.x, hit.normal.y, hit.normal.z);
             }
         }
         break;
