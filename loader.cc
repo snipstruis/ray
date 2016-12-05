@@ -282,12 +282,6 @@ bool setupScene(Scene& s, std::string const& filename)
         return false;
     }
 
-#ifdef TEA_TIME_FOR_MRS_NESBIT 
-    std::string filename = "obj/wt_teapot.obj";
-    if(!loadObject(s, filename, reflective_blue)) // reflective_blue = pretty :)
-        return false;
-#endif
-
     // AIR
     s.primitives.materials.emplace_back(Color(0.f, 0.f, 0.f),
                                         0.0f, 0.0f, 1.0f,

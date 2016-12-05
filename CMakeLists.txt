@@ -30,8 +30,6 @@ ENDIF()
 # turn this on to enable bounds checking in the stl, but it hurts perf a lot, it seems
 #add_definitions("-D_GLIBCXX_DEBUG")
 
-#add_definitions("-DTEA_TIME_FOR_MRS_NESBIT")
-
 if(WIN32)
     include_directories("lib/winOnly/SDL2-2.0.3")
     link_directories("lib/winOnly/SDL2-2.0.3/lib/x86")
