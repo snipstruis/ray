@@ -144,7 +144,7 @@ Color trace(Ray const& ray,
     }
 
     // absorption (Beer's law)
-    if(ray.mat>MATERIAL_AIR){
+    if(ray.mat!=MATERIAL_AIR){
         color.r *= expf( -raymat.color.r * hit.distance);
         color.g *= expf( -raymat.color.g * hit.distance);
         color.b *= expf( -raymat.color.b * hit.distance);

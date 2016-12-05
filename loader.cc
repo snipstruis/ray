@@ -204,7 +204,7 @@ void handleObject(Scene& s, MeshMap const& meshes, json const& o) {
         glm::vec4 transformed = transform * starting;
         glm::vec3 center(transformed[0], transformed[1], transformed[2]);
 
-        s.primitives.spheres.emplace_back(Sphere(center, 3, radius));
+        s.primitives.spheres.emplace_back(Sphere(center, MATERIAL_REFLECTIVE_BLUE, radius));
 
     }
     else if(kind == "plane"){
