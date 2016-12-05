@@ -48,14 +48,15 @@ struct Material{
 
     Material(Color c,
              float d, float r, float t, 
-             float ri=1.f, int check=-1, float highlight=1.f)
+             float ri=1.f, int check=-1, float highlight=0.f, float shi=20.0f)
         : color(c),
         diffuseness(d), 
         reflectiveness(r), 
         transparency(t),
         refraction_index(ri),
         checkered(check),
-        specular_highlight(highlight){};
+        specular_highlight(highlight),
+        shininess(shi){};
 
     Color color;
     float diffuseness;
@@ -63,6 +64,7 @@ struct Material{
     float transparency;
     float refraction_index;
     int checkered;
-    float specular_highlight;
+    float specular_highlight; // bightness of specular highlight
+    float shininess;          // the power to which te spec. highlight is raised
 };
 

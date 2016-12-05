@@ -17,13 +17,13 @@ inline Color calcLightOutput(PointLight const& light,
                      Material const& mat,
                      glm::vec3 light_dir) {
     float diff = glm::dot(hit.normal, light_dir);
-    Color ret = mat.color * light.color * (1.f/distance) * diff;
-    if(mat.specular_highlight!=1.f){
-        glm::vec3 R = hit.normal - 2.0f * diff * light_dir;
-        float dot = glm::dot(ray.direction,R);
-        if(dot>0){
-            float spec = powf(dot,20)*mat.specular_highlight;
-            ret += light.color * spec;
+    float falloff = 1.f/distance;
+    Color ret = mat.color * light.color * falloff * diff;
+    if(mat.specular_highlight>0.f){
+        glm::vec3 refl = glm::reflect(light_dir,hit.normal);
+        float dot = glm::dot(ray.direction,refl);
+        if(dot>0.f){
+            ret += powf(dot,mat.shininess) * mat.specular_highlight * light.color * falloff;
         } 
     }
     return ret;
