@@ -2,6 +2,7 @@
 
 #include "basics.h"
 #include "utils.h"
+#include "debug_print.h"
 
 #include "glm/vec3.hpp"
 #include "glm/gtc/constants.hpp"
@@ -92,7 +93,8 @@ struct Camera{
         
         // build result - note direction is normalised
         // FIXME: assumes origin point is in the material 'air'
-        return Ray(origin, glm::normalize(look_vec), 0, STARTING_TTL);
+        Ray r(origin, glm::normalize(look_vec), 0, STARTING_TTL);
+        return r;
     };
 
     void sanityCheck() const
@@ -120,10 +122,13 @@ struct Camera{
         auto tr = glm::vec3(1, 1, 1);
 
         // x djust for aspect ratio
-        float ar = (float)width/(float)height;
-        ar = 1;///ar;
-        std::cout << "AR " <<ar <<std::endl;
-        auto ar_adj = glm::vec3(ar, 1, 1);
+        
+        float w = width;
+        float h = height;
+        float ar = (w)/(h);
+        //ar = sqrt(ar);
+ //       std::cout << "AR " <<ar <<std::endl;
+        auto ar_adj = glm::vec3(1, 1, 1);
 
         tl = tl * ar_adj; 
         bl = bl * ar_adj; 
@@ -135,7 +140,9 @@ struct Camera{
 
         // adjust for fov, keeping dist along z axis const
         float fov_ratio = glm::tan(fov/2); 
-        auto fov_adj = glm::vec3(fov_ratio, fov_ratio, 1);
+        //fov_ratio /= sqrt(ar);
+        //fov_ratio /= (ar);
+        auto fov_adj = glm::vec3(1, 1, fov_ratio);
         
         tl = tl * fov_adj; 
         bl = bl * fov_adj; 
@@ -157,9 +164,14 @@ struct Camera{
         // transform top left to world
         top_left = tl + origin;
 
+        std::cout << "origin"  << origin << std::endl;
         std::cout << "top_left "  << top_left<<std::endl;
         std::cout << "u"  << u<<std::endl;
         std::cout << "v"  << v<<std::endl;
+
+        std::cout << "uL"  << glm::length(u) <<std::endl;
+        std::cout << "vL"  << glm::length(v) <<std::endl;
+        std::cout << "ar " << ar << " rat " << glm::length(u) / glm::length(v) << std::endl;
 
         sanityCheck();
     }

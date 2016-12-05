@@ -168,12 +168,15 @@ inline void renderFrame(Scene& s, std::vector<Color>& screenBuffer, Mode mode){
     int const height = s.camera.height;
     switch(mode){
     case Mode::Default:
-        #pragma omp parallel for schedule(auto) collapse(2)
+ //       #pragma omp parallel for schedule(auto) collapse(2)
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 Ray r = s.camera.makeRay(x, y);
                 int idx = (height-y-1) * width+ x;
-                screenBuffer[idx] = trace(r, s.primitives, s.lights, Color(0,0,0));
+                if(x == width / 2 || y ==height/2)
+                    screenBuffer[idx] = Color(1,0,0);
+                else
+                    screenBuffer[idx] = trace(r, s.primitives, s.lights, Color(0,0,0));
             }
         }
         break;
@@ -193,7 +196,7 @@ inline void renderFrame(Scene& s, std::vector<Color>& screenBuffer, Mode mode){
         }
         break;
     case Mode::Normal:
-        #pragma omp parallel for schedule(auto) collapse(2)
+//        #pragma omp parallel for schedule(auto) collapse(2)
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 Ray r = s.camera.makeRay(x,y);
