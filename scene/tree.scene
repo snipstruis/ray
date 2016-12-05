@@ -1,0 +1,48 @@
+{
+    "load_meshes" : {
+        "tree" : "obj/tree.obj"
+    },
+    "world" : {
+        "objects" : [
+            {
+                "kind" : "mesh",
+                "mesh_name" : "tree",
+                "transform" : {
+                    "translate" : { "x" : 0, "y" : 2, "z" : 8}
+                }
+            },
+            {
+                "kind" : "plane",
+                "normal" : { "x" : 0, "y" : 1, "z" : 0},
+                "center" : { "x" : 0, "y" : 0, "z" : 0}
+            }
+        ],
+        "lights" : [
+            {
+                "kind" : "point",
+                "intensity" : 0.5,
+                "color" : {"red" : 10, "green" : 1, "blue" : 3},
+                "position" : { "x" : 3, "y" : 3, "z" : 10}
+            },
+            {
+                "kind" : "point",
+                "intensity" : 0.5,
+                "color" : {"red" : 2, "green" : 10, "blue" : 2},
+                "position" : { "x" : -4, "y" : 12, "z" : 8}
+            },
+            {
+                "kind" : "point",
+                "intensity" : 0.5,
+                "color" : {"red" : 10, "green" : 5, "blue" : 1},
+                "position" : { "x" : 2, "y" : 4, "z" : 15}
+            }
+        ]
+        
+    },
+    "camera" : {
+        "origin" : { "x" : 4, "y" : 2, "z" : 16},
+        "look_angle" : { "yaw" : 200, "pitch" : -20},
+        "fov" : 90
+    }
+}
+
