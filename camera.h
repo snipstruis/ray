@@ -121,6 +121,7 @@ struct Camera{
 
         // x djust for aspect ratio
         float ar = (float)width/(float)height;
+        ar = 1;///ar;
         std::cout << "AR " <<ar <<std::endl;
         auto ar_adj = glm::vec3(ar, 1, 1);
 
@@ -155,6 +156,10 @@ struct Camera{
 
         // transform top left to world
         top_left = tl + origin;
+
+        std::cout << "top_left "  << top_left<<std::endl;
+        std::cout << "u"  << u<<std::endl;
+        std::cout << "v"  << v<<std::endl;
 
         sanityCheck();
     }
