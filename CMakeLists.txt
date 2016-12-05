@@ -87,4 +87,5 @@ add_scene("spots" "scene/spots.scene")
 add_scene("teapot" "scene/teapot.scene")
 add_scene("col-lights" "scene/col-lights.scene")
 add_scene("tree" "scene/tree.scene")
+add_scene("sportscar" "scene/sportscar.scene")
 
