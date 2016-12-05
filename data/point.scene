@@ -4,9 +4,7 @@
             {
                 "kind" : "sphere",
                 "radius" : 2,
-                "transform" : {
-                    "translate" : { "x" : -0, "y" : 3, "z" : 8}
-                }
+                "center" : { "x" : -0, "y" : 3, "z" : 8}
             },
             {
                 "kind" : "plane",
