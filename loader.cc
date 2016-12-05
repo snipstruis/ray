@@ -53,18 +53,18 @@ glm::mat4 handleTransform(json const& o) {
 
     if(o.find("translate") != o.end()){
         auto const& translate = readXYZ(o["translate"]);
-        std::cout << "GOT TRANS " << translate << std::endl;
+//        std::cout << "GOT TRANS " << translate << std::endl;
         result = glm::translate(result, translate);
     }
 
     if(o.find("rotate") != o.end()){
         auto const& rotate = readXYZ(o["rotate"]);
-        std::cout << "GOT ROTATE" << rotate << std::endl;
+ //       std::cout << "GOT ROTATE" << rotate << std::endl;
     }
 
     if(o.find("scale") != o.end()){
         auto const& scale = readXYZ(o["scale"]);
-        std::cout << "GOT SCALE " << scale << std::endl;
+  //      std::cout << "GOT SCALE " << scale << std::endl;
     }
 
     return result;
@@ -97,7 +97,6 @@ Mesh loadMesh(std::string const& filename){
     std::cout << "material count " << materials.size() << std::endl;
     Mesh mesh;
 
-
     for(auto const& shape : shapes) {
         // tinyobj should tesselate for us.
         assert(shape.mesh.indices.size() % 3 == 0);
@@ -106,6 +105,9 @@ Mesh loadMesh(std::string const& filename){
 
         for (int i = 0; i < ntriangles; i++) {
             int base = i * 3; 
+
+            int mat = shape.mesh.material_ids[i];
+            std::cout << mat << std::endl;
 
             MeshTriangle t(
                 makeVec3FromVerticies(attrib, shape.mesh.indices[base].vertex_index),
