@@ -84,7 +84,7 @@ int createMaterial(Scene& s, tinyobj::material_t const& m){
     // create a new mat on the back of the existing array.
     s.primitives.materials.emplace_back(
             Color(m.diffuse[0], m.diffuse[1], m.diffuse[2]),
-            0.0f, // reflective
+            BLACK, // reflective
             (1.0f - m.dissolve), // transparency - note 1==opaque in the mat files.
             m.ior,  // refractive index
             -1,     // no checkerboard

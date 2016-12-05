@@ -28,6 +28,11 @@ struct Color{
         return *this;
     };
 
+    inline Color& operator+=(float f){
+        r+=f; g+=f; b+=f;
+        return *this;
+    };
+
     inline Color& operator*=(Color const& c){
         r*=c.r; g*=c.g; b*=c.b;
         return *this;

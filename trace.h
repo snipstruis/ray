@@ -109,7 +109,7 @@ Color trace(Ray const& ray,
     }
 
     // angle-depenent transparancy (for dielectric materials)
-    float reflectiveness = mat.reflectiveness;
+    Color reflectiveness = mat.reflectiveness;
     float transparency = mat.transparency;
 
     if(mat.transparency > 0.f){
@@ -136,7 +136,7 @@ Color trace(Ray const& ray,
     }
     
     // reflection (mirror)
-    if(reflectiveness > 0.f){
+    if(!reflectiveness.isBlack()){
         Ray r = Ray(hit.impact+hit.normal*1e-4f,
                     glm::reflect(ray.direction, hit.normal),
                     ray.mat,
