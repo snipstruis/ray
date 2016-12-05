@@ -16,7 +16,7 @@ inline Color calcLightOutput(PointLight const& light,
                      Intersection const& hit, 
                      Material const& mat,
                      glm::vec3 light_dir) {
-    return mat.color * light.color * (1.f/distance) * glm::dot(-hit.normal, -light_dir);
+    return mat.color * light.color * (1.f/distance) * powf(glm::dot(hit.normal, light_dir),mat.specular_highlight);
 }
 
 // calculate spot light colour output
