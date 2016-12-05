@@ -92,7 +92,9 @@ Mesh loadMesh(std::string const& filename){
         throw std::runtime_error(ss.str());
     }
         
+    std::cout << "material count " << materials.size() << std::endl;
     Mesh mesh;
+
 
     for(auto const& shape : shapes) {
         // tinyobj should tesselate for us.

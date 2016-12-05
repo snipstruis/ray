@@ -83,5 +83,6 @@ endmacro(add_scene)
 
 # so, this first line creates a new target run-ray-point for the file scene/point.scene
 add_scene("point" "scene/point.scene")
+add_scene("lone-sphere" "scene/lone-sphere.scene")
 add_scene("spot" "scene/spot.scene")
 
