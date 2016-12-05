@@ -5,10 +5,10 @@
     "world" : {
         "objects" : [
             {
-                "kind" : "sphere",
-                "radius" :2,
+                "kind" : "mesh",
+                "mesh_name" : "teapot",
                 "transform" : {
-                    "translate" : { "x" : -2, "y" : 2, "z" : -2}
+                    "translate" : { "x" : -1, "y" : 2, "z" : -1}
                 }
             },
             {
@@ -28,9 +28,9 @@
         
     },
     "camera" : {
-        "origin" : { "x" : 5, "y" : 5, "z" : 2},
-        "look_angle" : { "yaw" : -110, "pitch" : 30},
-        "fov" : 90
+        "origin" : { "x" : 1, "y" : 4, "z" : 1},
+        "look_angle" : { "yaw" : -140, "pitch" : 30},
+        "fov" : 60
     }
 }
 
