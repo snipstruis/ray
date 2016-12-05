@@ -61,8 +61,8 @@ GuiAction handleEvents(Scene& s, Mode *vis)
             case SDL_MOUSEMOTION:
                 // yes - it's "airplane" style at the moment - mouse down = view up.
                 // I'm going to get a cmdline working soon, make this an option
-              //  s.camera.moveYawPitch(
-                //    glm::radians(((float)e.motion.xrel)/5), -glm::radians(((float)e.motion.yrel)/5));
+                s.camera.moveYawPitch(
+                    glm::radians(((float)e.motion.xrel)/5), -glm::radians(((float)e.motion.yrel)/5));
                 break;
             case SDL_KEYDOWN:
                 switch(e.key.keysym.scancode){
@@ -107,7 +107,7 @@ int main(int argc, char* argv[]){
         return -1;
     }
 
-    SDL_Window *win = SDL_CreateWindow("Roaytroayzah (initialising)", 100, 100, 600, 600, 
+    SDL_Window *win = SDL_CreateWindow("Roaytroayzah (initialising)", 100, 100, 640, 640, 
                                        SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
     SDL_GL_CreateContext(win);
 
@@ -116,7 +116,7 @@ int main(int argc, char* argv[]){
     glClear(GL_COLOR_BUFFER_BIT);
 
     // switch on relative mouse mode - hides the cursor, and kinda makes things... relative.
-    //SDL_SetRelativeMouseMode(SDL_TRUE);
+    SDL_SetRelativeMouseMode(SDL_TRUE);
 
     std::vector<Color> screenBuffer; // will be allocated on first loop
 

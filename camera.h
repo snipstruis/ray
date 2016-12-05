@@ -2,12 +2,10 @@
 
 #include "basics.h"
 #include "utils.h"
-#include "debug_print.h"
 
 #include "glm/vec3.hpp"
 #include "glm/gtc/constants.hpp"
 #include "glm/glm.hpp"
-#include "glm/gtx/io.hpp"
 #include "glm/gtx/epsilon.hpp"
 #include "glm/gtx/rotate_vector.hpp"
 #include "glm/gtx/vector_query.hpp"
@@ -17,7 +15,7 @@
 #include <cmath>
 #include <iostream>
 
-const float DEFAULT_FOV = PI/3;
+const float DEFAULT_FOV = PI/2;
 
 struct Camera{
     // screen res in pixels
@@ -53,8 +51,8 @@ struct Camera{
 
         resetView();
         buildLookVectors();
-        //buildCamera();
-        //sanityCheck();
+        buildCamera();
+        sanityCheck();
     }
 
     void resetView(){
@@ -93,13 +91,11 @@ struct Camera{
         
         // build result - note direction is normalised
         // FIXME: assumes origin point is in the material 'air'
-        Ray r(origin, glm::normalize(look_vec), 0, STARTING_TTL);
-        return r;
+        return Ray(origin, glm::normalize(look_vec), 0, STARTING_TTL);
     };
 
     void sanityCheck() const
     {
-        return;
         // check that the camera/screen has been set up - ie buildCamera has been called
         // ... this will fail if buildCamera's not been called.
         assert(glm::length(u) > 0);
@@ -108,8 +104,9 @@ struct Camera{
         // u & v should be perpendicular
         assert(feq(glm::dot(u, v), 0.0f));
     }
-
-    // y/p must be <2pi, fov < pi
+    // FIXME: probably break this into a functon to move the origin and change the other params 
+    // separately, as they are triggered from separate inputs
+    // y/p/r must be <2pi, fov < pi
     void buildCamera()
     {
         assert(isAngleInOneRev(yaw));
@@ -121,28 +118,9 @@ struct Camera{
         auto bl = glm::vec3(-1, -1, 1);
         auto tr = glm::vec3(1, 1, 1);
 
-        // x djust for aspect ratio
-        
-        float w = width;
-        float h = height;
-        float ar = (w)/(h);
-        //ar = sqrt(ar);
- //       std::cout << "AR " <<ar <<std::endl;
-        auto ar_adj = glm::vec3(1, 1, 1);
-
-        tl = tl * ar_adj; 
-        bl = bl * ar_adj; 
-        tr = tr * ar_adj; 
-
-        std::cout << "TL " <<tl <<std::endl;
-        std::cout << "BL " <<bl <<std::endl;
-        std::cout << "TR " <<tr <<std::endl;
-
         // adjust for fov, keeping dist along z axis const
         float fov_ratio = glm::tan(fov/2); 
-        //fov_ratio /= sqrt(ar);
-        //fov_ratio /= (ar);
-        auto fov_adj = glm::vec3(1, 1, fov_ratio);
+        auto fov_adj = glm::vec3(fov_ratio, fov_ratio, 1);
         
         tl = tl * fov_adj; 
         bl = bl * fov_adj; 
@@ -163,15 +141,6 @@ struct Camera{
 
         // transform top left to world
         top_left = tl + origin;
-
-        std::cout << "origin"  << origin << std::endl;
-        std::cout << "top_left "  << top_left<<std::endl;
-        std::cout << "u"  << u<<std::endl;
-        std::cout << "v"  << v<<std::endl;
-
-        std::cout << "uL"  << glm::length(u) <<std::endl;
-        std::cout << "vL"  << glm::length(v) <<std::endl;
-        std::cout << "ar " << ar << " rat " << glm::length(u) / glm::length(v) << std::endl;
 
         sanityCheck();
     }
