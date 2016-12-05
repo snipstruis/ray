@@ -285,7 +285,7 @@ bool setupScene(Scene& s, std::string const& filename)
                                         0.0f, // transparency
                                         1.f,  // refractive index
                                         -1,   // no checkerboard
-                                        1.f); // specular highlight
+                                        2.f); // specular highlight
     return true;
 }
 
