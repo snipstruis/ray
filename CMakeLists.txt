@@ -86,4 +86,5 @@ add_scene("lone-sphere" "scene/lone-sphere.scene")
 add_scene("spots" "scene/spots.scene")
 add_scene("teapot" "scene/teapot.scene")
 add_scene("col-lights" "scene/col-lights.scene")
+add_scene("tree" "scene/tree.scene")
 
