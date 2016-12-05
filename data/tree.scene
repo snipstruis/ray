@@ -1,6 +1,6 @@
 {
     "load_meshes" : {
-        "tree" : "obj/tree.obj"
+        "tree" : "tree.obj"
     },
     "world" : {
         "objects" : [

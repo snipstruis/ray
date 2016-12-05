@@ -1,6 +1,6 @@
 {
     "load_meshes" : {
-        "cube" : "obj/cube.obj"
+        "cube" : "cube.obj"
     },
     "world" : {
         "objects" : [

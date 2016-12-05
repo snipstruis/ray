@@ -1,6 +1,6 @@
 {
     "load_meshes" : {
-        "teapot" : "obj/wt_teapot.obj"
+        "teapot" : "wt_teapot.obj"
     },
     "world" : {
         "objects" : [
