@@ -199,22 +199,22 @@ inline Intersection findClosestIntersection(Primitives const& primitives, Ray co
 };
 
 // does ray intersect any geometry ? (stops after first hit)
-inline bool findAnyIntersection(Primitives const& primitives, Ray const& ray) {
+inline bool findAnyIntersection(Primitives const& primitives, Ray const& ray, float const max_dist) {
     for(auto const& s: primitives.spheres){
         auto check = intersect(s, ray);
-        if(check.distance > 0 && check.distance < INFINITY)
+        if(check.distance > 0 && check.distance < max_dist)
             return true;
     }
 
     for(auto const& p: primitives.planes){
         auto check = intersect(p, ray);
-        if(check.distance > 0 && check.distance < INFINITY)
+        if(check.distance > 0 && check.distance < max_dist)
             return true;
     }
 
     for(auto const& t: primitives.triangles){
         auto check = intersect(t, ray);
-        if(check.distance > 0 && check.distance < INFINITY)
+        if(check.distance > 0 && check.distance < max_dist)
             return true;
     }
 
