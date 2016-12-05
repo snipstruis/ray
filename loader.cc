@@ -126,9 +126,6 @@ glm::vec3 transformV3(glm::vec3 v, glm::mat4x4 transform) {
     glm::vec4 a(v[0], v[1], v[2], 1);
     glm::vec4 b = transform * a;
     glm::vec3 res(b[0], b[1], b[2]);
-
-    std::cout << " TTT " << v << " -> " << res << std::endl;
-
     return res;
 }
 
@@ -145,9 +142,6 @@ void transformMeshIntoScene(Scene& s, Mesh const& mesh, glm::mat4x4 const& trans
 
 void handleObject(Scene& s, MeshMap const& meshes, json const& o) {
 
-    std::cout << o << std::endl;
-    const std::string kind = o["kind"];
-
     glm::mat4x4 transform; // initialised to identity
     // is there a transform for this obj?
     if (o.find("transform") != o.end()) {
@@ -155,6 +149,7 @@ void handleObject(Scene& s, MeshMap const& meshes, json const& o) {
         std::cout << "got transform " << transform << std::endl;
     }
 
+    const std::string kind = o["kind"];
     if(kind == "mesh"){
         // find already loaded mesh
         std::string meshName = o["mesh_name"];
@@ -166,11 +161,9 @@ void handleObject(Scene& s, MeshMap const& meshes, json const& o) {
     }
     else if(kind == "sphere"){
         float radius = o["radius"];
-        std::cerr << "sphere, radius = " << radius << std::endl;
 
         glm::vec4 starting(0, 0, 0, 1);
         glm::vec4 transformed = transform * starting;
-        std::cout << "transformed " << transformed << std::endl;
         glm::vec3 center(transformed[0], transformed[1], transformed[2]);
 
         s.primitives.spheres.emplace_back(Sphere(center, 3, radius));
@@ -212,7 +205,6 @@ void handleLight(Scene& s, json const& l) {
 }
 
 void handleCamera(Scene& s, json const& c) {
-    std::cout << "got camera "<< c << std::endl;
     s.camera.startingOrigin = readXYZ(c["origin"]);
 
     auto const& lookAngle = c["look_angle"];
@@ -221,12 +213,10 @@ void handleCamera(Scene& s, json const& c) {
 
     s.camera.startingFov = readAngle(c, "fov");
     s.camera.resetView();
-    std::cout <<"cam odone"<<std::endl;
 
 }
 
 bool loadScene(Scene& s, std::string const& filename)  {
-
     std::ifstream inFile(filename);
     json o;
     inFile >> o;
@@ -236,13 +226,10 @@ bool loadScene(Scene& s, std::string const& filename)  {
     // load meshes
     if(o.find("load_meshes") != o.end()) {
         for(auto it = o["load_meshes"].begin(); it != o["load_meshes"].end(); ++it) {
-            std::cout << it.key() << " " << it.value() << std::endl;
-            
             // check for dup key
             if(meshMap.find(it.key()) != meshMap.end()) {
                 throw std::runtime_error("duplicate mesh key");
             }
-
             meshMap[it.key()] = loadMesh(it.value());
         }
     }
