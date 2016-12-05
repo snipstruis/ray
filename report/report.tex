@@ -1,10 +1,12 @@
 \section{features}
+A fully interactive whitted-style raytracer with run time scene loading.
 
-\subsection{}
+\subsection{Run time scene loader}
     \begin{enumerate}
     \item Json scene loader
         \begin{enumerate}
-        \item primitive
+        \item Spheres, triangle meshes, planes
+        \item Point lights
         \item camera
         \end{enumerate}
     \item \verb|.obj| file loader
@@ -13,10 +15,23 @@
 
 \subsection{Materials}
     \begin{enumerate}
-    \item diffuse lighting and shadows
+    \item diffuse lighting with hard shadows
     \item reflections
-    \item transparency with refraction index
+    \item transparency with refraction indices
     \item specular highlights
+    \end{enumerate}
+
+\subsection{Camera}
+    \begin{enumerate}
+    \item resizable windows
+    \item zoom (mousewheel)
+    \item pitch, yaw and translate
+    \end{enumerate}
+
+\subsection{Other}
+    \begin{enumerate}
+    \item multi-platform with CMake (linux, mac and windows)
+    \item multi-threaded with OpenMP (got around 5x speedup on linux, which is what is expected for 4 cores with HT)
     \end{enumerate}
 
 \section{External Packages}
