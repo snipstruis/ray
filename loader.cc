@@ -253,6 +253,8 @@ bool setupScene(Scene& s, std::string const& filename)
 {
     const int reflective_blue=3;
 
+    std::cout << "loading scene " << filename << std::endl;
+
     try{
         loadScene(s, filename);
     } catch (std::exception const& e) {
