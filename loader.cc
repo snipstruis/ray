@@ -177,34 +177,35 @@ void transformMeshIntoScene(Scene& s, Mesh const& mesh, glm::mat4x4 const& trans
     }
 }
 
-void handleObject(Scene& s, MeshMap const& meshes, json const& o) {
-
+void handleMesh(Scene& s, MeshMap const& meshes, json const& o) {
     glm::mat4x4 transform; // initialised to identity
+
     // is there a transform for this obj?
     if (o.find("transform") != o.end()) {
         transform = handleTransform(o["transform"]);
         std::cout << "got transform " << transform << std::endl;
     }
 
+    // find already loaded mesh
+    std::string meshName = o["mesh_name"];
+    auto it = meshes.find(meshName);
+    if(it == meshes.end())
+        throw std::runtime_error("unknown mesh");
+
+    transformMeshIntoScene(s, it->second, transform);
+}
+
+void handleObject(Scene& s, MeshMap const& meshes, json const& o) {
+
     const std::string kind = o["kind"];
     if(kind == "mesh"){
-        // find already loaded mesh
-        std::string meshName = o["mesh_name"];
-        auto it = meshes.find(meshName);
-        if(it == meshes.end())
-            throw std::runtime_error("unknown mesh");
-
-        transformMeshIntoScene(s, it->second, transform);
+        handleMesh(s, meshes, o);
     }
     else if(kind == "sphere"){
         float radius = o["radius"];
-
-        glm::vec4 starting(0, 0, 0, 1);
-        glm::vec4 transformed = transform * starting;
-        glm::vec3 center(transformed[0], transformed[1], transformed[2]);
+        glm::vec3 center = readXYZ(o["center"]);
 
         s.primitives.spheres.emplace_back(Sphere(center, MATERIAL_REFLECTIVE_BLUE, radius));
-
     }
     else if(kind == "plane"){
         glm::vec3 center = readXYZ(o["center"]);
