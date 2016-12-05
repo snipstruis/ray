@@ -28,12 +28,21 @@ struct Color{
         return *this;
     };
 
+    inline Color& operator+=(float f){
+        r+=f; g+=f; b+=f;
+        return *this;
+    };
+
     inline Color& operator*=(Color const& c){
         r*=c.r; g*=c.g; b*=c.b;
         return *this;
     }
 
     inline Color& operator*=(float f){ return *this*=Color(f,f,f); }
+
+    inline bool isBlack() const {
+        return !(r > 0.f && g > 0.f && b > 0.f);
+    }
 
     float r,g,b;
 };

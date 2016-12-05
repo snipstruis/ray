@@ -4,9 +4,7 @@
             {
                 "kind" : "sphere",
                 "radius" : 2,
-                "transform" : {
-                    "translate" : { "x" : -0, "y" : 0, "z" : 8}
-                }
+                "center" : { "x" : -0, "y" : 0, "z" : 8}
             },
             {
                 "kind" : "plane",
@@ -39,7 +37,7 @@
     "camera" : {
         "origin" : { "x" : 4, "y" : 8, "z" : 16},
         "look_angle" : { "yaw" : 200, "pitch" : 50},
-        "fov" : 90
+        "fov" : 60
     }
 }
 

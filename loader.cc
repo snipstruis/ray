@@ -84,14 +84,14 @@ int createMaterial(Scene& s, tinyobj::material_t const& m){
     // create a new mat on the back of the existing array.
     s.primitives.materials.emplace_back(
             Color(m.diffuse[0], m.diffuse[1], m.diffuse[2]),
-                                        0.8f, // diffuse 
-                                        0.0f, // reflective
-                                        0.0f, // transparency
-                                        1.f,  // refractive index
-                                        -1,   // no checkerboard
-                                        0.8,  // specular highlight
-                                        32.f);  // shinyness
+            BLACK, // reflective
+            (1.0f - m.dissolve), // transparency - note 1==opaque in the mat files.
+            m.ior,  // refractive index
+            -1,     // no checkerboard
+            Color(m.specular[0], m.specular[1], m.specular[2]), //specular highlight
+            m.shininess);  // shininess
 
+    std::cout << " shininess " << m.shininess<< std::endl;
     // return the index of this newly created material.
     return s.primitives.materials.size() - 1;       
 }
@@ -133,15 +133,21 @@ Mesh loadMesh(Scene& s, std::string const& filename){
             int localMatID = shape.mesh.material_ids[i];
 
             int globalMatID;    
-            auto it = matMap.find(localMatID);
-            if(it == matMap.end()) {
-                // nope, need to create it.
-                globalMatID = createMaterial(s, materials[localMatID]);
-                matMap[localMatID] = globalMatID;
+
+            // if this file has no materials, we'll get a -1 here
+            if(localMatID < 0) {
+                globalMatID = DEFAULT_MATERIAL;
             }
             else {
-                globalMatID = it->second;
-                std::cout << " existing mapping " << localMatID << " -> " << globalMatID << std::endl;
+                auto it = matMap.find(localMatID);
+                if(it == matMap.end()) {
+                    // nope, need to create it.
+                    globalMatID = createMaterial(s, materials[localMatID]);
+                    matMap[localMatID] = globalMatID;
+                }
+                else {
+                    globalMatID = it->second;
+                }
             }
 
             MeshTriangle t(
@@ -178,34 +184,35 @@ void transformMeshIntoScene(Scene& s, Mesh const& mesh, glm::mat4x4 const& trans
     }
 }
 
-void handleObject(Scene& s, MeshMap const& meshes, json const& o) {
-
+void handleMesh(Scene& s, MeshMap const& meshes, json const& o) {
     glm::mat4x4 transform; // initialised to identity
+
     // is there a transform for this obj?
     if (o.find("transform") != o.end()) {
         transform = handleTransform(o["transform"]);
         std::cout << "got transform " << transform << std::endl;
     }
 
+    // find already loaded mesh
+    std::string meshName = o["mesh_name"];
+    auto it = meshes.find(meshName);
+    if(it == meshes.end())
+        throw std::runtime_error("unknown mesh");
+
+    transformMeshIntoScene(s, it->second, transform);
+}
+
+void handleObject(Scene& s, MeshMap const& meshes, json const& o) {
+
     const std::string kind = o["kind"];
     if(kind == "mesh"){
-        // find already loaded mesh
-        std::string meshName = o["mesh_name"];
-        auto it = meshes.find(meshName);
-        if(it == meshes.end())
-            throw std::runtime_error("unknown mesh");
-
-        transformMeshIntoScene(s, it->second, transform);
+        handleMesh(s, meshes, o);
     }
     else if(kind == "sphere"){
         float radius = o["radius"];
+        glm::vec3 center = readXYZ(o["center"]);
 
-        glm::vec4 starting(0, 0, 0, 1);
-        glm::vec4 transformed = transform * starting;
-        glm::vec3 center(transformed[0], transformed[1], transformed[2]);
-
-        s.primitives.spheres.emplace_back(Sphere(center, MATERIAL_REFLECTIVE_BLUE, radius));
-
+        s.primitives.spheres.emplace_back(Sphere(center, DEFAULT_MATERIAL, radius));
     }
     else if(kind == "plane"){
         glm::vec3 center = readXYZ(o["center"]);
@@ -218,7 +225,7 @@ void handleObject(Scene& s, MeshMap const& meshes, json const& o) {
 }
 
 void handleLight(Scene& s, json const& l) {
-    std::cout << "LIGHT" << l << std::endl;
+//    std::cout << "LIGHT" << l << std::endl;
 
     const std::string kind = l["kind"];
     const glm::vec3 position = readXYZ(l["position"]);

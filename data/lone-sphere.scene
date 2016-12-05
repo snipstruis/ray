@@ -4,9 +4,7 @@
             {
                 "kind" : "sphere",
                 "radius" : 2,
-                "transform" : {
-                    "translate" : { "x" : -0, "y" : 3, "z" : 8}
-                }
+                "center" : { "x" : -0, "y" : 3, "z" : 8}
             }
         ],
         "lights" : 
@@ -20,8 +18,8 @@
         
     },
     "camera" : {
-        "eye_point" : { "x" : -1, "y" : -1, "z" : -1},
-        "eye_angle" : { "yaw" : -30, "pitch" : 30, "roll" : 0},
+        "origin" : { "x" : 4.5, "y" : 10, "z" : 11},
+        "look_angle" : { "yaw" : -120, "pitch" : 65},
         "fov" : 90
     }
 }
