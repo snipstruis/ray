@@ -307,7 +307,8 @@ bool setupScene(Scene& s, std::string const& filename)
                                         0.0f, // transparency
                                         1.f,  // refractive index
                                         -1,   // no checkerboard
-                                        2.f); // specular highlight
+                                        0.8,  // specular highlight
+                                        32.f);  // shinyness
     return true;
 }
 
