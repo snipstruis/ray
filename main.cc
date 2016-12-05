@@ -64,6 +64,7 @@ bool handleEvents(Scene& s, Mode *vis)
                         break;
                     case SDL_SCANCODE_0: *vis = Mode::Default; break;
                     case SDL_SCANCODE_1: *vis = Mode::Microseconds; break;
+                    case SDL_SCANCODE_2: *vis = Mode::Normal; break;
                     default:
                         break;
                 }
