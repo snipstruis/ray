@@ -221,6 +221,8 @@ void handleCamera(Scene& s, json const& c) {
 
     s.camera.startingFov = readAngle(c, "fov");
     s.camera.resetView();
+    std::cout <<"cam odone"<<std::endl;
+
 }
 
 bool loadScene(Scene& s, std::string const& filename)  {
