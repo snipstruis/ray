@@ -80,7 +80,18 @@ glm::vec3 makeVec3FromVerticies(tinyobj::attrib_t const& attrib, int index) {
 }
 
 int createMaterial(Scene& s, tinyobj::material_t const& material){
-    return 0;
+    // create a new mat on the back of the existing array.
+    s.primitives.materials.emplace_back(Color(0.2f, 0.6f, 0.9f),
+                                        0.8f, // diffuse 
+                                        0.0f, // reflective
+                                        0.0f, // transparency
+                                        1.f,  // refractive index
+                                        -1,   // no checkerboard
+                                        0.8,  // specular highlight
+                                        32.f);  // shinyness
+
+    // return the index of this newly created material.
+    return s.primitives.materials.size() - 1;       
 }
 
 Mesh loadMesh(Scene& s, std::string const& filename){
