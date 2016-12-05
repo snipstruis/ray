@@ -1,8 +1,4 @@
 {
-    "load_meshes" : {
-        "teapot" : "obj/wt_teapot.obj",
-        "plane" : "obj/plane.obj"
-    },
     "world" : {
         "objects" : [
             {
@@ -41,8 +37,8 @@
         
     },
     "camera" : {
-        "eye_point" : { "x" : -1, "y" : -1, "z" : -1},
-        "eye_angle" : { "yaw" : -30, "pitch" : 30, "roll" : 0},
+        "origin" : { "x" : 4, "y" : 8, "z" : 16},
+        "look_angle" : { "yaw" : 200, "pitch" : 50},
         "fov" : 90
     }
 }
