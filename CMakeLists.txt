@@ -59,12 +59,29 @@ add_executable(ray
 # linking
 target_link_libraries(ray SDL2 ${OPENGL_gl_LIBRARY})
 
-# create a target to auto load the raytracer 
-# note that it will start this with the wd set to source, so it can find any test objects
-add_custom_target(run-ray ray DEPENDS ray WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} USES_TERMINAL)
 
 # recurse into test
 if(NOT WIN32)
     add_subdirectory(test)
 endif()
+
+# create a target to auto load the raytracer 
+# note that it will start this with the wd set to source, so it can find any test objects
+
+macro(add_scene key scenefile)
+    set(N "run-ray-${key}") 
+
+    message(STATUS "adding target ${N} for scenefile ${scenefile}")
+
+    add_custom_target(${N}
+        COMMAND ray ${scenefile} 
+        DEPENDS ray 
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} 
+        USES_TERMINAL
+        )
+endmacro(add_scene)    
+
+# so, this first line creates a new target run-ray-point for the file scene/point.scene
+add_scene("point" "scene/point.scene")
+add_scene("spot" "scene/spot.scene")
 
