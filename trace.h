@@ -18,7 +18,7 @@ inline Color calcLightOutput(PointLight const& light,
                      glm::vec3 light_dir) {
     float diff = glm::dot(hit.normal, light_dir);
     float falloff = 1.f/distance;
-    Color ret = mat.color * light.color * falloff * diff;
+    Color ret = mat.diffuseColor * light.color * falloff * diff;
     if(mat.specular_highlight>0.f){
         glm::vec3 refl = glm::reflect(light_dir,hit.normal);
         float dot = glm::dot(ray.direction,refl);
@@ -103,8 +103,8 @@ Color trace(Ray const& ray,
     Color color = Color(0, 0, 0);
 
     // shadows and lighting
-    if(mat.diffuseness > 0.f){
-        color += mat.diffuseness * calcTotalDiffuse(ray,primitives, lights, hit, mat);
+    if(!mat.diffuseColor.isBlack()){
+        color += calcTotalDiffuse(ray,primitives, lights, hit, mat);
     }
 
     // angle-depenent transparancy (for dielectric materials)
@@ -145,9 +145,9 @@ Color trace(Ray const& ray,
 
     // absorption (Beer's law)
     if(ray.mat!=MATERIAL_AIR){
-        color.r *= expf( -raymat.color.r * hit.distance);
-        color.g *= expf( -raymat.color.g * hit.distance);
-        color.b *= expf( -raymat.color.b * hit.distance);
+        color.r *= expf( -raymat.diffuseColor.r * hit.distance);
+        color.g *= expf( -raymat.diffuseColor.g * hit.distance);
+        color.b *= expf( -raymat.diffuseColor.b * hit.distance);
     }
     return color;
 }

@@ -35,6 +35,10 @@ struct Color{
 
     inline Color& operator*=(float f){ return *this*=Color(f,f,f); }
 
+    inline bool isBlack() const {
+        return !(r > 0.f && g > 0.f && b > 0.f);
+    }
+
     float r,g,b;
 };
 
