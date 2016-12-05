@@ -129,7 +129,7 @@ Color trace(Ray const& ray,
         Ray refract_ray = Ray(hit.impact-(hit.normal*1e-4f),
                 refract_direction, 
                 //FIXME: exiting a primitive will set the material to air
-                hit.internal ? 0 : hit.mat, 
+                hit.internal ? MATERIAL_AIR : hit.mat, 
                 ray.ttl-1);
         color += transparency * trace(refract_ray, primitives, lights, alpha);
     }
@@ -144,7 +144,7 @@ Color trace(Ray const& ray,
     }
 
     // absorption (Beer's law)
-    if(ray.mat>0){
+    if(ray.mat>MATERIAL_AIR){
         color.r *= expf( -raymat.color.r * hit.distance);
         color.g *= expf( -raymat.color.g * hit.distance);
         color.b *= expf( -raymat.color.b * hit.distance);
