@@ -6,6 +6,7 @@
 #include "glm/vec3.hpp"
 #include "glm/gtc/constants.hpp"
 #include "glm/glm.hpp"
+#include "glm/gtx/io.hpp"
 #include "glm/gtx/epsilon.hpp"
 #include "glm/gtx/rotate_vector.hpp"
 #include "glm/gtx/vector_query.hpp"
@@ -15,7 +16,7 @@
 #include <cmath>
 #include <iostream>
 
-const float DEFAULT_FOV = PI/2;
+const float DEFAULT_FOV = PI/3;
 
 struct Camera{
     // screen res in pixels
@@ -51,8 +52,8 @@ struct Camera{
 
         resetView();
         buildLookVectors();
-        buildCamera();
-        sanityCheck();
+        //buildCamera();
+        //sanityCheck();
     }
 
     void resetView(){
@@ -96,6 +97,7 @@ struct Camera{
 
     void sanityCheck() const
     {
+        return;
         // check that the camera/screen has been set up - ie buildCamera has been called
         // ... this will fail if buildCamera's not been called.
         assert(glm::length(u) > 0);
@@ -104,9 +106,8 @@ struct Camera{
         // u & v should be perpendicular
         assert(feq(glm::dot(u, v), 0.0f));
     }
-    // FIXME: probably break this into a functon to move the origin and change the other params 
-    // separately, as they are triggered from separate inputs
-    // y/p/r must be <2pi, fov < pi
+
+    // y/p must be <2pi, fov < pi
     void buildCamera()
     {
         assert(isAngleInOneRev(yaw));
@@ -117,6 +118,19 @@ struct Camera{
         auto tl = glm::vec3(-1, 1, 1);
         auto bl = glm::vec3(-1, -1, 1);
         auto tr = glm::vec3(1, 1, 1);
+
+        // x djust for aspect ratio
+        float ar = (float)width/(float)height;
+        std::cout << "AR " <<ar <<std::endl;
+        auto ar_adj = glm::vec3(ar, 1, 1);
+
+        tl = tl * ar_adj; 
+        bl = bl * ar_adj; 
+        tr = tr * ar_adj; 
+
+        std::cout << "TL " <<tl <<std::endl;
+        std::cout << "BL " <<bl <<std::endl;
+        std::cout << "TR " <<tr <<std::endl;
 
         // adjust for fov, keeping dist along z axis const
         float fov_ratio = glm::tan(fov/2); 
