@@ -133,14 +133,21 @@ Mesh loadMesh(Scene& s, std::string const& filename){
             int localMatID = shape.mesh.material_ids[i];
 
             int globalMatID;    
-            auto it = matMap.find(localMatID);
-            if(it == matMap.end()) {
-                // nope, need to create it.
-                globalMatID = createMaterial(s, materials[localMatID]);
-                matMap[localMatID] = globalMatID;
+
+            // if this file has no materials, we'll get a -1 here
+            if(localMatID < 0) {
+                globalMatID = DEFAULT_MATERIAL;
             }
             else {
-                globalMatID = it->second;
+                auto it = matMap.find(localMatID);
+                if(it == matMap.end()) {
+                    // nope, need to create it.
+                    globalMatID = createMaterial(s, materials[localMatID]);
+                    matMap[localMatID] = globalMatID;
+                }
+                else {
+                    globalMatID = it->second;
+                }
             }
 
             MeshTriangle t(
@@ -205,7 +212,7 @@ void handleObject(Scene& s, MeshMap const& meshes, json const& o) {
         float radius = o["radius"];
         glm::vec3 center = readXYZ(o["center"]);
 
-        s.primitives.spheres.emplace_back(Sphere(center, MATERIAL_REFLECTIVE_BLUE, radius));
+        s.primitives.spheres.emplace_back(Sphere(center, DEFAULT_MATERIAL, radius));
     }
     else if(kind == "plane"){
         glm::vec3 center = readXYZ(o["center"]);
@@ -218,7 +225,7 @@ void handleObject(Scene& s, MeshMap const& meshes, json const& o) {
 }
 
 void handleLight(Scene& s, json const& l) {
-    std::cout << "LIGHT" << l << std::endl;
+//    std::cout << "LIGHT" << l << std::endl;
 
     const std::string kind = l["kind"];
     const glm::vec3 position = readXYZ(l["position"]);

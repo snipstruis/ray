@@ -36,6 +36,9 @@ const int MATERIAL_AIR = 0;
 const int MATERIAL_CHECKER = 1;
 const int MATERIAL_REFLECTIVE_BLUE= 2;
 
+// if a mesh doesn't have a material, it'll get this one
+const int DEFAULT_MATERIAL = MATERIAL_REFLECTIVE_BLUE;
+
 inline void buildFixedMaterials(std::vector<Material>& v){
     // AIR
     v.emplace_back(Color(0.f, 0.f, 0.f), // diffuse col
