@@ -83,6 +83,12 @@ glm::vec3 makeVec3FromVerticies(tinyobj::attrib_t const& attrib, int index) {
     return result;
 }
 
+glm::vec3 makeVec3FromNormals(tinyobj::attrib_t const& attrib, int index) {
+    int i = index * 3;
+    glm::vec3 result(attrib.normals[i], attrib.normals[i + 1], attrib.normals[i + 2]);
+    return result;
+}
+
 int createMaterial(Scene& s, tinyobj::material_t const& m){
 
     // create a new mat on the back of the existing array.
@@ -160,9 +166,9 @@ Mesh loadMesh(Scene& s, std::string const& filename){
                 makeVec3FromVerticies(attrib, shape.mesh.indices[base].vertex_index),
                 makeVec3FromVerticies(attrib, shape.mesh.indices[base + 1].vertex_index),
                 makeVec3FromVerticies(attrib, shape.mesh.indices[base + 2].vertex_index),
-                makeVec3FromVerticies(attrib, shape.mesh.indices[base].normal_index),
-                makeVec3FromVerticies(attrib, shape.mesh.indices[base + 1].normal_index),
-                makeVec3FromVerticies(attrib, shape.mesh.indices[base + 2].normal_index),
+                makeVec3FromNormals(attrib, shape.mesh.indices[base].normal_index),
+                makeVec3FromNormals(attrib, shape.mesh.indices[base + 1].normal_index),
+                makeVec3FromNormals(attrib, shape.mesh.indices[base + 2].normal_index),
                 globalMatID);
 
             mesh.triangles.emplace_back(t);
