@@ -3,6 +3,8 @@
  
 mtllib cube.mtl
 
+usemtl BodyGlossMat
+
 g cube
  
 v  0.0  0.0  0.0
