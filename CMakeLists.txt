@@ -28,7 +28,7 @@ ELSE()
 ENDIF()
 
 # turn this on to enable bounds checking in the stl, but it hurts perf a lot, it seems
-#add_definitions("-D_GLIBCXX_DEBUG")
+add_definitions("-D_GLIBCXX_DEBUG")
 
 if(WIN32)
     include_directories("lib/winOnly/SDL2-2.0.3")
@@ -88,6 +88,7 @@ add_scene("lone-sphere" "lone-sphere.scene")
 add_scene("spots" "spots.scene")
 add_scene("spots2" "spots2.scene")
 add_scene("teapot" "teapot.scene")
+add_scene("teapot-hi" "teapot-hi.scene")
 add_scene("col-lights" "col-lights.scene")
 add_scene("tree" "tree.scene")
 add_scene("tree-n-sphere" "tree-n-sphere.scene")

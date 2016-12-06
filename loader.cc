@@ -84,6 +84,12 @@ glm::vec3 makeVec3FromVerticies(tinyobj::attrib_t const& attrib, int index) {
 }
 
 glm::vec3 makeVec3FromNormals(tinyobj::attrib_t const& attrib, int index) {
+    // apparently index can go <0, which I guess means no normal
+    if(index < 0){
+        std::cout << "warning: missing normal " << std::endl;
+        return glm::vec3(0,0,0);
+    }
+
     int i = index * 3;
     glm::vec3 result(attrib.normals[i], attrib.normals[i + 1], attrib.normals[i + 2]);
     return result;
