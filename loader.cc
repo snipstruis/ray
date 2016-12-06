@@ -225,8 +225,6 @@ void handleObject(Scene& s, MeshMap const& meshes, json const& o) {
 }
 
 void handleLight(Scene& s, json const& l) {
-//    std::cout << "LIGHT" << l << std::endl;
-
     const std::string kind = l["kind"];
     const glm::vec3 position = readXYZ(l["position"]);
     const Color color = readColor(l["color"]);

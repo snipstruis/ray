@@ -1,13 +1,10 @@
 {
     "world" : {
-        "objects" : 
-        [
+        "objects" : [
             {
                 "kind" : "sphere",
                 "radius" : 2,
-                "transform" : {
-                    "translate" : { "x" : -0, "y" : 3, "z" : 8}
-                }
+                "center" : { "x" : 7, "y" : 0, "z" : 7}
             },
             {
                 "kind" : "plane",
@@ -15,22 +12,45 @@
                 "center" : { "x" : 0, "y" : -1, "z" : 0}
             }
         ],
-        "lights" : 
-        [
+        "lights" : [
+            {
+                "kind" : "point",
+                "color" : {"red" : 2, "green" : 2, "blue" : 2},
+                "position" : { "x" : 6, "y" : 5, "z" : 6}
+            },
             {
                 "kind" : "spot",
-                "cone_angle" : 30,
+                "inner_angle" : 30,
+                "outer_angle" : 60,
                 "falloff" : "linear",
-                "color" : {"red" : 10, "green" : 10, "blue" : 10},
-                "position" : { "x" : 2, "y" : 4, "z" : 15},
+                "color" : {"red" : 1, "green" : 8, "blue" : 1},
+                "position" : { "x" : 0, "y" : 4, "z" : 10},
+                "point_direction" : {"yaw" : 90, "pitch" : -35}
+            },
+            {
+                "kind" : "spot",
+                "inner_angle" : 30,
+                "outer_angle" : 45,
+                "falloff" : "linear",
+                "color" : {"red" : 10, "green" : 1, "blue" : 1},
+                "position" : { "x" : 4, "y" : 4, "z" : 10},
+                "point_direction" : {"yaw" : 90, "pitch" : -45}
+            },
+            {
+                "kind" : "spot",
+                "inner_angle" : 30,
+                "outer_angle" : 45,
+                "falloff" : "log",
+                "color" : {"red" : 1, "green" : 1, "blue" : 8},
+                "position" : { "x" : 8, "y" : 4, "z" : 10},
                 "point_direction" : {"yaw" : 90, "pitch" : -45}
             }
         ]
         
     },
     "camera" : {
-        "eye_point" : { "x" : -1, "y" : -1, "z" : -1},
-        "eye_angle" : { "yaw" : -30, "pitch" : 30, "roll" : 0},
+        "origin" : { "x" : 2, "y" : 5, "z" : 13},
+        "look_angle" : { "yaw" : 140, "pitch" : 30},
         "fov" : 90
     }
 }
