@@ -24,18 +24,32 @@ struct Plane {
 };
 
 struct Triangle{
+    // old constructor (pre per-vertex normals). will die.
     Triangle(glm::vec3 a, glm::vec3 b, glm::vec3 c, int m){
         v[0]=a; v[1]=b; v[2]=c; mat=m;
-//        pos=glm::vec3((a.x+b.x+c.x)/3.f,
-//                      (a.y+b.y+c.y)/3.f,
-//                      (a.z+b.z+c.z)/3.f);
+        //TODO: remove
         normal = glm::normalize(glm::cross(b-a,c-a));
     }
 
+    Triangle(
+            glm::vec3 const& _v1, glm::vec3 const& _v2, glm::vec3 const& _v3, 
+            glm::vec3 const& _n1, glm::vec3 const& _n2, glm::vec3 const& _n3, 
+            int _material) :
+        v{_v1, _v2, _v3}, 
+        n{_n1, _n2, _n3}, 
+        mat(_material) {
+            //TODO:remove
+            normal = glm::normalize(glm::cross(v[1]-v[0], v[2]-v[0]));
+        } 
+
+    //TODO: remove
     glm::vec3 normal;
- //   glm::vec3 pos; 
-    int mat; 
+    // verticies
     glm::vec3 v[3];
+    // per-vertex normal
+    glm::vec3 n[3];
+    // material
+    int mat; 
 };
 
 struct Primitives{
