@@ -84,6 +84,7 @@ glm::vec3 makeVec3FromVerticies(tinyobj::attrib_t const& attrib, int index) {
 }
 
 int createMaterial(Scene& s, tinyobj::material_t const& m){
+
     // create a new mat on the back of the existing array.
     s.primitives.materials.emplace_back(
             Color(m.diffuse[0], m.diffuse[1], m.diffuse[2]),
@@ -95,7 +96,10 @@ int createMaterial(Scene& s, tinyobj::material_t const& m){
             m.shininess);  // shininess
 
     // return the index of this newly created material.
-    return s.primitives.materials.size() - 1;       
+    auto globalMatId = s.primitives.materials.size() - 1;
+    std::cout << "created new material " << m.name << " @ " << globalMatId << std::endl;
+
+    return globalMatId;
 }
 
 Mesh loadMesh(Scene& s, std::string const& filename){
