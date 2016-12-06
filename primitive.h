@@ -42,7 +42,7 @@ struct Triangle{
             normal = glm::normalize(glm::cross(v[1]-v[0], v[2]-v[0]));
         } 
 
-    //TODO: remove
+    //TODO: remove, we have per-vertex normals now.
     glm::vec3 normal;
     // verticies
     glm::vec3 v[3];
