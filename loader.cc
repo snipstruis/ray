@@ -87,12 +87,12 @@ int createMaterial(Scene& s, tinyobj::material_t const& m){
 
     // create a new mat on the back of the existing array.
     s.primitives.materials.emplace_back(
-            Color(m.diffuse[0], m.diffuse[1], m.diffuse[2]),
-            Color(m.transmittance[0], m.transmittance[1], m.transmittance[2]),
+            Color(m.diffuse[0], m.diffuse[1], m.diffuse[2]), // diffuse color
+            Color(m.transmittance[0], m.transmittance[1], m.transmittance[2]), // transparency color
             (1.0f - m.dissolve), // transparency - note 1==opaque in the mat files.
             m.ior,  // refractive index
             -1,     // no checkerboard
-            Color(m.specular[0], m.specular[1], m.specular[2]), //specular highlight
+            Color(m.specular[0], m.specular[1], m.specular[2]), //specular highlight color
             m.shininess);  // shininess
 
     // return the index of this newly created material.
@@ -135,16 +135,16 @@ Mesh loadMesh(Scene& s, std::string const& filename){
             int base = i * 3; 
 
             // map the local material id to the global number.
-            // have we created/mapped this material yet?
             int localMatID = shape.mesh.material_ids[i];
-
             int globalMatID;    
 
-            // if this file has no materials, we'll get a -1 here
+            // if this obj file has no materials, we'll get a -1 here
             if(localMatID < 0) {
                 globalMatID = DEFAULT_MATERIAL;
             }
             else {
+                // ok, triangle has a material...
+                // have we created/mapped this material yet?
                 auto it = matMap.find(localMatID);
                 if(it == matMap.end()) {
                     // nope, need to create it.
@@ -160,6 +160,9 @@ Mesh loadMesh(Scene& s, std::string const& filename){
                 makeVec3FromVerticies(attrib, shape.mesh.indices[base].vertex_index),
                 makeVec3FromVerticies(attrib, shape.mesh.indices[base + 1].vertex_index),
                 makeVec3FromVerticies(attrib, shape.mesh.indices[base + 2].vertex_index),
+                makeVec3FromVerticies(attrib, shape.mesh.indices[base].normal_index),
+                makeVec3FromVerticies(attrib, shape.mesh.indices[base + 1].normal_index),
+                makeVec3FromVerticies(attrib, shape.mesh.indices[base + 2].normal_index),
                 globalMatID);
 
             mesh.triangles.emplace_back(t);
