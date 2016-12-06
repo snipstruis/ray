@@ -51,10 +51,10 @@ FalloffKind readFalloffKind(std::string const& s) {
         throw std::runtime_error("unknown falloff kind");
 }
 
-glm::mat4 handleTransform(json const& o) {
+glm::mat4 handleTransform(json const& o, bool rotateOnly) {
     glm::mat4 result; // is initialised to identity
 
-    if(o.find("translate") != o.end()){
+    if(!rotateOnly && o.find("translate") != o.end()){
         auto const& translate = readXYZ(o["translate"]);
         result = glm::translate(result, translate);
     }
@@ -66,7 +66,7 @@ glm::mat4 handleTransform(json const& o) {
         result = glm::rotate(result, rotate[2], glm::vec3(0.0f, 0.0f, 0.1f));
     }
 
-    if(o.find("scale") != o.end()){
+    if(!rotateOnly && o.find("scale") != o.end()){
         auto const& scale = readXYZ(o["scale"]);
         result = glm::scale(result, scale);
     }
@@ -196,17 +196,21 @@ glm::vec3 transformV3(glm::vec3 v, glm::mat4x4 transform) {
 
 // walk the whole mesh, copy-n-transform it into the world. 
 // ie stamp it down, based on inputs from the scene.
-void transformMeshIntoScene(Scene& s, Mesh const& mesh, glm::mat4x4 const& transform) {
+void transformMeshIntoScene(Scene& s, 
+        Mesh const& mesh, 
+        glm::mat4x4 const& vTransform,
+        glm::mat4x4 const& nTransform) {
+
     for(auto const& mt : mesh.triangles) {
         Triangle t(
             // verticies
-            transformV3(mt.v[0], transform), 
-            transformV3(mt.v[1], transform), 
-            transformV3(mt.v[2], transform), 
+            transformV3(mt.v[0], vTransform), 
+            transformV3(mt.v[1], vTransform), 
+            transformV3(mt.v[2], vTransform), 
             // normals
-            glm::normalize(transformV3(mt.n[0], transform)), 
-            glm::normalize(transformV3(mt.n[1], transform)), 
-            glm::normalize(transformV3(mt.n[2], transform)), 
+            glm::normalize(transformV3(mt.n[0], nTransform)), 
+            glm::normalize(transformV3(mt.n[1], nTransform)), 
+            glm::normalize(transformV3(mt.n[2], nTransform)), 
             mt.mat);
 
 //        std::cout << "MT " << mt <<std::endl;
@@ -218,11 +222,12 @@ void transformMeshIntoScene(Scene& s, Mesh const& mesh, glm::mat4x4 const& trans
 }
 
 void handleMesh(Scene& s, MeshMap const& meshes, json const& o) {
-    glm::mat4x4 transform; // initialised to identity
+    glm::mat4x4 vTransform, nTransform; // initialised to identity
 
     // is there a transform for this obj?
     if (o.find("transform") != o.end()) {
-        transform = handleTransform(o["transform"]);
+        vTransform = handleTransform(o["transform"], false);
+        nTransform = handleTransform(o["transform"], true);
     }
 
     // find already loaded mesh
@@ -231,7 +236,7 @@ void handleMesh(Scene& s, MeshMap const& meshes, json const& o) {
     if(it == meshes.end())
         throw std::runtime_error("unknown mesh");
 
-    transformMeshIntoScene(s, it->second, transform);
+    transformMeshIntoScene(s, it->second, vTransform, nTransform);
 }
 
 void handleObject(Scene& s, MeshMap const& meshes, json const& o) {
