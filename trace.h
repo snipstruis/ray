@@ -38,12 +38,11 @@ inline Color calcLightOutput(SpotLight const& light,
                      Material const& mat,
                      glm::vec3 light_dir) {
     float dot = fabs(glm::dot(-light_dir, light.pointDir));
-    // TODO: add outer cone to lightcone datastructure
-    float outer = light.cosOuterAngle+0.1;// TODO: precalculate!
+    float outer = light.cosOuterAngle;
     if(dot < outer){ // outside outer cone
         return Color(0,0,0);
     }
-    float inner = light.cosInnerAngle;// TODO: precalculate!
+    float inner = light.cosInnerAngle;
     Color lout = calcLightOutput( PointLight(light.pos,light.color),
                                   distance,ray,hit,mat,light_dir);
     if(dot > inner){ // inside inner cone
