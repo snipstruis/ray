@@ -7,7 +7,7 @@ A fully interactive whitted-style raytracer with run time scene loading.
         \begin{enumerate}
         \item Spheres, planes
         \item Triangle meshes - loaded from file, and transformed into the world (translate, rotate, scale)
-        \item Point lights
+        \item Point and Spot lights
         \item camera
         \end{enumerate}
     \item \verb|.obj| file loader (tinyojb)
@@ -34,7 +34,7 @@ A fully interactive whitted-style raytracer with run time scene loading.
     \begin{enumerate}
     \item multi-color lighting
     \item point lights
-    \item spot lights - linear and log falloff models
+    \item spot lights - linear falloff
     \end{enumerate}
 
 \subsection{Other}
@@ -49,7 +49,7 @@ The source is built using the standard CMake envirnonment.
 
 For example, on unix systems this command will do a release build -
 
-\verb|cmake -DCMAKE_BUILD_TYPE=Release .|
+\verb|cmake -DCMAKE_BUILD_TYPE=Release . ;|
 \verb|make|
 
 A similar command should work on Visual Studio, although the \verb|CMAKE_BUILD_TYPE| is not required - this is set in the Visual Studio gui.
