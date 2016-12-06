@@ -38,7 +38,6 @@
         "lights" : [
             {
                 "kind" : "point",
-                "intensity" : 0.5,
                 "color" : {"red" : 0.8, "green" : 0.7, "blue" : 0.6 },
                 "translate" : { "x" : -3, "y" : 10, "z" : 3}
             }
