@@ -6,12 +6,12 @@ A fully interactive whitted-style raytracer with run time scene loading.
     \item Json scene loader
         \begin{enumerate}
         \item Spheres, planes
-        \item Triangle meshes - loaded from file, and transformed into the world (translate, rotate, scale)
+        \item Triangle meshes --- loaded from file, and transformed into the world (translate, rotate, scale)
         \item Point and Spot lights
         \item camera
         \end{enumerate}
-    \item \verb|.obj| file loader (tinyojb)
-    \item \verb|.mtl| material file loader (tinyobj)
+    \item \verb|.obj| file loader (using tinyojb)
+    \item \verb|.mtl| material file loader (using tinyobj)
     \end{enumerate}
 
 \subsection{Materials}
@@ -21,7 +21,7 @@ A fully interactive whitted-style raytracer with run time scene loading.
     \item transparency with refraction indices
     \item specular highlights
     \item diffuse, reflective and specular values are defined by a 3-value color to match the \verb|.mtl| file format
-    \item they can also be combined in arbitrary ways (i.e. a material can have a diffuse, reflective, transparent and specular components)
+    \item they can also be combined in arbitrary ways (i.e.\ a material can have a diffuse, reflective, transparent and specular components)
     \item triangle meshes support smoothing using barycentric interpolation of the vertex normals
     \end{enumerate}
 
@@ -71,12 +71,12 @@ There is a collection of test scenes, objects and materials in the data director
     \begin{enumerate}
     \item WASD - move around the world
     \item mouse movement - rotate camera (yaw/pitch)
-    \item mouse wheel - zoom in/out
+    \item mouse wheel - zoom in/out (changes FOV)
     \item R - reset camera view to default (possibly set from scene file)
     \item ESC - quit
     \item 0 - view ray-traced image (default)
-    \item 1 - visualise per-pixel render time
-    \item 2 - visualise surface normals
+    \item 1 - visualise per-pixel render time (more red = more render time)
+    \item 2 - visualise surface normals (usefull for debugging and verifying smoothed normals)
     \end{enumerate}
 
 \section{External Packages}
@@ -85,10 +85,12 @@ The following external packages were used
     \item tiny object loader --- \url{https://syoyo.github.io/tinyobjloader/}
     \item glm --- \url{https://glm.g-truc.net/0.9.8/index.html}
     \item JSON for Modern C++ --- \url{https://github.com/nlohmann/json}
-    \item SDL2d
-    \item boost (test tree only)
-    \item CMake
+    \item SDL2 --- \url{https://www.libsdl.org/download-2.0.php}
+    \item boost (test tree only) --- \url{https://www.boost.org/}
+    \item CMake --- \url{https://cmake.org}
 \end{enumerate}
+
+\section{Screencaps}
 
 \includegraphics[width=0.5\textwidth]{img/colPointLights1sphere}
 \includegraphics[width=0.5\textwidth]{img/colPointlights1sphere_close}
