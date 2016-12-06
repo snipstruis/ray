@@ -5,12 +5,13 @@ A fully interactive whitted-style raytracer with run time scene loading.
     \begin{enumerate}
     \item Json scene loader
         \begin{enumerate}
-        \item Spheres, triangle meshes, planes
+        \item Spheres, planes
+        \item Triangle meshes - loaded from file, and transformed into the world (translate, rotate, scale)
         \item Point lights
         \item camera
         \end{enumerate}
-    \item \verb|.obj| file loader
-    \item \verb|.mtl| material file loader
+    \item \verb|.obj| file loader (tinyojb)
+    \item \verb|.mtl| material file loader (tinyobj)
     \end{enumerate}
 
 \subsection{Materials}
@@ -19,6 +20,7 @@ A fully interactive whitted-style raytracer with run time scene loading.
     \item reflections
     \item transparency with refraction indices
     \item specular highlights
+    \item diffuse, reflective and specular values are defined by a 3-value color to match the .mtl file format
     \end{enumerate}
 
 \subsection{Camera}
@@ -30,8 +32,9 @@ A fully interactive whitted-style raytracer with run time scene loading.
 
 \subsection{Lights}
     \begin{enumerate}
-    \item multi-color
+    \item multi-color lighting
     \item point lights
+    \item spot lights - linear and log falloff models
     \end{enumerate}
 
 \subsection{Other}
@@ -40,11 +43,48 @@ A fully interactive whitted-style raytracer with run time scene loading.
     \item multi-threaded with OpenMP (got around 5x speedup on linux, which is what is expected for 4 cores with HT)
     \end{enumerate}
 
+\section{Building}
+
+The source is built using the standard CMake envirnonment.
+
+For example, on unix systems this command will do a release build -
+
+cmake -DCMAKE_BUILD_TYPE=Release .
+make
+
+A similar command should work on Visual Studio, although the CMAKE_BUILD_TYPE is not required - this is set in the Visual Studio gui.
+
+On Windows, SDL2.dll must be availale somewhere on the path or in the same dir as the binary. 
+
+Boost is required for the test tree, but not the main system.
+
+\section{Running}
+
+There is a collection of test scenes, objects and materials in the data directory. To avoid fighting with relative paths, it works best to cd to this directory before running the system. For example, on windows, assuming the binary is in the Release directory under the root source tree - 
+
+cd <source_root>\data
+..\Release\ray.exe col-lights.scene
+
+\section{Input Commands}
+    \begin{enumerate}
+    \item WASD - move around the world
+    \item mouse movement - rotate camera (yaw/pitch)
+    \item mouse wheel - zoom in/out
+    \item R - reset camera view to default (possibly set from scene file)
+    \item ESC - quit
+    \item 0 - view ray-traced image (default)
+    \item 1 - visualise per-line render time
+    \item 2 - visualise surface normals
+    \end{enumerate}
+
 \section{External Packages}
 The following external packages were used 
 \begin{enumerate}
     \item tiny object loader --- \url{https://syoyo.github.io/tinyobjloader/}
     \item glm --- \url{https://glm.g-truc.net/0.9.8/index.html}
     \item JSON for Modern C++ --- \url{https://github.com/nlohmann/json}
+    \item SDL2d
+    \item boost (test tree only)
+    \item CMake
 \end{enumerate}
 
