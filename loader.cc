@@ -151,7 +151,7 @@ Mesh loadMesh(Scene& s, std::string const& filename){
                 }
             }
 
-            MeshTriangle t(
+            Triangle t(
                 makeVec3FromVerticies(attrib, shape.mesh.indices[base].vertex_index),
                 makeVec3FromVerticies(attrib, shape.mesh.indices[base + 1].vertex_index),
                 makeVec3FromVerticies(attrib, shape.mesh.indices[base + 2].vertex_index),
@@ -174,13 +174,21 @@ glm::vec3 transformV3(glm::vec3 v, glm::mat4x4 transform) {
     return res;
 }
 
+// walk the whole mesh, copy-n-transform it into the world. 
+// ie stamp it down, based on inputs from the scene.
 void transformMeshIntoScene(Scene& s, Mesh const& mesh, glm::mat4x4 const& transform) {
     for(auto const& mt : mesh.triangles) {
         Triangle t(
-            transformV3(mt.v1, transform), 
-            transformV3(mt.v2, transform), 
-            transformV3(mt.v3, transform), 
-            mt.material);
+            // verticies
+            transformV3(mt.v[0], transform), 
+            transformV3(mt.v[1], transform), 
+            transformV3(mt.v[2], transform), 
+            // normals
+            glm::normalize(transformV3(mt.n[0], transform)), 
+            glm::normalize(transformV3(mt.n[1], transform)), 
+            glm::normalize(transformV3(mt.n[2], transform)), 
+            mt.mat);
+
         s.primitives.triangles.emplace_back(t);
     }
 }
