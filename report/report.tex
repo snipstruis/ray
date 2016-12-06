@@ -20,7 +20,9 @@ A fully interactive whitted-style raytracer with run time scene loading.
     \item reflections
     \item transparency with refraction indices
     \item specular highlights
-    \item diffuse, reflective and specular values are defined by a 3-value color to match the .mtl file format
+    \item diffuse, reflective and specular values are defined by a 3-value color to match the \verb|.mtl| file format
+    \item they can also be combined in arbitrary ways (i.e. a material can have a diffuse, reflective, transparent and specular components)
+    \item triangle meshes support smoothing using barycentric interpolation of the vertex normals
     \end{enumerate}
 
 \subsection{Camera}
@@ -34,7 +36,7 @@ A fully interactive whitted-style raytracer with run time scene loading.
     \begin{enumerate}
     \item multi-color lighting
     \item point lights
-    \item spot lights - linear falloff
+    \item spot lights with linear falloff
     \end{enumerate}
 
 \subsection{Other}
