@@ -197,9 +197,9 @@ void transformMeshIntoScene(Scene& s, Mesh const& mesh, glm::mat4x4 const& trans
             glm::normalize(transformV3(mt.n[2], transform)), 
             mt.mat);
 
-        std::cout << "MT " << mt <<std::endl;
-        std::cout << "T " << t <<std::endl;
-        std::cout << std::endl;
+//        std::cout << "MT " << mt <<std::endl;
+//        std::cout << "T " << t <<std::endl;
+//        std::cout << std::endl;
 
         s.primitives.triangles.emplace_back(t);
     }
@@ -211,7 +211,6 @@ void handleMesh(Scene& s, MeshMap const& meshes, json const& o) {
     // is there a transform for this obj?
     if (o.find("transform") != o.end()) {
         transform = handleTransform(o["transform"]);
-        std::cout << "got transform " << transform << std::endl;
     }
 
     // find already loaded mesh
