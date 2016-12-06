@@ -62,10 +62,11 @@ inline void buildFixedMaterials(std::vector<Material>& v){
                    Color(0.8f, 0.8f, 0.8f),  // specular highlight
                    32.f);  // shinyness
 
-    v.emplace_back(Color(0.3f, 0.9f, 0.4f), // diffuse col
-                   Color(0.3f, 0.9f, 0.4f), // reflective
-                   0.0f, // transparency
-                   1.2f,  // refractive index
+    // this is the glass used for the g1.png - g10.png images
+    v.emplace_back(Color(0.1f, 0.1f, 0.1f), // diffuse col
+                   Color(0.0f, 0.4f, 0.0f), // reflective
+                   1.0f, // transparency
+                   1.5f,  // refractive index
                    -1,   // no checkerboard
                    Color(0.8f, 0.8f, 0.8f),  // specular highlight
                    45.f);  // shinyness
