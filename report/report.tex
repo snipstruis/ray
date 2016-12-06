@@ -49,7 +49,7 @@ The source is built using the standard CMake envirnonment.
 
 For example, on unix systems this command will do a release build -
 
-\verb|cmake -DCMAKE_BUILD_TYPE=Release . ;|
+\verb|cmake -DCMAKE_BUILD_TYPE=Release . ;| \\
 \verb|make|
 
 A similar command should work on Visual Studio, although the \verb|CMAKE_BUILD_TYPE| is not required - this is set in the Visual Studio gui.
@@ -62,7 +62,7 @@ Boost is required for the test tree, but not the main system.
 
 There is a collection of test scenes, objects and materials in the data directory. To avoid fighting with relative paths, it works best to cd to this directory before running the system. For example, on windows, assuming the binary is in the Release directory under the root source tree - 
 
-\verb|cd <source_root>\data|
+\verb|cd <source_root>\data| \\
 \verb|..\Release\ray.exe col-lights.scene|
 
 \section{Input Commands}
