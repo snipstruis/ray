@@ -73,6 +73,21 @@ struct Intersection{
     bool internal;
 };
 
+// adapted from Christer Ericson's Read-Time Collition Detection
+inline glm::vec3 barycentric(glm::vec3 p, glm::vec3 a, glm::vec3 b, glm::vec3 c) {
+    glm::vec3 v0 = b - a, v1 = c - a, v2 = p - a;
+    float d00 = glm::dot(v0, v0);
+    float d01 = glm::dot(v0, v1);
+    float d11 = glm::dot(v1, v1);
+    float d20 = glm::dot(v2, v0);
+    float d21 = glm::dot(v2, v1);
+    float denom = d00 * d11 - d01 * d01;
+    float v = (d11 * d20 - d01 * d21) / denom;
+    float w = (d00 * d21 - d01 * d20) / denom;
+    float u = 1.0f - v - w;
+    return glm::vec3(u,v,w);
+}
+
 // adapted from:
 // https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
 inline float moller_trumbore( 
@@ -136,8 +151,15 @@ inline Intersection intersect(Triangle const& t, Ray const& ray){
     }
     else {
         bool internal = glm::dot(ray.direction,t.normal)>0;
+        glm::vec3 hit = ray.origin + ray.direction * dist;
+#if 1
+        glm::vec3 bary = barycentric(hit, t.v[0], t.v[1], t.v[2]);
+        glm::vec3 normal = glm::normalize( bary.x*t.n[0] + bary.y*t.n[1] + bary.z*t.n[2] );
+        normal = internal? -normal : normal;
+#else
         glm::vec3 normal = internal? -t.normal : t.normal;
-        return Intersection(dist, ray.origin + ray.direction * dist, t.mat, normal, internal);
+#endif
+        return Intersection(dist, hit, t.mat, normal, internal);
     }
 }
 
