@@ -54,19 +54,16 @@ glm::mat4 handleTransform(json const& o) {
 
     if(o.find("translate") != o.end()){
         auto const& translate = readXYZ(o["translate"]);
-//        std::cout << "GOT TRANS " << translate << std::endl;
         result = glm::translate(result, translate);
     }
 
     if(o.find("rotate") != o.end()){
         auto const& rotate = readXYZ(o["rotate"]);
- //       std::cout << "GOT ROTATE" << rotate << std::endl;
     }
 
     if(o.find("scale") != o.end()){
         auto const& scale = readXYZ(o["scale"]);
         result = glm::scale(result, scale);
-  //      std::cout << "GOT SCALE " << scale << std::endl;
     }
 
     return result;
@@ -85,14 +82,13 @@ int createMaterial(Scene& s, tinyobj::material_t const& m){
     // create a new mat on the back of the existing array.
     s.primitives.materials.emplace_back(
             Color(m.diffuse[0], m.diffuse[1], m.diffuse[2]),
-            BLACK, // reflective
+            Color(m.transmittance[0], m.transmittance[1], m.transmittance[2]),
             (1.0f - m.dissolve), // transparency - note 1==opaque in the mat files.
             m.ior,  // refractive index
             -1,     // no checkerboard
             Color(m.specular[0], m.specular[1], m.specular[2]), //specular highlight
             m.shininess);  // shininess
 
-    std::cout << " shininess " << m.shininess<< std::endl;
     // return the index of this newly created material.
     return s.primitives.materials.size() - 1;       
 }
