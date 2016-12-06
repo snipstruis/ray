@@ -12,14 +12,15 @@ enum FalloffKind {
 };
 
 struct SpotLight{
-    SpotLight(glm::vec3 const& p, glm::vec3 const& dir, Color c, FalloffKind f, float angle): 
-        pos(p), pointDir(dir), color(c), falloff(f), coneAngle(angle) {};
+    SpotLight(glm::vec3 const& p, glm::vec3 const& dir, Color c, FalloffKind f, float _innerAngle, float _outerAngle): 
+        pos(p), pointDir(dir), color(c), falloff(f), innerAngle(_innerAngle), outerAngle(_outerAngle) {};
 
     glm::vec3 pos;
     glm::vec3 pointDir; // must be normalised
     Color color;
     FalloffKind falloff;
-    float coneAngle;
+    float innerAngle;
+    float outerAngle;
 };
 
 struct PointLight{

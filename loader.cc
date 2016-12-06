@@ -236,13 +236,11 @@ void handleLight(Scene& s, json const& l) {
     }
     else if(kind == "spot"){
         const glm::vec3 pointDirection = readPY(l["point_direction"]);
-        float coneAngleDegrees = l["cone_angle"];
-        float coneAngle = glm::radians(coneAngleDegrees);
+        float innerAngle = readAngle(l,"inner_angle");
+        float outerAngle = readAngle(l,"outer_angle");
         FalloffKind falloff = readFalloffKind(l["falloff"]);
 
-        s.lights.spotLights.emplace_back(position, pointDirection, color, falloff, coneAngle);
-
-        std::cout << "warning spot lights not supported yet "<< std::endl;
+        s.lights.spotLights.emplace_back(position, pointDirection, color, falloff, innerAngle, outerAngle);
     }
     else {
         throw std::runtime_error("light kind unknown");
