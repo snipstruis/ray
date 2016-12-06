@@ -49,7 +49,8 @@ inline Color calcLightOutput(SpotLight const& light,
     if(dot > inner){ // inside inner cone
         return lout;
     }else{ // between inner and outer cones
-        return 0.5*lout;
+        float ratio = 1.f - (dot-inner)/(outer-inner);
+        return ratio*lout;
     }
 }
 
