@@ -12,6 +12,7 @@
 // keep it all in its own file so it can be un-included in one go
 // note that glm already has operator<< for its types in glm/gtx/io.hpp
 
+// code to dump glm objects, suitable for loading in R
 inline std::ostream& DumpToR(std::ostream& os, const glm::mat4& m) {
     os << "matrix(c(";
     os <<  m[0][0] << ", " << m[1][0] << ", " << m[2][0] << ", " <<  m[3][0] << ", ";
@@ -39,6 +40,18 @@ inline std::ostream& operator<<(std::ostream& os, const Intersection& i) {
     os << " impact " << i.impact;
     os << " normal " << i.normal;
     os << " internal " << i.internal;
+
+    return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const Triangle& t) {
+    os << "v=(0: " << t.v[0];
+    os << " 1: " << t.v[1];
+    os << " 2: " << t.v[2];
+    os << ") n=(0:" << t.n[0];
+    os << " 1: " << t.n[1];
+    os << " 2: " << t.n[2];
+    os << ") mat=" << t.mat;
 
     return os;
 }
