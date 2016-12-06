@@ -9,7 +9,7 @@
                 "mesh_name" : "teapot",
                 "transform" : {
                     "translate" : { "x" : -1, "y" : 2, "z" : -1},
-                    "rotate" : { "x" : 0, "y" : 90.00, "z" : 0.00}
+                    "rotate" : { "x" : 0, "y" : -15.00, "z" : 0.00}
                 }
             },
             {

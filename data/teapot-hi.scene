@@ -1,6 +1,6 @@
 {
     "load_meshes" : {
-        "teapot" : "teapot_hi_shrunk.obj"
+        "teapot" : "teapot.obj"
     },
     "world" : {
         "objects" : [
@@ -8,7 +8,7 @@
                 "kind" : "mesh",
                 "mesh_name" : "teapot",
                 "transform" : {
-                    "translate" : { "x" : -1, "y" : 2, "z" : -1}
+                    "translate" : { "x" : 0, "y" : 0, "z" : 0}
                 }
             },
             {
@@ -21,16 +21,16 @@
         [
             {
                 "kind" : "point",
-                "color" : {"red" : 10, "green" : 10, "blue" : 10},
-                "position" : { "x" : -1, "y" : 8, "z" : 3}
+                "color" : {"red" : 100, "green" : 100, "blue" : 100},
+                "position" : { "x" : 0, "y" : 150, "z" : 100}
             }
         ]
         
     },
     "camera" : {
-        "origin" : { "x" : 1, "y" : 4, "z" : 1},
-        "look_angle" : { "yaw" : -140, "pitch" : 30},
-        "fov" : 45
+        "origin" : { "x" : 0, "y" : 150, "z" : -100},
+        "look_angle" : { "yaw" : 0, "pitch" : 40},
+        "fov" :60 
     }
 }
 

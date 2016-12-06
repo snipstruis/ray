@@ -2,7 +2,6 @@
 #
  
 mtllib cube.mtl
-
 usemtl BodyGlossMat
 
 g cube
