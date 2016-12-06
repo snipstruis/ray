@@ -7,6 +7,7 @@
 #include "glm/vec3.hpp"
 #include "glm/mat4x4.hpp"
 #include "glm/gtx/io.hpp"
+#include "glm/gtx/transform.hpp"
 #include "tiny_obj_loader.h"
 
 #include <fstream>
@@ -59,6 +60,9 @@ glm::mat4 handleTransform(json const& o) {
 
     if(o.find("rotate") != o.end()){
         auto const& rotate = readXYZ(o["rotate"]);
+        result = glm::rotate(result, rotate[0], glm::vec3(0.1f, 0.0f, 0.0f));
+        result = glm::rotate(result, rotate[1], glm::vec3(0.0f, 0.1f, 0.0f));
+        result = glm::rotate(result, rotate[2], glm::vec3(0.0f, 0.0f, 0.1f));
     }
 
     if(o.find("scale") != o.end()){
