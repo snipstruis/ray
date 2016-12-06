@@ -3,8 +3,18 @@
         "objects" : [
             {
                 "kind" : "sphere",
-                "radius" : 2,
+                "radius" : 3,
                 "center" : { "x" : 7, "y" : 0, "z" : 7}
+            },
+            {
+                "kind" : "sphere",
+                "radius" : 2,
+                "center" : { "x" : 1.5, "y" : 0, "z" : 7}
+            },
+            {
+                "kind" : "sphere",
+                "radius" : 1,
+                "center" : { "x" : -2, "y" : 0, "z" : 7}
             },
             {
                 "kind" : "plane",
@@ -21,9 +31,9 @@
             {
                 "kind" : "spot",
                 "inner_angle" : 30,
-                "outer_angle" : 60,
+                "outer_angle" : 50,
                 "falloff" : "linear",
-                "color" : {"red" : 1, "green" : 8, "blue" : 1},
+                "color" : {"red" : 1, "green" : 6, "blue" : 1},
                 "position" : { "x" : 0, "y" : 4, "z" : 10},
                 "point_direction" : {"yaw" : 90, "pitch" : -35}
             },
@@ -32,7 +42,7 @@
                 "inner_angle" : 30,
                 "outer_angle" : 45,
                 "falloff" : "linear",
-                "color" : {"red" : 10, "green" : 1, "blue" : 1},
+                "color" : {"red" : 12, "green" : 1, "blue" : 1},
                 "position" : { "x" : 4, "y" : 4, "z" : 10},
                 "point_direction" : {"yaw" : 90, "pitch" : -45}
             },
@@ -49,8 +59,8 @@
         
     },
     "camera" : {
-        "origin" : { "x" : 2, "y" : 5, "z" : 13},
-        "look_angle" : { "yaw" : 140, "pitch" : 30},
+        "origin" : { "x" : -1.2, "y" : 7, "z" : 15},
+        "look_angle" : { "yaw" : 145, "pitch" : 50},
         "fov" : 90
     }
 }
