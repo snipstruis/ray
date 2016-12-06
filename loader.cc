@@ -65,6 +65,7 @@ glm::mat4 handleTransform(json const& o) {
 
     if(o.find("scale") != o.end()){
         auto const& scale = readXYZ(o["scale"]);
+        result = glm::scale(result, scale);
   //      std::cout << "GOT SCALE " << scale << std::endl;
     }
 

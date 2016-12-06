@@ -93,4 +93,5 @@ add_scene("tree" "tree.scene")
 add_scene("tree-n-sphere" "tree-n-sphere.scene")
 add_scene("cubes" "cubes.scene")
 add_scene("sportscar" "sportscar.scene")
+add_scene("forest" "forest.scene")
 
