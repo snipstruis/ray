@@ -1,5 +1,7 @@
 #pragma once
 
+#include "utils.h"
+
 #include "glm/vec3.hpp"
 #include "glm/glm.hpp"
 
@@ -51,5 +53,9 @@ inline Color operator*(Color a, float        b){ return a*=b; }
 inline Color operator*(float a, Color        b){ return b*a; }
 inline Color operator*(Color a, Color const& b){ return a*=b; }
 inline Color operator+(Color a, Color const& b){ return a+=b; }
+
+inline Color ColorClamp(Color c, float min, float max) {
+    return Color(clamp(c.r, min, max), clamp(c.g, min, max), clamp(c.b, min, max));
+}
 
 
