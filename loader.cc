@@ -168,14 +168,14 @@ Mesh loadMesh(Scene& s, std::string const& filename){
                 }
             }
 
-            Triangle t(
-                makeVec3FromVerticies(attrib, shape.mesh.indices[base].vertex_index),
-                makeVec3FromVerticies(attrib, shape.mesh.indices[base + 1].vertex_index),
-                makeVec3FromVerticies(attrib, shape.mesh.indices[base + 2].vertex_index),
-                makeVec3FromNormals(attrib, shape.mesh.indices[base].normal_index),
-                makeVec3FromNormals(attrib, shape.mesh.indices[base + 1].normal_index),
-                makeVec3FromNormals(attrib, shape.mesh.indices[base + 2].normal_index),
-                globalMatID);
+            auto v1 = makeVec3FromVerticies(attrib, shape.mesh.indices[base].vertex_index),;
+            auto v2 = makeVec3FromVerticies(attrib, shape.mesh.indices[base + 1].vertex_index);
+            auto v3 = makeVec3FromVerticies(attrib, shape.mesh.indices[base + 2].vertex_index);
+            auto n1 = makeVec3FromNormals(attrib, shape.mesh.indices[base].normal_index);
+            auto n2 = makeVec3FromNormals(attrib, shape.mesh.indices[base + 1].normal_index);
+            auto n3 = makeVec3FromNormals(attrib, shape.mesh.indices[base + 2].normal_index);
+
+            Triangle t(v1, v2, v3, n1, n2, n3, globalMatID);
 
             mesh.triangles.emplace_back(t);
         }
