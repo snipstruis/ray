@@ -168,7 +168,7 @@ Mesh loadMesh(Scene& s, std::string const& filename){
                 }
             }
 
-            auto v1 = makeVec3FromVerticies(attrib, shape.mesh.indices[base].vertex_index),;
+            auto v1 = makeVec3FromVerticies(attrib, shape.mesh.indices[base].vertex_index);
             auto v2 = makeVec3FromVerticies(attrib, shape.mesh.indices[base + 1].vertex_index);
             auto v3 = makeVec3FromVerticies(attrib, shape.mesh.indices[base + 2].vertex_index);
             auto n1 = makeVec3FromNormals(attrib, shape.mesh.indices[base].normal_index);
