@@ -55,8 +55,7 @@ add_executable(ray
 )
 
 # linking
-target_link_libraries(ray SDL2 ${OPENGL_gl_LIBRARY})
-
+target_link_libraries(ray SDL2 boost_program_options ${OPENGL_gl_LIBRARY})
 
 # recurse into test
 if(NOT WIN32)
@@ -64,6 +63,9 @@ if(NOT WIN32)
 endif()
 
 #add_subdirectory(report)
+
+set(IMG_OUTPUT_DIR "$ENV{HOME}")
+message(STATUS "image output dir ${IMG_OUTPUT_DIR}")
 
 # create a target to auto load the raytracer 
 # note that it will start this with the wd set to source, so it can find any test objects
@@ -74,7 +76,7 @@ macro(add_scene key scenefile)
     message(STATUS "adding target ${N} for scenefile ${scenefile}")
 
     add_custom_target(${N}
-        COMMAND ray ${scenefile} 
+        COMMAND ray ${scenefile} ${IMG_OUTPUT_DIR}
         DEPENDS ray 
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/data
         USES_TERMINAL

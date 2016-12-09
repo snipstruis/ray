@@ -1,6 +1,8 @@
 #pragma once
 
 #include "basics.h"
+#include "color.h"
+
 #include <vector>
 
 const Color BLACK(0.f, 0.f, 0.f);
