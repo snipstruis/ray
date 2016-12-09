@@ -94,7 +94,10 @@ GuiAction handleEvents(Scene& s, Mode *vis)
 }
 
 // main loop when in interactive mode
-int interactiveLoop(Scene& s) {
+// @s: pre-populated scene
+// @imgDir: location to write screenshots
+//
+int interactiveLoop(Scene& s, std::string const& imgDir) {
     SDL_Window *win = SDL_CreateWindow("Roaytroayzah (initialising)", 100, 100, 640, 640, 
                                        SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
     SDL_GL_CreateContext(win);
@@ -119,7 +122,7 @@ int interactiveLoop(Scene& s) {
         if (a==GA_QUIT)
             break;
         else if (a==GA_SCREENSHOT)
-            WriteTgaImage(s.camera.width, s.camera.height, screenBuffer);
+            WriteTgaImage(imgDir, s.camera.width, s.camera.height, screenBuffer);
 
         // FIXME: maybe save a bit of work by only doing this if camera's moved
         s.camera.buildCamera();

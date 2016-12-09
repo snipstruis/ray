@@ -55,8 +55,7 @@ add_executable(ray
 )
 
 # linking
-target_link_libraries(ray SDL2 ${OPENGL_gl_LIBRARY})
-
+target_link_libraries(ray SDL2 boost_program_options ${OPENGL_gl_LIBRARY})
 
 # recurse into test
 if(NOT WIN32)
