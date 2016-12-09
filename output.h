@@ -36,7 +36,6 @@ void WriteNamedTgaImage(std::string const& fname, unsigned int width, unsigned i
 	}   
 }
 
-#include <ctime>
 // generates a filename, and writes the image to dir
 void WriteTgaImage(std::string const& dir, unsigned int width, unsigned int height, ScreenBuffer const& buf) {
     std::stringstream ss;

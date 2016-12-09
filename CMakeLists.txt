@@ -73,7 +73,7 @@ macro(add_scene key scenefile)
     message(STATUS "adding target ${N} for scenefile ${scenefile}")
 
     add_custom_target(${N}
-        COMMAND ray ${scenefile} 
+        COMMAND ray --scene ${scenefile} 
         DEPENDS ray 
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/data
         USES_TERMINAL
