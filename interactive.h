@@ -1,9 +1,10 @@
+#pragma once
 
-#include "scene.h"
 #include "camera.h"
 #include "loader.h"
+#include "output.h"
+#include "scene.h"
 #include "trace.h"
-#include "debug_print.h"
 
 #define GL_GLEXT_PROTOTYPES
 #include <SDL2/SDL.h>
@@ -12,36 +13,9 @@
 
 #include <cmath>
 #include <chrono>
-#include <fstream>
 #include <vector>
 
-// originally from https://danielbeard.wordpress.com/2011/06/06/image-saving-code-c/
-void DoScreenshot(int width, int height, std::vector<Color>& screenBuffer) {
-
-	std::fstream o("image.tga", std::ios::out | std::ios::binary);
-
-	// Write the header
-	o.put(0);
-   	o.put(0);
-   	o.put(2);                       // uncompressed RGB 
-   	o.put(0); 	o.put(0);
-   	o.put(0); 	o.put(0);
-   	o.put(0);
-   	o.put(0); 	o.put(0);           // X origin 
-   	o.put(0); 	o.put(0);           // y origin
-   	o.put((width & 0x00FF));
-   	o.put((width & 0xFF00) / 256);
-   	o.put((height & 0x00FF));
-   	o.put((height & 0xFF00) / 256);
-   	o.put(24);                      // 24 bit bitmap
-   	o.put(0);
-
-	for (int i = 0; i < (height * width); i++) {
-		o.put(screenBuffer[i].b*255);
-		o.put(screenBuffer[i].g*255);
-		o.put(screenBuffer[i].r*255);
-	}   
-}
+// this file contains all machinery to operate interactive mode - ie whenever there is a visible window 
 
 void setWindowTitle(Scene const& s, SDL_Window *win, float frametime_ms)
 {
@@ -69,6 +43,7 @@ enum GuiAction {
     GA_QUIT,
     GA_SCREENSHOT
 };
+
 // process input
 // returns action to be performed
 GuiAction handleEvents(Scene& s, Mode *vis)
@@ -118,20 +93,8 @@ GuiAction handleEvents(Scene& s, Mode *vis)
     return GA_NONE;
 }
 
-int main(int argc, char* argv[]){
-    if(argc != 2) {
-        std::cerr << "usage " << argv[0] << " <scenefile>" << std::endl;
-        return -1;
-    }
-
-    // setup scene first, so we can bail on error without flashing a window briefly (errors are stdout 
-    // for now - maybe should be a dialog box in future).
-    Scene s;
-    if(!setupScene(s, argv[1])) {
-        std::cout << "failed to setup scene, bailing" << std::endl;
-        return -1;
-    }
-
+// main loop when in interactive mode
+int interactiveLoop(Scene& s) {
     SDL_Window *win = SDL_CreateWindow("Roaytroayzah (initialising)", 100, 100, 640, 640, 
                                        SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
     SDL_GL_CreateContext(win);
@@ -143,11 +106,12 @@ int main(int argc, char* argv[]){
     // switch on relative mouse mode - hides the cursor, and kinda makes things... relative.
     SDL_SetRelativeMouseMode(SDL_TRUE);
 
-    std::vector<Color> screenBuffer; // will be allocated on first loop
+    ScreenBuffer screenBuffer; // will be sized on first loop
 
     auto now = std::chrono::high_resolution_clock::now();
 
     Mode mode=Mode::Default;
+
     while(true){
         SDL_GL_GetDrawableSize(win, &s.camera.width, &s.camera.height);
 
@@ -155,7 +119,7 @@ int main(int argc, char* argv[]){
         if (a==GA_QUIT)
             break;
         else if (a==GA_SCREENSHOT)
-            DoScreenshot(s.camera.width, s.camera.height, screenBuffer);
+            WriteTgaImage(s.camera.width, s.camera.height, screenBuffer);
 
         // FIXME: maybe save a bit of work by only doing this if camera's moved
         s.camera.buildCamera();
@@ -184,4 +148,6 @@ int main(int argc, char* argv[]){
         setWindowTitle(s, win, avg);
         SDL_GL_SwapWindow(win);
     }
+
+    return 0; // no error
 }

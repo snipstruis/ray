@@ -5,8 +5,12 @@
 #include "glm/vec3.hpp"
 #include "glm/glm.hpp"
 
-// FIXME: looking for a better name for this file..
+#include <vector>
+
 // Basic types, used in most places 
+
+struct Color;
+typedef std::vector<Color> ScreenBuffer;
 
 const int STARTING_TTL = 10; // probably should be configurable or dynamically calculated
 
