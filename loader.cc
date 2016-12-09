@@ -355,20 +355,20 @@ bool setupScene(Scene& s, std::string const& filename)
 }
 
 void printCamera(Camera const& c) {
-    json origin;// = json::array();
+    json origin;
     origin["x"] = c.origin[0];
     origin["y"] = c.origin[1];
-    origin["z"] = c.origin[1];
+    origin["z"] = c.origin[2];
 
     json look_angle;
-    look_angle["yaw"] = c.yaw;
-    look_angle["pitch"] = c.pitch;
+    look_angle["yaw"] = glm::degrees(c.yaw);
+    look_angle["pitch"] = glm::degrees(c.pitch);
 
     json camera;
     camera["origin"] = origin;
     camera["look_angle"] = look_angle;
-    camera["fov"] = c.fov;
+    camera["fov"] = glm::degrees(c.fov);
 
-    std::cout << "CAMERA: " << camera << std::endl;
+    std::cout << "\"camera\" : " << camera << std::endl;
 }
 
