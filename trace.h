@@ -1,9 +1,10 @@
 #pragma once
 
-#include "utils.h"
+#include "color.h"
 #include "basics.h"
 #include "primitive.h"
 #include "scene.h"
+#include "utils.h"
 
 #include <cmath>
 #include <chrono>
