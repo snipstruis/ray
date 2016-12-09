@@ -23,8 +23,22 @@ struct Triangle{
 };
 
 struct Primitives{
-    std::vector<Material> materials;
-    std::vector<Triangle> triangles;
+    std::vector<float> vx[3], vy[3], vz[3];
+    std::vector<float> nx[3], ny[3], nz[3];
+    std::vector<Material> mat;
+    void add_triangle(
+            glm::vec3 const& va, glm::vec3 const& vb, glm::vec3 const& vc, 
+            glm::vec3 const& na, glm::vec3 const& nb, glm::vec3 const& nc, 
+            Material const& material){
+        vx[0].push_back(va.x); vy[0].push_back(va.y); vz[0].push_back(va.z);
+        vx[1].push_back(vb.x); vy[1].push_back(vb.y); vz[1].push_back(vb.z);
+        vx[2].push_back(vc.x); vy[2].push_back(vc.y); vz[2].push_back(vc.z);
+        nx[0].push_back(na.x); ny[0].push_back(na.y); nz[0].push_back(na.z);
+        nx[1].push_back(nb.x); ny[1].push_back(nb.y); nz[1].push_back(nb.z);
+        nx[2].push_back(nc.x); ny[2].push_back(nc.y); nz[2].push_back(nc.z);
+        mat.push_back(material);
+    }
+    inline size_t triangle_count() const { return vx[0].size(); }
 };
 
 // result of an intersection calculation
@@ -33,7 +47,6 @@ struct Intersection{
     Intersection(float d):distance(d){};
     Intersection(float d, glm::vec3 i, int m, glm::vec3 n, bool intr)
         :distance(d),impact(i),mat(m),normal(n),internal(intr){};
-
     float distance;
     glm::vec3 impact;
     int mat;
@@ -111,33 +124,42 @@ inline float moller_trumbore(
 }
 
 // compute triangle/ray intersection
-inline Intersection intersect(Triangle const& t, Ray const& ray){
-    float dist = moller_trumbore(t.v[0], t.v[1], t.v[2], ray.origin, ray.direction);
+inline Intersection intersect(Ray const& ray, int const mat,
+                              glm::vec3 va, glm::vec3 vb, glm::vec3 vc,
+                              glm::vec3 na, glm::vec3 nb, glm::vec3 nc){
+    float dist = moller_trumbore(va, vb, vc, ray.origin, ray.direction);
 
     if(dist==INFINITY) {
         return Intersection(INFINITY);
-    }
-    else {
+    } else {
         glm::vec3 hit = ray.origin + ray.direction * dist;
 
         // smoothing
-        glm::vec3 bary = barycentric(hit, t.v[0], t.v[1], t.v[2]);
+        glm::vec3 bary = barycentric(hit, va, vb, vc);
         glm::vec3 normal = 
-            glm::normalize( bary.x*t.n[0] + bary.y*t.n[1] + bary.z*t.n[2] );
+            glm::normalize( bary.x*na + bary.y*nb + bary.z*nc );
 
         // internal check
         bool internal = glm::dot(ray.direction,normal)>0;
         normal = internal? -normal : normal;
 
-        return Intersection(dist, hit, t.mat, normal, internal);
+        return Intersection(dist, hit, mat, normal, internal);
     }
 }
 
 // find closest intersection with any geometry
-inline Intersection findClosestIntersection(Primitives const& primitives, Ray const& ray) {
+inline Intersection findClosestIntersection(Primitives const& p, 
+                                            Ray        const& ray) {
     Intersection hit = Intersection(INFINITY);
-    for(auto const& t: primitives.triangles){
-        auto check = intersect(t,ray);
+    size_t triangle_count = p.triangle_count();
+    for(int i=0; i<triangle_count; i++){
+        auto check = intersect(ray, i,
+                glm::vec3(p.vx[0], p.vy[0], p.vz[0]),
+                glm::vec3(p.vx[1], p.vy[1], p.vz[1]),
+                glm::vec3(p.vx[2], p.vy[2], p.vz[2]),
+                glm::vec3(p.nx[0], p.ny[0], p.nz[0]),
+                glm::vec3(p.nx[1], p.ny[1], p.nz[1]),
+                glm::vec3(p.nx[2], p.ny[2], p.nz[2]));
         if(check.distance < hit.distance && check.distance > 0){
             hit = check;
         }
@@ -146,9 +168,16 @@ inline Intersection findClosestIntersection(Primitives const& primitives, Ray co
 };
 
 // does ray intersect any geometry ? (stops after first hit)
-inline bool findAnyIntersection(Primitives const& primitives, Ray const& ray, float const max_dist) {
-    for(auto const& t: primitives.triangles){
-        auto check = intersect(t, ray);
+inline bool findAnyIntersection(Primitives const& p, Ray const& ray, float const max_dist) {
+    size_t triangle_count = p.triangle_count();
+    for(int i=0; i<triangle_count; i++){
+        auto check = intersect(ray, i,
+                glm::vec3(p.vx[0], p.vy[0], p.vz[0]),
+                glm::vec3(p.vx[1], p.vy[1], p.vz[1]),
+                glm::vec3(p.vx[2], p.vy[2], p.vz[2]),
+                glm::vec3(p.nx[0], p.ny[0], p.nz[0]),
+                glm::vec3(p.nx[1], p.ny[1], p.nz[1]),
+                glm::vec3(p.nx[2], p.ny[2], p.nz[2]));
         if(check.distance > 0 && check.distance < max_dist)
             return true;
     }
