@@ -246,15 +246,10 @@ void handleObject(Scene& s, MeshMap const& meshes, json const& o) {
         handleMesh(s, meshes, o);
     }
     else if(kind == "sphere"){
-        float radius = o["radius"];
-        glm::vec3 center = readXYZ(o["center"]);
-
-        s.primitives.spheres.emplace_back(Sphere(center, DEFAULT_MATERIAL, radius));
+        printf("warning: spheres no longer supported\n");
     }
     else if(kind == "plane"){
-        glm::vec3 center = readXYZ(o["center"]);
-        glm::vec3 normal = glm::normalize(readXYZ(o["normal"]));
-        s.primitives.planes.emplace_back(Plane(center, MATERIAL_CHECKER, normal));
+        printf("warning: planes no longer supported\n");
     }
     else {
         throw std::runtime_error("object kind unknown");
