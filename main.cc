@@ -1,53 +1,28 @@
 
 #include "interactive.h"
 
-#include <boost/program_options.hpp>
-
 int main(int argc, char* argv[]){
-    namespace po = boost::program_options;
 
-    std::string sceneFile, imgDir;
-
-	po::options_description desc("options");
-	desc.add_options()
-   		("help", "produce help message")
-    	("scene", po::value<std::string>(&sceneFile)->required(), "scene file name")
-    	("image-dir", po::value<std::string>()->required(), "image output dir");
-
-	po::variables_map vm;
-
-    try {
-	    po::store(po::parse_command_line(argc, argv, desc), vm);
-	    po::notify(vm);    
-    } catch (po::error const& e) {
-    	std::cout << "error parsing commandline: " << e.what()<< "\n";
+    if (argc < 2 || argc > 3) {
+        std::cout << "USAGE: " << argv[0] << " <scene file> [image output dir]\n";
         return -1;
     }
 
-	if (vm.count("help")) {
-    	std::cout << desc << "\n";
-	    return 0;
-	}
-return 0;
+    std::string sceneFile = argv[1];
+    std::string imgDir;
 
-
-std::string s2;
-    try {
-    s2 = vm["scene"].as<std::string>();
-    } catch (boost::bad_any_cast const& e) {
-        std::cout << e.what() << std::endl;
+    if (argc == 3) {
+        imgDir = argv[2];
+        std::cout << "using img output dir " << imgDir << "\n";
     }
-    std::cout << s2; 
-    std::cout <<"\n";
-    return 0;
 
     // setup scene first, so we can bail on error without flashing a window briefly (errors are stdout 
     // for now - maybe should be a dialog box in future).
     Scene s;
-    if(!setupScene(s, vm["scene"].as<std::string>())) {
+    if(!setupScene(s, sceneFile)) {
         std::cout << "failed to setup scene, bailing" << std::endl;
         return -1;
     }
 
-    return interactiveLoop(s, "/Users/nick");
+    return interactiveLoop(s, imgDir);
 }

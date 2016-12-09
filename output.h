@@ -11,6 +11,7 @@
 void WriteNamedTgaImage(std::string const& fname, unsigned int width, unsigned int height, ScreenBuffer const& buf) {
     assert(buf.size() == width * height);
 
+    std::cout << "screenshot - " << fname << std::endl;
 	std::fstream o(fname, std::ios::out | std::ios::binary);
 
 	// Write the header
@@ -34,17 +35,23 @@ void WriteNamedTgaImage(std::string const& fname, unsigned int width, unsigned i
 		o.put(buf[i].g * 255);
 		o.put(buf[i].r * 255);
 	}   
+
+    if(!o.good())
+        std::cout << "WARNING: error writing screenshot " << std::endl;
 }
 
 // generates a filename, and writes the image to dir
 void WriteTgaImage(std::string const& dir, unsigned int width, unsigned int height, ScreenBuffer const& buf) {
     std::stringstream ss;
-    ss << dir << "/";
+
+    if (dir.size() > 0)
+        ss << dir << "/";
+
+    ss << "ray-";
 
     auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     ss << std::put_time(std::localtime(&now), "%Y-%m-%d-%H.%M.%S");
     ss << ".tga";
 
     WriteNamedTgaImage(ss.str(), width, height, buf);
-    std::cout << "wrote image " << ss.str() << std::endl;
 }
