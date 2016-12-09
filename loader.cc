@@ -354,3 +354,21 @@ bool setupScene(Scene& s, std::string const& filename)
     return true;
 }
 
+void printCamera(Camera const& c) {
+    json origin;// = json::array();
+    origin["x"] = c.origin[0];
+    origin["y"] = c.origin[1];
+    origin["z"] = c.origin[1];
+
+    json look_angle;
+    look_angle["yaw"] = c.yaw;
+    look_angle["pitch"] = c.pitch;
+
+    json camera;
+    camera["origin"] = origin;
+    camera["look_angle"] = look_angle;
+    camera["fov"] = c.fov;
+
+    std::cout << "CAMERA: " << camera << std::endl;
+}
+
