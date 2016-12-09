@@ -8,27 +8,13 @@
 #include <cmath>
 
 struct Triangle{
-    // old constructor (pre per-vertex normals). will die.
-    Triangle(glm::vec3 a, glm::vec3 b, glm::vec3 c, int m){
-        v[0]=a; v[1]=b; v[2]=c; mat=m;
-        //TODO: remove
-        normal = glm::normalize(glm::cross(b-a,c-a));
-    }
-
     Triangle(
             glm::vec3 const& _v1, glm::vec3 const& _v2, glm::vec3 const& _v3, 
             glm::vec3 const& _n1, glm::vec3 const& _n2, glm::vec3 const& _n3, 
             int _material) :
         v{_v1, _v2, _v3}, 
         n{_n1, _n2, _n3}, 
-        mat(_material) {
-            //TODO:remove
-            normal = glm::normalize(glm::cross(v[1]-v[0], v[2]-v[0]));
-        } 
-
-    //TODO: remove, we have per-vertex normals now.
-    glm::vec3 normal;
-    // verticies
+        mat(_material) { } 
     glm::vec3 v[3];
     // per-vertex normal
     glm::vec3 n[3];
@@ -132,15 +118,17 @@ inline Intersection intersect(Triangle const& t, Ray const& ray){
         return Intersection(INFINITY);
     }
     else {
-        bool internal = glm::dot(ray.direction,t.normal)>0;
         glm::vec3 hit = ray.origin + ray.direction * dist;
-#if 1
+
+        // smoothing
         glm::vec3 bary = barycentric(hit, t.v[0], t.v[1], t.v[2]);
-        glm::vec3 normal = glm::normalize( bary.x*t.n[0] + bary.y*t.n[1] + bary.z*t.n[2] );
+        glm::vec3 normal = 
+            glm::normalize( bary.x*t.n[0] + bary.y*t.n[1] + bary.z*t.n[2] );
+
+        // internal check
+        bool internal = glm::dot(ray.direction,normal)>0;
         normal = internal? -normal : normal;
-#else
-        glm::vec3 normal = internal? -t.normal : t.normal;
-#endif
+
         return Intersection(dist, hit, t.mat, normal, internal);
     }
 }
