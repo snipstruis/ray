@@ -1,6 +1,7 @@
 #pragma once
 
 #include "glm/vec3.hpp"
+#include <cl.hpp>
 
 struct AABB {
     glm::vec3 a,b;

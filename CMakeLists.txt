@@ -6,6 +6,12 @@ project(ray)
 message(STATUS "build type ${CMAKE_BUILD_TYPE}")
 
 find_package(OpenGL)
+find_package(OpenCL)
+
+MESSAGE(STATUS "Using OpenGL include dir ${OPENGL_INCLUDE_DIR}")
+MESSAGE(STATUS "Using OpenGL lib ${OPENGL_gl_LIBRARY}")
+MESSAGE(STATUS "Using OpenCL include dir ${OpenCL_INCLUDE_DIRS}")
+MESSAGE(STATUS "Using OpenCL libs ${OpenCL_LIBRARIES}")
 
 ####### Compile flags
 # common flags
@@ -41,8 +47,6 @@ include_directories("lib")
 # quieten warnings in glm - we're using radians
 add_definitions("-DGLM_FORCE_RADIANS")
 
-MESSAGE(STATUS "Using OpenGL lib ${OPENGL_gl_LIBRARY}")
-
 # add the root directory of the project as an include dir
 include_directories(.)
 
@@ -55,7 +59,7 @@ add_executable(ray
 )
 
 # linking
-target_link_libraries(ray SDL2 boost_program_options ${OPENGL_gl_LIBRARY})
+target_link_libraries(ray SDL2 ${OPENGL_gl_LIBRARY})
 
 # recurse into test
 if(NOT WIN32)
@@ -73,7 +77,7 @@ message(STATUS "image output dir ${IMG_OUTPUT_DIR}")
 macro(add_scene key scenefile)
     set(N "run-ray-${key}") 
 
-    message(STATUS "adding target ${N} for scenefile ${scenefile}")
+    #    message(STATUS "adding target ${N} for scenefile ${scenefile}")
 
     add_custom_target(${N}
         COMMAND ray ${scenefile} ${IMG_OUTPUT_DIR}
