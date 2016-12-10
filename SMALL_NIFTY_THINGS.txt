@@ -1,0 +1,6 @@
+- screenshots
+- output camera
+- render every nth pixel
+- interactive (continuous) / interactive (manual) / non-interactive mode
+
+

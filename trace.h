@@ -1,6 +1,7 @@
 #pragma once
 
 #include "bvh.h"
+#include "color.h"
 #include "basics.h"
 #include "primitive.h"
 #include "scene.h"
@@ -185,7 +186,8 @@ inline void renderFrame(Scene& s, std::vector<Color>& screenBuffer, Mode mode){
             for (int x = 0; x < width; x++) {
                 Ray r = s.camera.makeRay(x, y);
                 int idx = (height-y-1) * width+ x;
-                screenBuffer[idx] = trace(r, s.primitives, s.lights, Color(0,0,0));
+                auto col = trace(r, s.primitives, s.lights, Color(0,0,0));
+                screenBuffer[idx] = ColorClamp(col, 0.0f, 1.0f);
             }
         }
         break;

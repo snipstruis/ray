@@ -168,14 +168,14 @@ Mesh loadMesh(Scene& s, std::string const& filename){
                 }
             }
 
-            Triangle t(
-                makeVec3FromVerticies(attrib, shape.mesh.indices[base].vertex_index),
-                makeVec3FromVerticies(attrib, shape.mesh.indices[base + 1].vertex_index),
-                makeVec3FromVerticies(attrib, shape.mesh.indices[base + 2].vertex_index),
-                makeVec3FromNormals(attrib, shape.mesh.indices[base].normal_index),
-                makeVec3FromNormals(attrib, shape.mesh.indices[base + 1].normal_index),
-                makeVec3FromNormals(attrib, shape.mesh.indices[base + 2].normal_index),
-                globalMatID);
+            auto v1 = makeVec3FromVerticies(attrib, shape.mesh.indices[base].vertex_index);
+            auto v2 = makeVec3FromVerticies(attrib, shape.mesh.indices[base + 1].vertex_index);
+            auto v3 = makeVec3FromVerticies(attrib, shape.mesh.indices[base + 2].vertex_index);
+            auto n1 = makeVec3FromNormals(attrib, shape.mesh.indices[base].normal_index);
+            auto n2 = makeVec3FromNormals(attrib, shape.mesh.indices[base + 1].normal_index);
+            auto n3 = makeVec3FromNormals(attrib, shape.mesh.indices[base + 2].normal_index);
+
+            Triangle t(v1, v2, v3, n1, n2, n3, globalMatID);
 
             mesh.triangles.emplace_back(t);
         }
@@ -352,5 +352,23 @@ bool setupScene(Scene& s, std::string const& filename)
     }
 
     return true;
+}
+
+void printCamera(Camera const& c) {
+    json origin;
+    origin["x"] = c.origin[0];
+    origin["y"] = c.origin[1];
+    origin["z"] = c.origin[2];
+
+    json look_angle;
+    look_angle["yaw"] = glm::degrees(c.yaw);
+    look_angle["pitch"] = glm::degrees(c.pitch);
+
+    json camera;
+    camera["origin"] = origin;
+    camera["look_angle"] = look_angle;
+    camera["fov"] = glm::degrees(c.fov);
+
+    std::cout << "\"camera\" : " << camera << std::endl;
 }
 
