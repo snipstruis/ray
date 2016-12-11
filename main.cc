@@ -26,5 +26,11 @@ int main(int argc, char* argv[]){
         return -1;
     }
 
-    return interactiveLoop(s, imgDir);
+    BVH* b = buildBVH(s);
+    assert(b);
+
+    auto ret = interactiveLoop(s, *b, imgDir);
+
+    delete b;
+    return ret;
 }

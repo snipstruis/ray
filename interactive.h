@@ -1,8 +1,10 @@
 #pragma once
 
+#include "bvh.h"
 #include "camera.h"
 #include "loader.h"
 #include "output.h"
+#include "render.h"
 #include "scene.h"
 #include "trace.h"
 
@@ -98,7 +100,7 @@ GuiAction handleEvents(Scene& s, Mode *vis)
 // @s: pre-populated scene
 // @imgDir: location to write screenshots
 //
-int interactiveLoop(Scene& s, std::string const& imgDir) {
+int interactiveLoop(Scene& s, BVH& b, std::string const& imgDir) {
     SDL_Window *win = SDL_CreateWindow("Roaytroayzah (initialising)", 100, 100, 640, 640, 
                                        SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
     SDL_GL_CreateContext(win);
@@ -133,7 +135,7 @@ int interactiveLoop(Scene& s, std::string const& imgDir) {
 
         glViewport(0, 0, s.camera.width, s.camera.height);
 
-        renderFrame(s, screenBuffer, mode);
+        renderFrame(s, b, screenBuffer, mode);
        
         // blit to screen
         glDrawPixels(s.camera.width, s.camera.height, GL_RGB, GL_FLOAT, screenBuffer.data());

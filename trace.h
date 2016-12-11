@@ -175,7 +175,7 @@ enum class Mode {
 
 // main render starting loop
 // assumes screenbuffer is big enough to handle the width*height pixels (per the camera)
-inline void renderFrame(Scene& s, std::vector<Color>& screenBuffer, Mode mode){
+inline void renderFrame(Scene& s, BVH& b, std::vector<Color>& screenBuffer, Mode mode){
     // draw pixels
     int const width  = s.camera.width;
     int const height = s.camera.height;
