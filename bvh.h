@@ -21,19 +21,28 @@ inline std::ostream& operator<<(std::ostream& os, const AABB& a) {
 
 struct BVHNode {
     BVHNode(): leftFirst(0), count(0) {}
+    BVHNode(unsigned int _leftFirst, unsigned int _count): leftFirst(_leftFirst), count(_count) {}
 
     bool isLeaf() const {
         return count > 0;
     }
 
+    // only valid for non-leaves
     std::uint32_t leftIndex() const {
         assert(!isLeaf());
         return leftFirst;
     }
 
+    // only valid for non-leaves
     std::uint32_t rightIndex() const {
         assert(!isLeaf());
         return leftFirst + 1;
+    }
+
+    // only valid for leaves
+    std::uint32_t first() const {
+        assert(isLeaf());
+        return leftFirst;
     }
 
     AABB bounds;
@@ -46,9 +55,25 @@ static_assert(sizeof(AABB) == 24, "AABB size");
 static_assert(sizeof(BVHNode) == 32, "BVHNode size");
 
 struct BVH {
-    BVH(): root(nullptr) {} 
+    BVH() {
+        nodes.resize(1); // ensure at least root exists
+    } 
 
-    BVHNode* root;
+    BVH(unsigned int nodeCount) {
+        nodes.resize(nodeCount); 
+    } 
+
+    BVHNode const& getNode(unsigned int index) const {
+        assert(index < nodes.size());
+        return nodes[index];
+    }
+
+    BVHNode& root() {
+        assert(nodes.size() > 0);
+        return nodes[0];
+    }
+
+    std::vector<BVHNode> nodes;
     std::vector<unsigned int> indicies;
 };
 
@@ -83,17 +108,17 @@ inline void FindAABB(AABB& result, TriangleSet const& triangles, unsigned int st
 inline BVH* buildStupidBVH(Scene& s) {
     BVH* bvh = new BVH;
 
-    bvh->root = new BVHNode;
-    bvh->root->leftFirst = 0;
-    bvh->root->count = s.primitives.triangles.size();
+    bvh->root().leftFirst = 0;
+    bvh->root().count = s.primitives.triangles.size();
+
     bvh->indicies.resize(s.primitives.triangles.size());
 
     for (unsigned int i = 0; i < s.primitives.triangles.size(); i++)
         bvh->indicies[i] = i;
 
-    FindAABB(bvh->root->bounds, s.primitives.triangles, 0, s.primitives.triangles.size());
+    FindAABB(bvh->root().bounds, s.primitives.triangles, 0, s.primitives.triangles.size());
 
-    std::cout << "AABB " << bvh->root->bounds << std::endl;
+    std::cout << "AABB " << bvh->root().bounds << std::endl;
     return bvh;
 }
 
@@ -108,32 +133,61 @@ inline BVH* buildBVH(Scene& s) {
     return buildStupidBVH(s);
 }
 
+// Does a ray intersect the BVH node? Returns distance to intersect, or INFINITY if no intersection
+float rayIntersectsBVH(BVHNode const& node, Ray const& ray) {
+
+    return INFINITY;
+}
 // Find the closest intersection with any primitive
-Intersection FindClosestIntersectionBVH(
+Intersection findClosestIntersectionBVH(
         BVH const& bvh, 
         BVHNode const& node, 
         Primitives const& primitives, 
-        Ray const& r) {
+        Ray const& ray) {
 
     if(!node.isLeaf()) {
-        // not at a leaf yet - recurse both children
-        BVHNode& left = bvh.getNode(node.getLeft());
-        BVHNode& right = bvh.getNode(node.getRight());
-        Intersection& hitLeft = FindClosestIntersectionBVH(bvh, left, primitives, r);
-        Intersection& hitRight = FindClosestIntersectionBVH(bvh, right, primitives, r);
+        // we are not at a leaf yet - consider both children
+        BVHNode const& left = bvh.getNode(node.leftIndex());
+        BVHNode const& right = bvh.getNode(node.rightIndex());
 
-        if(hitLeft.distance < hitRight.distance)
-            return hitLeft;
-        else
-            return hitRight;
+        float distLeft = rayIntersectsBVH(left, ray);
+        float distRight = rayIntersectsBVH(right, ray);
+
+        if(distLeft == INFINITY && distRight == INFINITY)
+            return Intersection(INFINITY);
+
+        Intersection hit;
+
+        if(distLeft < distRight) {
+            hit = findClosestIntersectionBVH(bvh, left, primitives, ray);
+            if(hit.distance < INFINITY)
+                return hit;
+    
+            if(distRight < INFINITY)
+                return findClosestIntersectionBVH(bvh, right, primitives, ray);
+
+            return INFINITY;
+        }
+        else {
+            hit = findClosestIntersectionBVH(bvh, right, primitives, ray);
+            if(hit.distance < INFINITY)
+                return hit;
+    
+            if(distLeft< INFINITY)
+                return findClosestIntersectionBVH(bvh, left, primitives, ray);
+
+            return INFINITY;
+        }
     }
     else {
         // we are at a leaf - walk all triangles to find an exact hit.
         Intersection hit = Intersection(INFINITY);
 
-        for(unsigned int i = node.firstLeft; i < (node.firstLeft + node.count); i++) {
-            auto const& t = bvh.getTriangle(i);
-            auto check = intersect(t, r);
+        for(unsigned int i = node.first(); i < (node.first()+ node.count); i++) {
+            assert(i < bvh.indicies.size());
+            unsigned int triangleIndex = bvh.indicies[i];
+            Triangle const& t = primitives.triangles[triangleIndex];
+            auto check = intersect(t, ray);
 
             if(check.distance < hit.distance && check.distance > 0)
                 hit = check;
