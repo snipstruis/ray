@@ -15,6 +15,15 @@ struct Triangle{
         v{_v1, _v2, _v3}, 
         n{_n1, _n2, _n3}, 
         mat(_material) { } 
+
+    // FIXME: consider caching or pre-calcuating centoid (but we'll likely redo this structure anyway)
+    glm::vec3 getCentoid() const {
+        return glm::vec3(
+            (v[0][0] + v[1][0] + v[2][0]) / 3.0f,  // x
+            (v[0][1] + v[1][1] + v[2][1]) / 3.0f,  // y
+            (v[0][2] + v[1][2] + v[2][2]) / 3.0f); // z
+        }
+
     glm::vec3 v[3];
     // per-vertex normal
     glm::vec3 n[3];
