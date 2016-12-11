@@ -96,21 +96,20 @@ Color trace(Ray const& ray,
             Primitives const& primitives,
             Lights const& lights,
             Color const& alpha){
-
     if(ray.ttl<=0) return alpha;
 
     Intersection hit = findClosestIntersection(primitives, ray);
     if(hit.distance==INFINITY) return alpha;
 
-    Material mat = primitives.mat[hit.mat];
+    Material mat = primitives.materials[hit.mat];
 
-    Material raymat = primitives.mat[ray.mat];
+    Material raymat = primitives.materials[ray.mat];
     if(mat.checkered >= 0){
         int x = (int)(hit.impact.x - EPSILON);
         int y = (int)(hit.impact.y - EPSILON);
         int z = (int)(hit.impact.z - EPSILON);
         if((x&1)^(y&1)^(z&1)) 
-            mat = primitives.mat[mat.checkered];
+            mat = primitives.materials[mat.checkered];
     }
 	
     Color color = Color(0, 0, 0);

@@ -98,7 +98,7 @@ glm::vec3 makeVec3FromNormals(tinyobj::attrib_t const& attrib, int index) {
 int createMaterial(Scene& s, tinyobj::material_t const& m){
 
     // create a new mat on the back of the existing array.
-    s.primitives.mat.emplace_back(
+    s.primitives.materials.emplace_back(
             Color(m.diffuse[0], m.diffuse[1], m.diffuse[2]), // diffuse color
             Color(m.transmittance[0], m.transmittance[1], m.transmittance[2]), // transparency color
             (1.0f - m.dissolve), // transparency - note 1==opaque in the mat files.
@@ -108,7 +108,7 @@ int createMaterial(Scene& s, tinyobj::material_t const& m){
             m.shininess);  // shininess
 
     // return the index of this newly created material.
-    auto globalMatId = s.primitives.mat.size() - 1;
+    auto globalMatId = s.primitives.materials.size() - 1;
     std::cout << "created new material " << m.name << " @ " << globalMatId << std::endl;
 
     return globalMatId;
@@ -329,10 +329,10 @@ bool loadScene(Scene& s, std::string const& filename)  {
 
 bool setupScene(Scene& s, std::string const& filename)
 {
-    buildFixedMaterials(s.primitives.mat);
+    buildFixedMaterials(s.primitives.materials);
 
     // sanity check - the fixed materials should now be created
-    assert(s.primitives.mat.size() > 2);
+    assert(s.primitives.materials.size() > 2);
 
     std::cout << "loading scene " << filename << std::endl;
 

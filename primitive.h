@@ -11,18 +11,19 @@
 struct Primitives{
     // for each vertex, for each triangle, for each vertices and normal xyz.
     std::array<std::vector<float>,3> vx, vy, vz, nx, ny, nz;
-    std::vector<Material> mat;
+    std::vector<int> mat_idx;
+    std::vector<Material> materials;
     void add_triangle(
             glm::vec3 const& va, glm::vec3 const& vb, glm::vec3 const& vc, 
             glm::vec3 const& na, glm::vec3 const& nb, glm::vec3 const& nc, 
-            Material const& material){
+            int const& material_index){
         vx[0].push_back(va.x); vy[0].push_back(va.y); vz[0].push_back(va.z);
         vx[1].push_back(vb.x); vy[1].push_back(vb.y); vz[1].push_back(vb.z);
         vx[2].push_back(vc.x); vy[2].push_back(vc.y); vz[2].push_back(vc.z);
         nx[0].push_back(na.x); ny[0].push_back(na.y); nz[0].push_back(na.z);
         nx[1].push_back(nb.x); ny[1].push_back(nb.y); nz[1].push_back(nb.z);
         nx[2].push_back(nc.x); ny[2].push_back(nc.y); nz[2].push_back(nc.z);
-        mat.push_back(material);
+        mat_idx.push_back(material_index);
     }
     inline glm::vec3 vertex(int i, int side){
         return glm::vec3(vx[side][i],vy[side][i],vz[side][i]);
