@@ -97,13 +97,50 @@ inline BVH* buildStupidBVH(Scene& s) {
     return bvh;
 }
 
+
 // Try to build the best possible BVH; i.e., Favor optimal traversals, at the expense of slower build time. 
 inline BVH* buildStaticBVH(Scene& s) {
+    assert(false); //unimplemented
     return nullptr;
 }
 
 inline BVH* buildBVH(Scene& s) {
     return buildStupidBVH(s);
+}
+
+// Find the closest intersection with any primitive
+Intersection FindClosestIntersectionBVH(
+        BVH const& bvh, 
+        BVHNode const& node, 
+        Primitives const& primitives, 
+        Ray const& r) {
+
+    if(!node.isLeaf()) {
+        // not at a leaf yet - recurse both children
+        BVHNode& left = bvh.getNode(node.getLeft());
+        BVHNode& right = bvh.getNode(node.getRight());
+        Intersection& hitLeft = FindClosestIntersectionBVH(bvh, left, primitives, r);
+        Intersection& hitRight = FindClosestIntersectionBVH(bvh, right, primitives, r);
+
+        if(hitLeft.distance < hitRight.distance)
+            return hitLeft;
+        else
+            return hitRight;
+    }
+    else {
+        // we are at a leaf - walk all triangles to find an exact hit.
+        Intersection hit = Intersection(INFINITY);
+
+        for(unsigned int i = node.firstLeft; i < (node.firstLeft + node.count); i++) {
+            auto const& t = bvh.getTriangle(i);
+            auto check = intersect(t, r);
+
+            if(check.distance < hit.distance && check.distance > 0)
+                hit = check;
+        }
+
+        return hit;
+    }
 }
 
 #if 0
