@@ -22,9 +22,13 @@ struct Triangle{
     int mat; 
 };
 
+// we pass these around a lot, so typedef them out
+typedef std::vector<Material> MaterialSet;
+typedef std::vector<Triangle> TriangleSet;
+
 struct Primitives{
-    std::vector<Material> materials;
-    std::vector<Triangle> triangles;
+    MaterialSet materials;
+    TriangleSet triangles;
 };
 
 // result of an intersection calculation
