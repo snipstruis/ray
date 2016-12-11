@@ -8,17 +8,33 @@
 
 #include <vector>
 
+// axis-aligned bounding box
+// members not named min/max to avoid clashes with library functions
 struct AABB {
-    glm::vec3 a,b;
+    glm::vec3 low, high;
 };
 
-inline std::ostream& operator<<(std::ostream& os, const AABB& aabb) {
-    os << aabb.a << " -> " << aabb.b;
+inline std::ostream& operator<<(std::ostream& os, const AABB& a) {
+    os << a.low << " -> " << a.high;
     return os;
 }
 
 struct BVHNode {
     BVHNode(): leftFirst(0), count(0) {}
+
+    bool isLeaf() const {
+        return count > 0;
+    }
+
+    std::uint32_t leftIndex() const {
+        assert(!isLeaf());
+        return leftFirst;
+    }
+
+    std::uint32_t rightIndex() const {
+        assert(!isLeaf());
+        return leftFirst + 1;
+    }
 
     AABB bounds;
     std::uint32_t leftFirst;
@@ -42,20 +58,21 @@ inline void FindAABB(AABB& result, TriangleSet const& triangles, unsigned int st
     assert(count >= 1);
     assert(start + count <= triangles.size());
 
-    result.a[0] = result.b[0] = triangles[start].v[0][0];
-    result.a[1] = result.b[1] = triangles[start].v[0][1];
-    result.a[2] = result.b[2] = triangles[start].v[0][2];
+    // need a starting min/max value. could set this to +/- INF. for now we'll use the zeroth vertex..
+    // this is not ideal, but we'll be rewriting this in some kind of SIMD way later anyway.
+    result.low[0] = result.high[0] = triangles[start].v[0][0];
+    result.low[1] = result.high[1] = triangles[start].v[0][1];
+    result.low[2] = result.high[2] = triangles[start].v[0][2];
 
     for(unsigned int i = start; i < (start + count); i++) {
         for(unsigned int j = 0; j < 3; j++) {
+            result.low[0] = std::min(result.low[0], triangles[i].v[j][0]);
+            result.low[1] = std::min(result.low[1], triangles[i].v[j][1]);
+            result.low[2] = std::min(result.low[2], triangles[i].v[j][2]);
 
-            result.a[0] = std::min(result.a[0], triangles[i].v[j][0]);
-            result.a[1] = std::min(result.a[1], triangles[i].v[j][1]);
-            result.a[2] = std::min(result.a[2], triangles[i].v[j][2]);
-
-            result.b[0] = std::max(result.b[0], triangles[i].v[j][0]);
-            result.b[1] = std::max(result.b[1], triangles[i].v[j][1]);
-            result.b[2] = std::max(result.b[2], triangles[i].v[j][2]);
+            result.high[0] = std::max(result.high[0], triangles[i].v[j][0]);
+            result.high[1] = std::max(result.high[1], triangles[i].v[j][1]);
+            result.high[2] = std::max(result.high[2], triangles[i].v[j][2]);
         }
     }
 }
