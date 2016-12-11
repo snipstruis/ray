@@ -158,7 +158,6 @@ inline Intersection findClosestIntersection(Primitives const& primitives, Ray co
     }
     return hit;
 };
-#endif
 
 // does ray intersect any geometry ? (stops after first hit)
 inline bool findAnyIntersection(Primitives const& primitives, Ray const& ray, float const max_dist) {
@@ -169,3 +168,4 @@ inline bool findAnyIntersection(Primitives const& primitives, Ray const& ray, fl
     }
     return false;
 };
+#endif

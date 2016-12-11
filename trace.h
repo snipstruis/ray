@@ -57,6 +57,7 @@ inline Color calcLightOutput(SpotLight const& light,
 
 template <class LightsType>
 inline Color diffuse(Ray const& ray,
+              BVH const& bvh,
               Primitives const& primitives,
               LightsType const& lights,
               Intersection const& hit,
@@ -71,7 +72,7 @@ inline Color diffuse(Ray const& ray,
         Ray shadow_ray = Ray(hit.impact + (hit.normal*1e-4f), light_direction, ray.mat, ray.ttl-1);
 
         // does this shadow ray hit any geometry?
-        bool shadow_hit = findAnyIntersection(primitives, shadow_ray, light_distance);
+        bool shadow_hit = findAnyIntersectionBVH(bvh, primitives, shadow_ray, light_distance);
 
         if(!shadow_hit){
             color += calcLightOutput(light, light_distance, ray, hit, mat, light_direction);
@@ -81,14 +82,15 @@ inline Color diffuse(Ray const& ray,
 }
 
 inline Color calcTotalDiffuse(Ray const& ray,
+              BVH const& bvh,
               Primitives const& primitives,
               Lights const& lights,
               Intersection const& hit,
               Material const& mat){
     Color color = Color(0,0,0);
 
-    color += diffuse(ray, primitives, lights.pointLights, hit, mat);
-    color += diffuse(ray, primitives, lights.spotLights, hit, mat);
+    color += diffuse(ray, bvh, primitives, lights.pointLights, hit, mat);
+    color += diffuse(ray, bvh, primitives, lights.spotLights, hit, mat);
 
     return color;
 }
@@ -119,7 +121,7 @@ Color trace(Ray const& ray,
 
     // shadows and lighting
     if(!mat.diffuseColor.isBlack()){
-        color += calcTotalDiffuse(ray,primitives, lights, hit, mat);
+        color += calcTotalDiffuse(ray, bvh, primitives, lights, hit, mat);
     }
 
     // angle-depenent transparancy (for dielectric materials)

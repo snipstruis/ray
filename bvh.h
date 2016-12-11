@@ -203,6 +203,7 @@ Intersection findClosestIntersectionBVH(
     }
 }
 
+// find closest triangle intersection for ray
 Intersection findClosestIntersectionBVH(
         BVH const& bvh, 
         Primitives const& primitives, 
@@ -211,47 +212,26 @@ Intersection findClosestIntersectionBVH(
     return findClosestIntersectionBVH(bvh, bvh.root(), primitives, ray);
 }
 
-#if 0
-void constructBVH(std::vector<Triangle> const& primitives)  {
-	// create index array
-	indices = new uint[N];
+// return true if ANY triangle is intersected by ray
+bool findAnyIntersectionBVH(
+        BVH const& bvh, 
+        BVHNode const& node, 
+        Primitives const& primitives, 
+        Ray const& ray,
+        float maxDist) {
 
-	for(int i = 0; i < N; i++) 
-		indices[i] = i;
-
-	// allocate BVH root node
-	root = new BVHNode();
-
-	// subdivide root node
-	root->first = 0;
-	root->count = N;
-	root->bounds = CalculateBounds( primitives, root->first, root->count ); 
-	root->Subdivide();
+    // FIXME: implement properly
+    Intersection i = findClosestIntersectionBVH(bvh, primitives, ray);
+    
+    return i.distance < maxDist;
 }
 
-void Subdivide() {
-	if (count < 3) 
-		return;
+// return true if ANY triangle is intersected by ray
+bool findAnyIntersectionBVH(
+        BVH const& bvh, 
+        Primitives const& primitives, 
+        Ray const& ray,
+        float maxDist) {
 
-	this.left = new BVHNode();
-	this.right = new BVHNode();
-
-	Partition();
-	this.left->Subdivide();
-	this.right->Subdivide();
-	this.isLeaf = false;
+    return findAnyIntersectionBVH(bvh, bvh.root(), primitives, ray, maxDist);
 }
-
-void Traverse(Ray const& r)
-{
-	if(!r.Intersects(bounds)) 
-		return;
-   	if (isleaf()) {	
-		IntersectPrimitives();
-    }
-	else {
-      pool[left].Traverse( r );
-      pool[left + 1].Traverse( r );
-} }
-
-#endif
