@@ -146,6 +146,7 @@ inline Intersection intersect(Triangle const& t, Ray const& ray){
     }
 }
 
+#if 0
 // find closest intersection with any geometry
 inline Intersection findClosestIntersection(Primitives const& primitives, Ray const& ray) {
     Intersection hit = Intersection(INFINITY);
@@ -157,6 +158,7 @@ inline Intersection findClosestIntersection(Primitives const& primitives, Ray co
     }
     return hit;
 };
+#endif
 
 // does ray intersect any geometry ? (stops after first hit)
 inline bool findAnyIntersection(Primitives const& primitives, Ray const& ray, float const max_dist) {

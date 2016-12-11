@@ -73,6 +73,11 @@ struct BVH {
         return nodes[0];
     }
 
+    BVHNode const& root() const {
+        assert(nodes.size() > 0);
+        return nodes[0];
+    }
+
     std::vector<BVHNode> nodes;
     std::vector<unsigned int> indicies;
 };
@@ -138,6 +143,7 @@ float rayIntersectsBVH(BVHNode const& node, Ray const& ray) {
 
     return INFINITY;
 }
+
 // Find the closest intersection with any primitive
 Intersection findClosestIntersectionBVH(
         BVH const& bvh, 
@@ -195,6 +201,14 @@ Intersection findClosestIntersectionBVH(
 
         return hit;
     }
+}
+
+Intersection findClosestIntersectionBVH(
+        BVH const& bvh, 
+        Primitives const& primitives, 
+        Ray const& ray) {
+
+    return findClosestIntersectionBVH(bvh, bvh.root(), primitives, ray);
 }
 
 #if 0

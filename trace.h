@@ -94,13 +94,14 @@ inline Color calcTotalDiffuse(Ray const& ray,
 }
 
 Color trace(Ray const& ray,
+            BVH const& bvh,
             Primitives const& primitives,
             Lights const& lights,
             Color const& alpha){
 
     if(ray.ttl<=0) return alpha;
 
-    Intersection hit = findClosestIntersection(primitives, ray);
+    Intersection hit = findClosestIntersectionBVH(bvh, primitives, ray);
     if(hit.distance==INFINITY) return alpha;
 
     Material mat = primitives.materials[hit.mat];
@@ -145,7 +146,7 @@ Color trace(Ray const& ray,
                 //FIXME: exiting a primitive will set the material to air
                 hit.internal ? MATERIAL_AIR : hit.mat, 
                 ray.ttl-1);
-        color += transparency * trace(refract_ray, primitives, lights, alpha);
+        color += transparency * trace(refract_ray, bvh, primitives, lights, alpha);
     }
     
     // reflection (mirror)
@@ -154,7 +155,7 @@ Color trace(Ray const& ray,
                     glm::reflect(ray.direction, hit.normal),
                     ray.mat,
                     ray.ttl-1);
-        color += reflectiveness * trace(r,primitives,lights,alpha);
+        color += reflectiveness * trace(r, bvh, primitives,lights,alpha);
     }
 
     // absorption (Beer's law)
@@ -175,7 +176,7 @@ enum class Mode {
 
 // main render starting loop
 // assumes screenbuffer is big enough to handle the width*height pixels (per the camera)
-inline void renderFrame(Scene& s, BVH& b, std::vector<Color>& screenBuffer, Mode mode){
+inline void renderFrame(Scene& s, BVH& bvh, std::vector<Color>& screenBuffer, Mode mode){
     // draw pixels
     int const width  = s.camera.width;
     int const height = s.camera.height;
@@ -186,7 +187,7 @@ inline void renderFrame(Scene& s, BVH& b, std::vector<Color>& screenBuffer, Mode
             for (int x = 0; x < width; x++) {
                 Ray r = s.camera.makeRay(x, y);
                 int idx = (height-y-1) * width+ x;
-                auto col = trace(r, s.primitives, s.lights, Color(0,0,0));
+                auto col = trace(r, bvh, s.primitives, s.lights, Color(0,0,0));
                 screenBuffer[idx] = ColorClamp(col, 0.0f, 1.0f);
             }
         }
@@ -198,7 +199,7 @@ inline void renderFrame(Scene& s, BVH& b, std::vector<Color>& screenBuffer, Mode
                 auto start = std::chrono::high_resolution_clock::now();
                 Ray r = s.camera.makeRay(x, y);
                 int idx = (height-y-1) * width+ x;
-                screenBuffer[idx] = trace(r,s.primitives,s.lights,Color(0,0,0));
+                screenBuffer[idx] = trace(r, bvh, s.primitives, s.lights, Color(0,0,0));
                 auto end = std::chrono::high_resolution_clock::now();
                 auto frametime = 
                     std::chrono::duration_cast<std::chrono::duration<float,std::micro>>(end-start).count();
@@ -207,6 +208,7 @@ inline void renderFrame(Scene& s, BVH& b, std::vector<Color>& screenBuffer, Mode
         }
         break;
     case Mode::Normal:
+#if 0
         #pragma omp parallel for schedule(auto) collapse(2)
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
@@ -216,6 +218,7 @@ inline void renderFrame(Scene& s, BVH& b, std::vector<Color>& screenBuffer, Mode
                 screenBuffer[idx] = Color(hit.normal.x, hit.normal.y, hit.normal.z);
             }
         }
+#endif
         break;
     }
 }
