@@ -56,7 +56,6 @@ inline void FindAABB(AABB& result, TriangleSet const& triangles, unsigned int st
             result.b[0] = std::max(result.b[0], triangles[i].v[j][0]);
             result.b[1] = std::max(result.b[1], triangles[i].v[j][1]);
             result.b[2] = std::max(result.b[2], triangles[i].v[j][2]);
-            std::cout << result.a << " " << result.b << " " << triangles[i].v[j] << std::endl;
         }
     }
 }
