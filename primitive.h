@@ -5,26 +5,12 @@
 #include "material.h"
 
 #include <vector>
+#include <array>
 #include <cmath>
 
-struct Triangle{
-    Triangle(
-            glm::vec3 const& _v1, glm::vec3 const& _v2, glm::vec3 const& _v3, 
-            glm::vec3 const& _n1, glm::vec3 const& _n2, glm::vec3 const& _n3, 
-            int _material) :
-        v{_v1, _v2, _v3}, 
-        n{_n1, _n2, _n3}, 
-        mat(_material) { } 
-    glm::vec3 v[3];
-    // per-vertex normal
-    glm::vec3 n[3];
-    // material
-    int mat; 
-};
-
 struct Primitives{
-    std::vector<float> vx[3], vy[3], vz[3];
-    std::vector<float> nx[3], ny[3], nz[3];
+    // for each vertex, for each triangle, for each vertices and normal xyz.
+    std::array<std::vector<float>,3> vx, vy, vz, nx, ny, nz;
     std::vector<Material> mat;
     void add_triangle(
             glm::vec3 const& va, glm::vec3 const& vb, glm::vec3 const& vc, 
@@ -37,6 +23,12 @@ struct Primitives{
         nx[1].push_back(nb.x); ny[1].push_back(nb.y); nz[1].push_back(nb.z);
         nx[2].push_back(nc.x); ny[2].push_back(nc.y); nz[2].push_back(nc.z);
         mat.push_back(material);
+    }
+    inline glm::vec3 vertex(int i, int side){
+        return glm::vec3(vx[side][i],vy[side][i],vz[side][i]);
+    }
+    inline glm::vec3 normal(int i, int side){
+        return glm::vec3(nx[side][i],ny[side][i],nz[side][i]);
     }
     inline size_t triangle_count() const { return vx[0].size(); }
 };
@@ -125,8 +117,8 @@ inline float moller_trumbore(
 
 // compute triangle/ray intersection
 inline Intersection intersect(Ray const& ray, int const mat,
-                              glm::vec3 va, glm::vec3 vb, glm::vec3 vc,
-                              glm::vec3 na, glm::vec3 nb, glm::vec3 nc){
+                              glm::vec3 const& va, glm::vec3 const& vb, glm::vec3 const& vc,
+                              glm::vec3 const& na, glm::vec3 const& nb, glm::vec3 const& nc){
     float dist = moller_trumbore(va, vb, vc, ray.origin, ray.direction);
 
     if(dist==INFINITY) {
@@ -154,12 +146,12 @@ inline Intersection findClosestIntersection(Primitives const& p,
     size_t triangle_count = p.triangle_count();
     for(int i=0; i<triangle_count; i++){
         auto check = intersect(ray, i,
-                glm::vec3(p.vx[0], p.vy[0], p.vz[0]),
-                glm::vec3(p.vx[1], p.vy[1], p.vz[1]),
-                glm::vec3(p.vx[2], p.vy[2], p.vz[2]),
-                glm::vec3(p.nx[0], p.ny[0], p.nz[0]),
-                glm::vec3(p.nx[1], p.ny[1], p.nz[1]),
-                glm::vec3(p.nx[2], p.ny[2], p.nz[2]));
+                glm::vec3(p.vx[0][i], p.vy[0][i], p.vz[0][i]),
+                glm::vec3(p.vx[1][i], p.vy[1][i], p.vz[1][i]),
+                glm::vec3(p.vx[2][i], p.vy[2][i], p.vz[2][i]),
+                glm::vec3(p.nx[0][i], p.ny[0][i], p.nz[0][i]),
+                glm::vec3(p.nx[1][i], p.ny[1][i], p.nz[1][i]),
+                glm::vec3(p.nx[2][i], p.ny[2][i], p.nz[2][i]));
         if(check.distance < hit.distance && check.distance > 0){
             hit = check;
         }
@@ -172,12 +164,12 @@ inline bool findAnyIntersection(Primitives const& p, Ray const& ray, float const
     size_t triangle_count = p.triangle_count();
     for(int i=0; i<triangle_count; i++){
         auto check = intersect(ray, i,
-                glm::vec3(p.vx[0], p.vy[0], p.vz[0]),
-                glm::vec3(p.vx[1], p.vy[1], p.vz[1]),
-                glm::vec3(p.vx[2], p.vy[2], p.vz[2]),
-                glm::vec3(p.nx[0], p.ny[0], p.nz[0]),
-                glm::vec3(p.nx[1], p.ny[1], p.nz[1]),
-                glm::vec3(p.nx[2], p.ny[2], p.nz[2]));
+                glm::vec3(p.vx[0][i], p.vy[0][i], p.vz[0][i]),
+                glm::vec3(p.vx[1][i], p.vy[1][i], p.vz[1][i]),
+                glm::vec3(p.vx[2][i], p.vy[2][i], p.vz[2][i]),
+                glm::vec3(p.nx[0][i], p.ny[0][i], p.nz[0][i]),
+                glm::vec3(p.nx[1][i], p.ny[1][i], p.nz[1][i]),
+                glm::vec3(p.nx[2][i], p.ny[2][i], p.nz[2][i]));
         if(check.distance > 0 && check.distance < max_dist)
             return true;
     }

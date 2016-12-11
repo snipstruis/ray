@@ -102,22 +102,22 @@ Color trace(Ray const& ray,
     Intersection hit = findClosestIntersection(primitives, ray);
     if(hit.distance==INFINITY) return alpha;
 
-    Material mat = primitives.materials[hit.mat];
+    Material mat = primitives.mat[hit.mat];
 
-    Material raymat = primitives.materials[ray.mat];
+    Material raymat = primitives.mat[ray.mat];
     if(mat.checkered >= 0){
         int x = (int)(hit.impact.x - EPSILON);
         int y = (int)(hit.impact.y - EPSILON);
         int z = (int)(hit.impact.z - EPSILON);
         if((x&1)^(y&1)^(z&1)) 
-            mat = primitives.materials[mat.checkered];
+            mat = primitives.mat[mat.checkered];
     }
 	
     Color color = Color(0, 0, 0);
 
     // shadows and lighting
     if(!mat.diffuseColor.isBlack()){
-        color += calcTotalDiffuse(ray,primitives, lights, hit, mat);
+        color += calcTotalDiffuse(ray, primitives, lights, hit, mat);
     }
 
     // angle-depenent transparancy (for dielectric materials)
