@@ -100,7 +100,6 @@ Intersection findClosestIntersectionBVH(
         Intersection hitLeft = findClosestIntersectionBVH(bvh, left, primitives, ray);
         Intersection hitRight = findClosestIntersectionBVH(bvh, right, primitives, ray);
 
-
         if(hitLeft.distance == INFINITY && hitRight.distance == INFINITY)
             return Intersection(INFINITY);
 

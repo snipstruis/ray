@@ -17,7 +17,7 @@ struct Triangle{
         mat(_material) { } 
 
     // FIXME: consider caching or pre-calcuating centoid (but we'll likely redo this structure anyway)
-    glm::vec3 getCentoid() const {
+    glm::vec3 getCentroid() const {
         return glm::vec3(
             (v[0][0] + v[1][0] + v[2][0]) / 3.0f,  // x
             (v[0][1] + v[1][1] + v[2][1]) / 3.0f,  // y
