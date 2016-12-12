@@ -14,7 +14,7 @@
 
 struct BVHNode {
     BVHNode(): leftFirst(0), count(0) {}
-    BVHNode(unsigned int _leftFirst, unsigned int _count): leftFirst(_leftFirst), count(_count) {}
+    BVHNode(std::uint32_t _leftFirst, std::uint32_t _count): leftFirst(_leftFirst), count(_count) {}
 
     bool isLeaf() const {
         return count > 0;
@@ -47,7 +47,7 @@ struct BVHNode {
 static_assert(sizeof(BVHNode) == 32, "BVHNode size");
 
 struct BVH {
-    BVH() : nextFree(1) {
+    BVH() : nextFree(2) {
         nodes.resize(1); // ensure at least root exists
     } 
 
@@ -78,7 +78,7 @@ struct BVH {
 
     std::vector<BVHNode> nodes;
     std::vector<unsigned int> indicies;
-    unsigned int nextFree;
+    std::uint32_t nextFree;
 };
 
 // Find the closest intersection with any primitive
@@ -89,7 +89,7 @@ Intersection findClosestIntersectionBVH(
         Ray const& ray) {
 
     // does this ray miss us all together?
-    if(rayIntersectsAABB(bounds, ray) == INFINITY)
+    if(rayIntersectsAABB(node.bounds, ray) == INFINITY)
         return Intersection(INFINITY);
 
     if(!node.isLeaf()) {
@@ -100,10 +100,13 @@ Intersection findClosestIntersectionBVH(
         Intersection hitLeft = findClosestIntersectionBVH(bvh, left, primitives, ray);
         Intersection hitRight = findClosestIntersectionBVH(bvh, right, primitives, ray);
 
+
         if(hitLeft.distance == INFINITY && hitRight.distance == INFINITY)
             return Intersection(INFINITY);
 
-        if(distLeft < distRight) 
+        std::cout << "|";
+
+        if(hitLeft.distance < hitRight.distance) 
             return hitLeft;
         else
             return hitRight;
@@ -111,6 +114,8 @@ Intersection findClosestIntersectionBVH(
     else {
         // we are at a leaf - walk all triangles to find an exact hit.
         Intersection hit = Intersection(INFINITY);
+
+        std::cout << ".";
 
         for(unsigned int i = node.first(); i < (node.first() + node.count); i++) {
             assert(i < bvh.indicies.size());
@@ -132,7 +137,11 @@ Intersection findClosestIntersectionBVH(
         Primitives const& primitives, 
         Ray const& ray) {
 
-    return findClosestIntersectionBVH(bvh, bvh.root(), primitives, ray);
+    auto i = findClosestIntersectionBVH(bvh, bvh.root(), primitives, ray);
+
+//    if(i.distance < INFINITY)
+  //      std::cout << "." << std::endl;
+    return i;
 }
 
 // return true if ANY triangle is intersected by ray

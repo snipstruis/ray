@@ -42,6 +42,7 @@ void subdivide(TriangleSet const& triangles, BVH& bvh, BVHNode& node, unsigned i
     }
     else {
         // non-leaf node.
+        node.leftFirst = bvh.nextFree;
         BVHNode left = bvh.allocNextNode();
         BVHNode right = bvh.allocNextNode();
         
@@ -71,7 +72,9 @@ inline BVH* buildSimpleBVH(Scene& s) {
 
     subdivide(s.primitives.triangles, *bvh, bvh->root(), 0, s.primitives.triangles.size(), 0);
 
-    std::cout << "AABB " << bvh->root().bounds << std::endl;
+    std::cout << "node count " << bvh->nextFree << std::endl;
+    std::cout << "triangle count " << s.primitives.triangles.size() << std::endl;
+    std::cout << "simple AABB " << bvh->root().bounds << std::endl;
 
     return bvh;
 }
