@@ -145,6 +145,7 @@ inline BVH* buildSimpleBVH(Scene& s) {
 }
 
 inline BVH* buildBVH(Scene& s) {
-//    return buildStupidBVH(s);
-    return buildSimpleBVH(s);
+    BVH* b = buildSimpleBVH(s);
+    sanityCheckBVH(*b, s.primitives.triangles);
+    return b;
 }

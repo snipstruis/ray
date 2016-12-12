@@ -78,6 +78,11 @@ struct BVH {
         return nodes[nextFree++];
     }
 
+    std::uint32_t nodeCount() const {
+        assert(nextFree >= 2);
+        return nextFree - 1; // includes root node, but skips the empty 1 node
+    }
+
     std::vector<BVHNode> nodes;
     TriangleMapping indicies;
     std::uint32_t nextFree;
@@ -136,6 +141,9 @@ Intersection findClosestIntersectionBVH(
         Ray const& ray) {
 
     return findClosestIntersectionBVH(bvh, bvh.root(), primitives, ray);
+
+    //FIXME: might be able to decompose this a bit more
+
 }
 
 // return true if ANY triangle is intersected by ray
@@ -161,3 +169,52 @@ bool findAnyIntersectionBVH(
 
     return findAnyIntersectionBVH(bvh, bvh.root(), primitives, ray, maxDist);
 }
+
+// walk the whole BVH, explode if the bvh is insane. 
+// should compile out on release builds
+// this is debug code, it's certainly not especially efficient
+void sanityCheckBVH(BVH& bvh, TriangleSet const& triangles) {
+    // check triangle refs are sane
+    for(std::uint32_t i : bvh.indicies) {
+        assert(i < triangles.size());
+        
+        // check uniqueness
+        bool found = false;
+        for(std::uint32_t j : bvh.indicies) {
+            if(found) {
+                assert(j != i);
+            } 
+            else {
+                found = (i == j);
+            }
+        }
+    }
+
+    assert(bvh.nodes.size() >= bvh.nodeCount() + 1);
+
+    // check root node
+    if (bvh.root().isLeaf()) {
+        assert(bvh.nodeCount() == 1);
+    }
+    else {
+        // first non-root node should be at 2
+        assert(bvh.root().leftFirst == 2);
+        // walk nodes
+        for(std::uint32_t i = 2; i < bvh.nodeCount() + 2; i++) {
+            auto const& node = bvh.getNode(i);
+            if(node.isLeaf()) {
+                assert(node.leftFirst < bvh.indicies.size());
+                assert(node.leftFirst + node.count <= bvh.indicies.size());
+            } 
+            else {
+                assert(node.leftFirst > i);
+                assert(node.leftFirst < bvh.nodeCount() + 2);
+            }
+        }
+    }
+    std::cout << "sanity check OK" <<std::endl;
+}
+
+
+
+
