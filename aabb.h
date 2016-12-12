@@ -12,6 +12,12 @@
 // axis-aligned bounding box
 // members not named min/max to avoid clashes with library functions
 struct AABB {
+    void sanityCheck() const {
+        assert(low[0] <= high[0]);
+        assert(low[1] <= high[1]);
+        assert(low[2] <= high[2]);
+    }
+
     glm::vec3 low, high;
 };
 
@@ -45,10 +51,24 @@ inline void calcAABB(AABB& result, TriangleSet const& triangles, unsigned int st
             result.high[2] = std::max(result.high[2], triangles[i].v[j][2]);
         }
     }
+
+    result.sanityCheck();
 }
 
 // find an AABB that surrounds 2x existing ones
 inline void combineAABB(AABB& result, AABB const& a, AABB const& b) {
+    a.sanityCheck();
+    b.sanityCheck();
+
+    result.low[0] = std::min(a.low[0], b.low[0]);
+    result.low[1] = std::min(a.low[1], b.low[1]);
+    result.low[2] = std::min(a.low[2], b.low[2]);
+
+    result.high[0] = std::max(a.high[0], b.high[0]);
+    result.high[1] = std::max(a.high[1], b.high[1]);
+    result.high[2] = std::max(a.high[2], b.high[2]);
+
+    result.sanityCheck();
 }
 
 // Does a ray intersect the BVH node? Returns distance to intersect, or INFINITY if no intersection
