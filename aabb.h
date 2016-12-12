@@ -78,6 +78,20 @@ inline void combineAABB(AABB& result, AABB const& a, AABB const& b) {
     result.sanityCheck();
 }
 
+// does @outer fully contain @inner?
+inline bool containsAABB(AABB const& outer, AABB const& inner) {
+    inner.sanityCheck();
+    outer.sanityCheck();
+
+    return 
+        outer.low[0] <= inner.low[0] && 
+        outer.low[1] <= inner.low[1] && 
+        outer.low[2] <= inner.low[2] && 
+        outer.high[0] >= inner.high[0] && 
+        outer.high[1] >= inner.high[1] && 
+        outer.high[2] >= inner.high[2];
+}
+
 // Does a ray intersect the BVH node? Returns distance to intersect, or INFINITY if no intersection
 // based on http://gamedev.stackexchange.com/questions/18436/most-efficient-aabb-vs-ray-collision-algorithms
 float rayIntersectsAABB(AABB const& a, Ray const& ray) {
