@@ -53,6 +53,7 @@ void subdivide(TriangleSet const& triangles, BVH& bvh, BVHNode& node, unsigned i
 
         // now subdivide's done, combine aabb 
         combineAABB(node.bounds, left.bounds, right.bounds);
+        std::cout << "comb AABB " << node.bounds << std::endl;
     }
 }
 

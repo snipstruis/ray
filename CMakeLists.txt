@@ -17,13 +17,13 @@ MESSAGE(STATUS "Using OpenCL libs ${OpenCL_LIBRARIES}")
 # common flags
 
 if(NOT WIN32)
-    set(CMAKE_CXX_FLAGS "-fopenmp -march=native -O3 --std=c++1y -Wall -Wextra -fno-rtti -Wno-unused-parameter")
+    set(CMAKE_CXX_FLAGS "-fopenmp -march=native --std=c++1y -Wall -Wextra -fno-rtti -Wno-unused-parameter")
 
     # explicitly turn on color diags as this doesn't work automatically under ninja 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcolor-diagnostics")
 
     # release only
-    set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG")
+    set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3")
 
     # debug only
     set(CMAKE_CXX_FLAGS_DEBUG "-ggdb")
@@ -34,7 +34,7 @@ ELSE()
 ENDIF()
 
 # turn this on to enable bounds checking in the stl, but it hurts perf a lot, it seems
-#add_definitions("-D_GLIBCXX_DEBUG")
+add_definitions("-D_GLIBCXX_DEBUG")
 
 if(WIN32)
     include_directories("lib/winOnly/SDL2-2.0.3")
