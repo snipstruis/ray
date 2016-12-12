@@ -71,18 +71,13 @@ inline glm::vec3 barycentric(glm::vec3 p, glm::vec3 a, glm::vec3 b, glm::vec3 c)
 
 // adapted from:
 // https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
-inline float moller_trumbore( 
-                       const glm::vec3   v1,  // Triangle vertices
-                       const glm::vec3   v2,
-                       const glm::vec3   v3,
-                       const glm::vec3    o,   // Ray origin
-                       const glm::vec3    d) { // Ray direction
+inline float moller_trumbore(Triangle const& tri, Ray const& ray) {
     // Find vectors for two edges sharing V1
-    glm::vec3 e1 = v2 - v1;
-    glm::vec3 e2 = v3 - v1;
+    glm::vec3 e1 = tri.v[1] - tri.v[0];
+    glm::vec3 e2 = tri.v[2] - tri.v[0];
 
     // Begin calculating determinant - also used to calculate u parameter
-    glm::vec3 p = glm::cross(d, e2);
+    glm::vec3 p = glm::cross(ray.direction, e2);
 
     // if determinant is near zero, ray lies in plane of triangle or ray is parallel 
     // to plane of triangle
@@ -95,7 +90,7 @@ inline float moller_trumbore(
     float inv_det = 1.f / det;
 
     // calculate distance from V1 to ray origin
-    glm::vec3 t = o - v1;
+    glm::vec3 t = ray.origin - tri.v[0];
 
     // Calculate u parameter and test bound
     float u = glm::dot(t, p) * inv_det;
@@ -108,7 +103,7 @@ inline float moller_trumbore(
     glm::vec3 q = glm::cross(t, e1);
 
     // Calculate V parameter and test bound
-    float v = glm::dot(d, q) * inv_det;
+    float v = glm::dot(ray.direction, q) * inv_det;
 
     // The intersection lies outside of the triangle
     if(v < 0.f || u + v  > 1.f) 
@@ -125,7 +120,7 @@ inline float moller_trumbore(
 
 // compute triangle/ray intersection
 inline Intersection intersect(Triangle const& t, Ray const& ray){
-    float dist = moller_trumbore(t.v[0], t.v[1], t.v[2], ray.origin, ray.direction);
+    float dist = moller_trumbore(t, ray);
 
     if(dist==INFINITY) {
         return Intersection(INFINITY);
@@ -145,27 +140,3 @@ inline Intersection intersect(Triangle const& t, Ray const& ray){
         return Intersection(dist, hit, t.mat, normal, internal);
     }
 }
-
-#if 0
-// find closest intersection with any geometry
-inline Intersection findClosestIntersection(Primitives const& primitives, Ray const& ray) {
-    Intersection hit = Intersection(INFINITY);
-    for(auto const& t: primitives.triangles){
-        auto check = intersect(t,ray);
-        if(check.distance < hit.distance && check.distance > 0){
-            hit = check;
-        }
-    }
-    return hit;
-};
-
-// does ray intersect any geometry ? (stops after first hit)
-inline bool findAnyIntersection(Primitives const& primitives, Ray const& ray, float const max_dist) {
-    for(auto const& t: primitives.triangles){
-        auto check = intersect(t, ray);
-        if(check.distance > 0 && check.distance < max_dist)
-            return true;
-    }
-    return false;
-};
-#endif
