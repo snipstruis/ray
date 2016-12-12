@@ -48,10 +48,11 @@ inline std::ostream& operator<<(std::ostream& os, const Triangle& t) {
     os << "v=(0: " << t.v[0];
     os << " 1: " << t.v[1];
     os << " 2: " << t.v[2];
-    os << ")\n n=(0:" << t.n[0];
-    os << " 1: " << t.n[1];
-    os << " 2: " << t.n[2];
-    os << ")\n mat=" << t.mat << std::endl;
+    os << ")";
+    //os << "\n n=(0:" << t.n[0];
+//    os << " 1: " << t.n[1];
+ //   os << " 2: " << t.n[2];
+//    os << ")\n mat=" << t.mat << std::endl;
 
     return os;
 }

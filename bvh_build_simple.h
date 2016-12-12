@@ -21,7 +21,7 @@ inline BVH* buildStupidBVH(Scene& s) {
     for (unsigned int i = 0; i < s.primitives.triangles.size(); i++)
         bvh->indicies[i] = i;
 
-    calcAABB(bvh->root().bounds, s.primitives.triangles, 0, bvh->root().count);
+    calcAABBIndirect(bvh->root().bounds, s.primitives.triangles, bvh->indicies, 0, bvh->root().count);
 
     std::cout << "stupid AABB " << bvh->root().bounds << std::endl;
     return bvh;
@@ -30,16 +30,23 @@ inline BVH* buildStupidBVH(Scene& s) {
 void subdivide(TriangleSet const& triangles, BVH& bvh, BVHNode& node, std::uint32_t start, std::uint32_t count, int axis) {
 
     if(count <= 3) {
+        std::cout << "subdivide leaf start " << start << " count " << count << " axis " << axis <<std::endl;;
         // ok, leafy time.
         node.leftFirst = start;
         // give this node a count, which by definition makes it a leaf
         node.count = count;
         assert(node.isLeaf());
+        assert(node.leftFirst == node.first());
 
-        calcAABB(node.bounds, triangles, node.first(), node.count);
-        std::cout << "leaf AABB " << node.bounds << std::endl;
+        calcAABBIndirect(node.bounds, triangles, bvh.indicies, node.first(), node.count);
+        std::cout << "leaf AABB " << node.bounds << " count " << node.count << std::endl;
+        std::cout << "  " << triangles[bvh.indicies[start]] << std::endl;
+        std::cout << "  " << triangles[bvh.indicies[start+1]] << std::endl;
+        std::cout << "  " << triangles[bvh.indicies[start+2]] << std::endl;
+
     }
     else {
+        std::cout << "subdivide mid start " << start << " count " << count << " axis " << axis <<std::endl;;
         float sum = 0.0f;
         // non-leaf node.
         for (std::uint32_t i = start; i < (start + count) ; i++) {
@@ -76,10 +83,12 @@ void subdivide(TriangleSet const& triangles, BVH& bvh, BVHNode& node, std::uint3
                 continue;
             }
 
+#if 0
             std::cout << "swap " << i << " " << j << std::endl;
             std::cout << "ii " << triangles[bvh.indicies[i]].getCentroid()[axis] << " ";
             std::cout << "jj " << triangles[bvh.indicies[j]].getCentroid()[axis] << " ";
             std::cout << std::endl;
+#endif
 
             int temp = bvh.indicies[j];
             bvh.indicies[j] = bvh.indicies[i];
@@ -91,19 +100,22 @@ void subdivide(TriangleSet const& triangles, BVH& bvh, BVHNode& node, std::uint3
 
         // alloc child nodes
         node.leftFirst = bvh.nextFree;
-        BVHNode left = bvh.allocNextNode();
-        BVHNode right = bvh.allocNextNode();
+        BVHNode& left = bvh.allocNextNode();
+        BVHNode& right = bvh.allocNextNode();
         
         std::uint32_t halfCount = count / 2;
         int nextAxis = (axis + 1) % 3;
 
         // recurse
-        subdivide(triangles, bvh, left, start , halfCount, nextAxis);
-        subdivide(triangles, bvh, right, start + halfCount, halfCount, nextAxis);
+        subdivide(triangles, bvh, left, start, halfCount, nextAxis);
+        subdivide(triangles, bvh, right, (start + halfCount), halfCount, nextAxis);
 
         // now subdivide's done, combine aabb 
         combineAABB(node.bounds, left.bounds, right.bounds);
         std::cout << "comb AABB " << node.bounds << std::endl;
+        std::cout << "   l AABB " << left.bounds << std::endl;
+        std::cout << "   r AABB " << right.bounds << std::endl;
+
     }
 }
 
@@ -111,7 +123,7 @@ void subdivide(TriangleSet const& triangles, BVH& bvh, BVHNode& node, std::uint3
 inline BVH* buildSimpleBVH(Scene& s) {
     BVH* bvh = new BVH(s.primitives.triangles.size());
 
-    bvh->root().leftFirst = 0;
+    bvh->root().leftFirst = 2;
     bvh->root().count = 0;
 
     for (unsigned int i = 0; i < s.primitives.triangles.size(); i++)
@@ -122,6 +134,12 @@ inline BVH* buildSimpleBVH(Scene& s) {
     std::cout << "node count " << bvh->nextFree << std::endl;
     std::cout << "triangle count " << s.primitives.triangles.size() << std::endl;
     std::cout << "simple AABB " << bvh->root().bounds << std::endl;
+    std::cout << "  l=" << bvh->root().leftIndex()<< " r=" << bvh->root().rightIndex()<< std::endl;
+    std::cout << " left AABB " << bvh->getNode( bvh->root().leftIndex()).bounds<< std::endl;
+    std::cout << " right AABB " << bvh->getNode( bvh->root().rightIndex()).bounds<< std::endl;
+
+    assert(bvh->root().leftFirst ==2);
+    assert(bvh->root().count == 0);
 
     return bvh;
 }

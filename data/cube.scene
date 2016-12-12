@@ -10,11 +10,6 @@
                 "transform" : {
                     "translate" : { "x" : -0, "y" : 0, "z" : 0}
                 }
-            },
-            {
-                "kind" : "plane",
-                "normal" : { "x" : 0, "y" : 1, "z" : 0},
-                "center" : { "x" : 0, "y" : -1, "z" : 0}
             }
         ],
         "lights" : [

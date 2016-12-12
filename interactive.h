@@ -101,7 +101,7 @@ GuiAction handleEvents(Scene& s, Mode *vis)
 // @imgDir: location to write screenshots
 //
 int interactiveLoop(Scene& s, BVH& b, std::string const& imgDir) {
-    SDL_Window *win = SDL_CreateWindow("Roaytroayzah (initialising)", 100, 100, 640, 640, 
+    SDL_Window *win = SDL_CreateWindow("Roaytroayzah (initialising)", 10, 10, 640, 640, 
                                        SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
     SDL_GL_CreateContext(win);
 

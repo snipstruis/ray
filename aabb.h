@@ -24,12 +24,17 @@ struct AABB {
 static_assert(sizeof(AABB) == 24, "AABB size");
 
 inline std::ostream& operator<<(std::ostream& os, const AABB& a) {
-    os << a.low << " -> " << a.high;
+    os << a.low << ":" << a.high;
     return os;
 }
 
 // find the AABB for @count triangles, starting at @start
-inline void calcAABB(AABB& result, TriangleSet const& triangles, unsigned int start, unsigned int count) {
+// uses BVH-style indirect mapping in indicies
+inline void calcAABBIndirect(AABB& result, 
+        TriangleSet const& triangles,
+        TriangleMapping const& indicies, 
+        unsigned int start, 
+        unsigned int count) {
 
     assert(count >= 1);
     assert(start + count <= triangles.size());
@@ -41,14 +46,16 @@ inline void calcAABB(AABB& result, TriangleSet const& triangles, unsigned int st
     result.low[2] = result.high[2] = triangles[start].v[0][2];
 
     for(unsigned int i = start; i < (start + count); i++) {
-        for(unsigned int j = 0; j < 3; j++) {
-            result.low[0] = std::min(result.low[0], triangles[i].v[j][0]);
-            result.low[1] = std::min(result.low[1], triangles[i].v[j][1]);
-            result.low[2] = std::min(result.low[2], triangles[i].v[j][2]);
+        Triangle const& t = triangles[indicies[i]];
 
-            result.high[0] = std::max(result.high[0], triangles[i].v[j][0]);
-            result.high[1] = std::max(result.high[1], triangles[i].v[j][1]);
-            result.high[2] = std::max(result.high[2], triangles[i].v[j][2]);
+        for(unsigned int j = 0; j < 3; j++) {
+            result.low[0] = std::min(result.low[0], t.v[j][0]);
+            result.low[1] = std::min(result.low[1], t.v[j][1]);
+            result.low[2] = std::min(result.low[2], t.v[j][2]);
+
+            result.high[0] = std::max(result.high[0], t.v[j][0]);
+            result.high[1] = std::max(result.high[1], t.v[j][1]);
+            result.high[2] = std::max(result.high[2], t.v[j][2]);
         }
     }
 
