@@ -88,45 +88,31 @@ Intersection findClosestIntersectionBVH(
         Primitives const& primitives, 
         Ray const& ray) {
 
+    // does this ray miss us all together?
+    if(rayIntersectsAABB(bounds, ray) == INFINITY)
+        return Intersection(INFINITY);
+
     if(!node.isLeaf()) {
         // we are not at a leaf yet - consider both children
         BVHNode const& left = bvh.getNode(node.leftIndex());
         BVHNode const& right = bvh.getNode(node.rightIndex());
 
-        float distLeft = rayIntersectsAABB(left.bounds, ray);
-        float distRight = rayIntersectsAABB(right.bounds, ray);
+        Intersection hitLeft = findClosestIntersectionBVH(bvh, left, primitives, ray);
+        Intersection hitRight = findClosestIntersectionBVH(bvh, right, primitives, ray);
 
-        if(distLeft == INFINITY && distRight == INFINITY)
+        if(hitLeft.distance == INFINITY && hitRight.distance == INFINITY)
             return Intersection(INFINITY);
 
-        Intersection hit;
-
-        if(distLeft < distRight) {
-            hit = findClosestIntersectionBVH(bvh, left, primitives, ray);
-            if(hit.distance < INFINITY)
-                return hit;
-    
-            if(distRight < INFINITY)
-                return findClosestIntersectionBVH(bvh, right, primitives, ray);
-
-            return INFINITY;
-        }
-        else {
-            hit = findClosestIntersectionBVH(bvh, right, primitives, ray);
-            if(hit.distance < INFINITY)
-                return hit;
-    
-            if(distLeft< INFINITY)
-                return findClosestIntersectionBVH(bvh, left, primitives, ray);
-
-            return INFINITY;
-        }
+        if(distLeft < distRight) 
+            return hitLeft;
+        else
+            return hitRight;
     }
     else {
         // we are at a leaf - walk all triangles to find an exact hit.
         Intersection hit = Intersection(INFINITY);
 
-        for(unsigned int i = node.first(); i < (node.first()+ node.count); i++) {
+        for(unsigned int i = node.first(); i < (node.first() + node.count); i++) {
             assert(i < bvh.indicies.size());
             unsigned int triangleIndex = bvh.indicies[i];
             Triangle const& t = primitives.triangles[triangleIndex];

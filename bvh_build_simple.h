@@ -13,15 +13,17 @@ inline BVH* buildStupidBVH(Scene& s) {
 
     bvh->root().leftFirst = 0;
     bvh->root().count = s.primitives.triangles.size();
-
     bvh->indicies.resize(s.primitives.triangles.size());
+
+    // as we have a single node, it should be a leaf
+    assert(bvh->root().isLeaf());
 
     for (unsigned int i = 0; i < s.primitives.triangles.size(); i++)
         bvh->indicies[i] = i;
 
     calcAABB(bvh->root().bounds, s.primitives.triangles, 0, bvh->root().count);
 
-    std::cout << "AABB " << bvh->root().bounds << std::endl;
+    std::cout << "stupid AABB " << bvh->root().bounds << std::endl;
     return bvh;
 }
 
@@ -30,7 +32,7 @@ void subdivide(TriangleSet const& triangles, BVH& bvh, BVHNode& node, unsigned i
 
     if(count <= 3) {
         // ok, leafy time.
-        node.leftFirst= start;
+        node.leftFirst = start;
         // give this node a count, which by definition makes it a leaf
         node.count = count;
         assert(node.isLeaf());
