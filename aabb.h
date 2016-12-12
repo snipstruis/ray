@@ -47,9 +47,14 @@ inline void calcAABB(AABB& result, TriangleSet const& triangles, unsigned int st
     }
 }
 
+// find an AABB that surrounds 2x existing ones
+inline void combineAABB(AABB& result, AABB const& a, AABB const& b) {
+}
+
 // Does a ray intersect the BVH node? Returns distance to intersect, or INFINITY if no intersection
 // based on http://gamedev.stackexchange.com/questions/18436/most-efficient-aabb-vs-ray-collision-algorithms
 float rayIntersectsAABB(AABB const& a, Ray const& ray) {
+    // FIXME: as this gets called a lot (with the same ray) move these 3 divides out to the calling fn
 	float dx = 1.0f / ray.direction[0];
 	float dy = 1.0f / ray.direction[1];
 	float dz = 1.0f / ray.direction[2];

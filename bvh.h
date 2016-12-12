@@ -47,12 +47,13 @@ struct BVHNode {
 static_assert(sizeof(BVHNode) == 32, "BVHNode size");
 
 struct BVH {
-    BVH() {
+    BVH() : nextFree(1) {
         nodes.resize(1); // ensure at least root exists
     } 
 
-    BVH(unsigned int nodeCount) {
-        nodes.resize(nodeCount); 
+    BVH(unsigned int triangleCount) : nextFree(1) {
+        nodes.resize(triangleCount* 2); 
+        indicies.resize(triangleCount);
     } 
 
     BVHNode const& getNode(unsigned int index) const {
@@ -70,10 +71,15 @@ struct BVH {
         return nodes[0];
     }
 
+    BVHNode& allocNextNode() {
+        assert(nextFree < nodes.size());
+        return nodes[nextFree++];
+    }
+
     std::vector<BVHNode> nodes;
     std::vector<unsigned int> indicies;
+    unsigned int nextFree;
 };
-
 
 // Find the closest intersection with any primitive
 Intersection findClosestIntersectionBVH(
