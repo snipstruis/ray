@@ -213,17 +213,22 @@ inline void renderFrame(Scene& s, BVH& bvh, std::vector<Color>& screenBuffer, Mo
         }
         break;
     case Mode::Normal:
-#if 0
         #pragma omp parallel for schedule(auto) collapse(2)
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 Ray r = s.camera.makeRay(x,y);
                 int idx = (height-y-1) * width+ x;
-                auto hit = findClosestIntersection(s.primitives,r);
-                screenBuffer[idx] = Color(hit.normal.x, hit.normal.y, hit.normal.z);
+                auto hit = findClosestIntersectionBVH(bvh, s.primitives, r);
+                if(hit.distance < INFINITY) {
+                    Triangle const& tri = s.primitives.triangles[hit.triangle];
+                    auto fancy = FancyIntersect(hit.distance, tri, r);
+                    screenBuffer[idx] = Color(fancy.normal.x, fancy.normal.y, fancy.normal.z);
+                }
+                else {
+                    screenBuffer[idx] = BLACK;
+                }
             }
         }
-#endif
         break;
     }
 }
