@@ -1,6 +1,6 @@
 #pragma once
 
-#include "bvh.h"
+#include "bvh_traverse.h"
 #include "color.h"
 #include "basics.h"
 #include "primitive.h"
