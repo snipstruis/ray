@@ -9,13 +9,8 @@
                 "mesh_name" : "dragon",
                 "transform" : {
                     "translate" : { "x" : -1, "y" : 2, "z" : -1},
-                    "rotate" : { "x" : 0, "y" : -15.00, "z" : 0.00}
+                    "rotate" : { "x" : 0, "y" : 40.00, "z" : 0.00}
                 }
-            },
-            {
-                "kind" : "plane",
-                "normal" : { "x" : 0, "y" : 1, "z" : 0},
-                "center" : { "x" : 0, "y" : -1, "z" : 0}
             }
         ],
         "lights" : 
@@ -30,8 +25,8 @@
     },
     "camera" : {
         "origin" : { "x" : 1, "y" : 4, "z" : 1},
-        "look_angle" : { "yaw" : -135, "pitch" : 30},
-        "fov" : 40
+        "look_angle" : { "yaw" : -135, "pitch" : 35},
+        "fov" : 20
     }
 }
 
