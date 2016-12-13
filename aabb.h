@@ -24,7 +24,8 @@ struct AABB {
 static_assert(sizeof(AABB) == 24, "AABB size");
 
 inline std::ostream& operator<<(std::ostream& os, const AABB& a) {
-    os << a.low << ":" << a.high;
+    float vol = (a.high[0] - a.low[0]) * (a.high[1] - a.low[1]) * (a.high[2] - a.low[2]);
+    os << a.low << ":" << a.high << " volume " << vol ;
     return os;
 }
 
