@@ -29,7 +29,7 @@ inline BVH* buildStupidBVH(Scene& s) {
 
 void subdivide(TriangleSet const& triangles, BVH& bvh, BVHNode& node, std::uint32_t start, std::uint32_t count, int axis) {
 
-    if(count <= 5) {
+    if(count <= 3) {
         std::cout << "subdivide leaf start " << start << " count " << count << " axis " << axis <<std::endl;;
         // ok, leafy time.
         node.leftFirst = start;
@@ -60,8 +60,6 @@ void subdivide(TriangleSet const& triangles, BVH& bvh, BVHNode& node, std::uint3
         float average = sum / (count * 3.0f);
 
         std::cout << "av " << average << " axis " << axis << " count " << count << std::endl;
-
-        // FIXME: danger, check for odd count
 
         int i = start;
         int j = start + count - 1;
@@ -100,11 +98,14 @@ void subdivide(TriangleSet const& triangles, BVH& bvh, BVHNode& node, std::uint3
         BVHNode& right = bvh.allocNextNode();
         
         std::uint32_t halfCount = count / 2;
-        int nextAxis = (axis + 1) % 3;
 
+        // beware odd numbers..!
+        std::uint32_t secondRange = halfCount + (count % 2);
+        
+        int nextAxis = (axis + 1) % 3;
         // recurse
         subdivide(triangles, bvh, left, start, halfCount, nextAxis);
-        subdivide(triangles, bvh, right, (start + halfCount), halfCount, nextAxis);
+        subdivide(triangles, bvh, right, (start + halfCount), secondRange, nextAxis);
 
         // now subdivide's done, combine aabb 
         combineAABB(node.bounds, left.bounds, right.bounds);

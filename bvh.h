@@ -146,7 +146,7 @@ void doSanityCheckBVH(BVH& bvh, TriangleSet const& triangles) {
         // first non-root node should be at 2
         assert(bvh.root().leftFirst == 2);
 
-        int triangleCount = 0;
+        unsigned int triangleCount = 0;
         // walk nodes
         for(std::uint32_t i = 2; i < bvh.nodeCount() + 1; i++) {
             auto const& node = bvh.getNode(i);
@@ -167,8 +167,10 @@ void doSanityCheckBVH(BVH& bvh, TriangleSet const& triangles) {
             }
             std::cout << std::endl;
             // if this blows up, there are some triangles not accounted for in the BVH
-            assert(triangleCount == triangles.size());
+
         }
+        assert(triangleCount == triangles.size());
+        std::cout << "bvh triangle count " << triangleCount << " triangles " << triangles.size() << std::endl;
     }
 
     sanityCheckAABBRecurse(bvh, bvh.root(), bvh.root().bounds, triangles);
