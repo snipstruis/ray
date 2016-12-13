@@ -29,7 +29,7 @@ inline BVH* buildStupidBVH(Scene& s) {
 
 void subdivide(TriangleSet const& triangles, BVH& bvh, BVHNode& node, std::uint32_t start, std::uint32_t count, int axis) {
 
-    if(count <= 3) {
+    if(count <= 100) {
         std::cout << "subdivide leaf start " << start << " count " << count << " axis " << axis <<std::endl;;
         // ok, leafy time.
         node.leftFirst = start;
@@ -40,10 +40,6 @@ void subdivide(TriangleSet const& triangles, BVH& bvh, BVHNode& node, std::uint3
 
         calcAABBIndirect(node.bounds, triangles, bvh.indicies, node.first(), node.count);
         std::cout << "leaf AABB " << node.bounds << " count " << node.count << std::endl;
-        std::cout << "  " << triangles[bvh.indicies[start]] << std::endl;
-        std::cout << "  " << triangles[bvh.indicies[start+1]] << std::endl;
-        std::cout << "  " << triangles[bvh.indicies[start+2]] << std::endl;
-
     }
     else {
         std::cout << "subdivide mid start " << start << " count " << count << " axis " << axis <<std::endl;;
@@ -112,10 +108,6 @@ void subdivide(TriangleSet const& triangles, BVH& bvh, BVHNode& node, std::uint3
 
         // now subdivide's done, combine aabb 
         combineAABB(node.bounds, left.bounds, right.bounds);
-        std::cout << "comb AABB " << node.bounds << std::endl;
-        std::cout << "   l AABB " << left.bounds << std::endl;
-        std::cout << "   r AABB " << right.bounds << std::endl;
-
     }
 }
 
