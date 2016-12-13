@@ -145,6 +145,8 @@ void doSanityCheckBVH(BVH& bvh, TriangleSet const& triangles) {
     else {
         // first non-root node should be at 2
         assert(bvh.root().leftFirst == 2);
+
+        int triangleCount = 0;
         // walk nodes
         for(std::uint32_t i = 2; i < bvh.nodeCount() + 1; i++) {
             auto const& node = bvh.getNode(i);
@@ -153,7 +155,7 @@ void doSanityCheckBVH(BVH& bvh, TriangleSet const& triangles) {
             if(node.isLeaf()) {
                 std::cout << " first: " << node.first();
                 std::cout << " count: " << node.count;
-
+                triangleCount += node.count;
                 assert(node.leftFirst < bvh.indicies.size());
                 assert(node.leftFirst + node.count <= bvh.indicies.size());
             } 
@@ -164,6 +166,8 @@ void doSanityCheckBVH(BVH& bvh, TriangleSet const& triangles) {
                 assert(node.leftFirst < bvh.nodeCount() + 2);
             }
             std::cout << std::endl;
+            // if this blows up, there are some triangles not accounted for in the BVH
+            assert(triangleCount == triangles.size());
         }
     }
 
