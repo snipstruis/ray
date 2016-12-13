@@ -90,10 +90,9 @@ struct BVH {
 };
 
 // recursively check that every node fully contains its child bounds
-void sanityCheckAABBRecurse(BVH const& bvh, BVHNode const& node, AABB const& aabb, TriangleSet const& triangles) {
+void sanityCheckAABBRecurse(BVH const& bvh, BVHNode const& node, TriangleSet const& triangles) {
     if(node.isLeaf()) {
         // ensure all triangles are inside aabb
-        // this will actually be done twice per left right now (note the double recursion below).
         for(unsigned int i = node.first(); i < (node.first() + node.count); i++) {
             Triangle const& t = triangles[bvh.indicies[i]];
             assert(containsTriangle(node.bounds, t));
@@ -103,15 +102,12 @@ void sanityCheckAABBRecurse(BVH const& bvh, BVHNode const& node, AABB const& aab
         auto const& left = bvh.getNode(node.leftIndex());
         auto const& right = bvh.getNode(node.rightIndex());
 
-        assert(containsAABB(aabb, left.bounds));
-        assert(containsAABB(aabb, right.bounds));
+        // check both immediate child bounds fit in our bounds
+        assert(containsAABB(node.bounds, left.bounds));
+        assert(containsAABB(node.bounds, right.bounds));
 
-        // firstly check THIS aabb against every child aabb
-        sanityCheckAABBRecurse(bvh, left, aabb, triangles);
-        sanityCheckAABBRecurse(bvh, right, aabb, triangles);
-
-        sanityCheckAABBRecurse(bvh, left, left.bounds, triangles);
-        sanityCheckAABBRecurse(bvh, right, right.bounds, triangles);
+        sanityCheckAABBRecurse(bvh, left, triangles);
+        sanityCheckAABBRecurse(bvh, right, triangles);
     }
 }
 
@@ -153,27 +149,24 @@ void doSanityCheckBVH(BVH& bvh, TriangleSet const& triangles) {
             std::cout << "i : " << i;
 
             if(node.isLeaf()) {
-                std::cout << " first: " << node.first();
-                std::cout << " count: " << node.count;
                 triangleCount += node.count;
                 assert(node.leftFirst < bvh.indicies.size());
                 assert(node.leftFirst + node.count <= bvh.indicies.size());
             } 
             else {
-                std::cout << " left: " << node.leftIndex();
-                std::cout << " right: " << node.rightIndex();
                 assert(node.leftFirst > i);
                 assert(node.leftFirst < bvh.nodeCount() + 2);
             }
             std::cout << std::endl;
-            // if this blows up, there are some triangles not accounted for in the BVH
-
         }
+        // if this blows up, there are some triangles not accounted for in the BVH
         assert(triangleCount == triangles.size());
         std::cout << "bvh triangle count " << triangleCount << " triangles " << triangles.size() << std::endl;
     }
 
-    sanityCheckAABBRecurse(bvh, bvh.root(), bvh.root().bounds, triangles);
+    std::cout << "sanity check recursing " <<std::endl;
+
+    sanityCheckAABBRecurse(bvh, bvh.root(), triangles);
 
     std::cout << "sanity check OK" <<std::endl;
 }
