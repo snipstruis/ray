@@ -92,6 +92,21 @@ inline bool containsAABB(AABB const& outer, AABB const& inner) {
         outer.high[2] >= inner.high[2];
 }
 
+inline bool containsTriangle(AABB const& outer, Triangle const& t) {
+    outer.sanityCheck();
+    bool result = true;
+
+    for(unsigned int i = 0; i < 3; i++) {
+        for(unsigned int j = 0; j < 3; j++) {
+            float val = t.v[i][j];
+            result &= (val >= outer.low[j]);
+            result &= (val <= outer.high[j]);
+        }
+    }
+
+    return result;
+}
+
 // Does a ray intersect the BVH node? Returns distance to intersect, or INFINITY if no intersection
 // based on http://gamedev.stackexchange.com/questions/18436/most-efficient-aabb-vs-ray-collision-algorithms
 float rayIntersectsAABB(AABB const& a, Ray const& ray) {
