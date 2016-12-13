@@ -170,10 +170,30 @@ bool findAnyIntersectionBVH(
     return findAnyIntersectionBVH(bvh, bvh.root(), primitives, ray, maxDist);
 }
 
+// recursively check that every node fully contains its child bounds
+void sanityCheckAABBRecurse(BVH const& bvh, BVHNode const& node, AABB const& aabb) {
+    if(node.isLeaf())
+        return;
+
+    auto const& left = bvh.getNode(node.leftIndex());
+    auto const& right = bvh.getNode(node.rightIndex());
+
+    assert(containsAABB(aabb, left.bounds));
+    assert(containsAABB(aabb, right.bounds));
+
+    // firstly check THIS aabb against every child aabb
+    sanityCheckAABBRecurse(bvh, left, aabb);
+    sanityCheckAABBRecurse(bvh, right, aabb);
+
+    sanityCheckAABBRecurse(bvh, left, left.bounds);
+    sanityCheckAABBRecurse(bvh, right, right.bounds);
+}
+
 // walk the whole BVH, explode if the bvh is insane. 
 // should compile out on release builds
-// this is debug code, it's certainly not especially efficient
-void sanityCheckBVH(BVH& bvh, TriangleSet const& triangles) {
+// this is debug only code, it's certainly not especially efficient
+// see also sanityCheck() below for a version that automatically compiles out 
+void doSanityCheckBVH(BVH& bvh, TriangleSet const& triangles) {
     // check triangle refs are sane
     for(std::uint32_t i : bvh.indicies) {
         assert(i < triangles.size());
@@ -213,8 +233,15 @@ void sanityCheckBVH(BVH& bvh, TriangleSet const& triangles) {
         }
     }
     std::cout << "sanity check OK" <<std::endl;
+
+    sanityCheckAABBRecurse(bvh, bvh.root(), bvh.root().bounds);
 }
 
+void sanityCheckBVH(BVH& bvh, TriangleSet const& triangles) {
+#ifndef NDEBUG
+    doSanityCheckBVH(bvh, triangles);
+#endif
+}
 
 
 
