@@ -7,6 +7,8 @@
 #include <vector>
 #include <cmath>
 
+inline bool SMOOTHING=true;
+
 struct Triangle{
     Triangle(
             glm::vec3 const& _v1, glm::vec3 const& _v2, glm::vec3 const& _v3, 
@@ -124,9 +126,14 @@ inline FancyIntersection FancyIntersect(float dist, Triangle const& t, Ray const
     assert(dist < INFINITY);
     glm::vec3 hit = ray.origin + ray.direction * dist;
 
+    glm::vec3 normal;
     // smoothing
-    glm::vec3 bary = barycentric(hit, t.v[0], t.v[1], t.v[2]);
-    glm::vec3 normal = glm::normalize( bary.x*t.n[0] + bary.y*t.n[1] + bary.z*t.n[2] );
+    if(SMOOTHING){
+        glm::vec3 bary = barycentric(hit, t.v[0], t.v[1], t.v[2]);
+        normal = glm::normalize( bary.x*t.n[0] + bary.y*t.n[1] + bary.z*t.n[2] );
+    }else{
+        normal = (t.n[0]/3.f) + (t.n[1]/3.f) + (t.n[2]/3.f);
+    }
 
     // internal check
     bool internal = glm::dot(ray.direction,normal)>0;
