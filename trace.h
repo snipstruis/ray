@@ -15,7 +15,7 @@
 inline Color calcLightOutput(PointLight const& light, 
                      float distance, 
                      Ray const& ray, 
-                     Intersection const& hit, 
+                     FancyIntersection const& hit, 
                      Material const& mat,
                      glm::vec3 light_dir) {
     float diff = glm::dot(hit.normal, light_dir);
@@ -36,7 +36,7 @@ inline Color calcLightOutput(PointLight const& light,
 inline Color calcLightOutput(SpotLight const& light, 
                      float distance, 
                      Ray const& ray, 
-                     Intersection const& hit, 
+                     FancyIntersection const& hit, 
                      Material const& mat,
                      glm::vec3 light_dir) {
     float dot = fabs(glm::dot(-light_dir, light.pointDir));
@@ -60,7 +60,7 @@ inline Color diffuse(Ray const& ray,
               BVH const& bvh,
               Primitives const& primitives,
               LightsType const& lights,
-              Intersection const& hit,
+              FancyIntersection const& hit,
               Material const& mat){
     Color color = Color(0,0,0);
 
@@ -85,7 +85,7 @@ inline Color calcTotalDiffuse(Ray const& ray,
               BVH const& bvh,
               Primitives const& primitives,
               Lights const& lights,
-              Intersection const& hit,
+              FancyIntersection const& hit,
               Material const& mat){
     Color color = Color(0,0,0);
 
@@ -103,16 +103,19 @@ Color trace(Ray const& ray,
 
     if(ray.ttl<=0) return alpha;
 
-    Intersection hit = findClosestIntersectionBVH(bvh, primitives, ray);
-    if(hit.distance==INFINITY) return alpha;
+    MiniIntersection hit = findClosestIntersectionBVH(bvh, primitives, ray);
+    if(hit.distance==INFINITY) 
+        return alpha;
 
-    Material mat = primitives.materials[hit.mat];
-
+    Triangle const& tri = primitives.triangles[hit.triangle];
+    FancyIntersection fancy = FancyIntersect(hit.distance, tri, ray);
+    Material mat = primitives.materials[fancy.mat];
     Material raymat = primitives.materials[ray.mat];
+
     if(mat.checkered >= 0){
-        int x = (int)(hit.impact.x - EPSILON);
-        int y = (int)(hit.impact.y - EPSILON);
-        int z = (int)(hit.impact.z - EPSILON);
+        int x = (int)(fancy.impact.x - EPSILON);
+        int y = (int)(fancy.impact.y - EPSILON);
+        int z = (int)(fancy.impact.z - EPSILON);
         if((x&1)^(y&1)^(z&1)) 
             mat = primitives.materials[mat.checkered];
     }
@@ -121,7 +124,7 @@ Color trace(Ray const& ray,
 
     // shadows and lighting
     if(!mat.diffuseColor.isBlack()){
-        color += calcTotalDiffuse(ray, bvh, primitives, lights, hit, mat);
+        color += calcTotalDiffuse(ray, bvh, primitives, lights, fancy, mat);
     }
 
     // angle-depenent transparancy (for dielectric materials)
@@ -132,7 +135,7 @@ Color trace(Ray const& ray,
         float n1 = raymat.refraction_index;
         float n2 = mat.refraction_index;
         float r0 = (n1-n2)/(n1+n2); r0*=r0;
-        float pow5 = 1.f-glm::dot(hit.normal,-ray.direction);
+        float pow5 = 1.f-glm::dot(fancy.normal, -ray.direction);
         float fr = r0+(1.f-r0)*pow5*pow5*pow5*pow5*pow5;
         reflectiveness += transparency*fr;
         transparency   -= transparency*fr;
@@ -141,20 +144,20 @@ Color trace(Ray const& ray,
     // transparency (refraction)
     if(transparency>0.f){
         glm::vec3 refract_direction = 
-            glm::refract(ray.direction, hit.normal, 
-                    raymat.refraction_index/(hit.internal?1.f:mat.refraction_index));
-        Ray refract_ray = Ray(hit.impact-(hit.normal*1e-4f),
+            glm::refract(ray.direction, fancy.normal, 
+                    raymat.refraction_index/(fancy.internal?1.f:mat.refraction_index));
+        Ray refract_ray = Ray(fancy.impact-(fancy.normal*1e-4f),
                 refract_direction, 
                 //FIXME: exiting a primitive will set the material to air
-                hit.internal ? MATERIAL_AIR : hit.mat, 
+                fancy.internal ? MATERIAL_AIR : fancy.mat, 
                 ray.ttl-1);
         color += transparency * trace(refract_ray, bvh, primitives, lights, alpha);
     }
     
     // reflection (mirror)
     if(!reflectiveness.isBlack()){
-        Ray r = Ray(hit.impact+hit.normal*1e-4f,
-                    glm::reflect(ray.direction, hit.normal),
+        Ray r = Ray(fancy.impact+fancy.normal*1e-4f,
+                    glm::reflect(ray.direction, fancy.normal),
                     ray.mat,
                     ray.ttl-1);
         color += reflectiveness * trace(r, bvh, primitives,lights,alpha);

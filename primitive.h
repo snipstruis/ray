@@ -41,16 +41,16 @@ struct Primitives{
 };
 
 // result of an intersection calculation
-struct Intersection{
-    Intersection() = default;
-    Intersection(float d):distance(d){};
-    Intersection(float d, glm::vec3 i, int m, glm::vec3 n, bool intr)
-        :distance(d),impact(i),mat(m),normal(n),internal(intr){};
+// This is the former Intersection struct - the basic result of an intersection is now in MiniIntersection
+// generally one of these will be built after deciding a specific triangle is the closest
+struct FancyIntersection{
+    FancyIntersection() = default;
+    FancyIntersection(glm::vec3 i, int m, glm::vec3 n, bool intr)
+        : impact(i), mat(m), normal(n), internal(intr){};
 
-    float distance;
-    glm::vec3 impact;
-    int mat;
-    glm::vec3 normal;
+    glm::vec3 impact;   // point of impact
+    int mat;            // material at impact
+    glm::vec3 normal;   // normal at impact
     bool internal;
 };
 
@@ -119,24 +119,18 @@ inline float moller_trumbore(Triangle const& tri, Ray const& ray) {
 }
 
 // compute triangle/ray intersection
-inline Intersection intersect(Triangle const& t, Ray const& ray){
-    float dist = moller_trumbore(t, ray);
+// assumes there is an intersection between t & ray already calculated
+inline FancyIntersection FancyIntersect(float dist, Triangle const& t, Ray const& ray){
+    assert(dist < INFINITY);
+    glm::vec3 hit = ray.origin + ray.direction * dist;
 
-    if(dist==INFINITY) {
-        return Intersection(INFINITY);
-    }
-    else {
-        glm::vec3 hit = ray.origin + ray.direction * dist;
+    // smoothing
+    glm::vec3 bary = barycentric(hit, t.v[0], t.v[1], t.v[2]);
+    glm::vec3 normal = glm::normalize( bary.x*t.n[0] + bary.y*t.n[1] + bary.z*t.n[2] );
 
-        // smoothing
-        glm::vec3 bary = barycentric(hit, t.v[0], t.v[1], t.v[2]);
-        glm::vec3 normal = 
-            glm::normalize( bary.x*t.n[0] + bary.y*t.n[1] + bary.z*t.n[2] );
+    // internal check
+    bool internal = glm::dot(ray.direction,normal)>0;
+    normal = internal? -normal : normal;
 
-        // internal check
-        bool internal = glm::dot(ray.direction,normal)>0;
-        normal = internal? -normal : normal;
-
-        return Intersection(dist, hit, t.mat, normal, internal);
-    }
+    return FancyIntersection(hit, t.mat, normal, internal);
 }

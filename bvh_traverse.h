@@ -6,8 +6,18 @@
 
 #include "glm/vec3.hpp"
 
+// minimal intersection result
+// note: if dist == INFINITY, triangle is undefined.
+struct MiniIntersection {
+    MiniIntersection(float _distance, int _triangle) : distance(_distance), triangle(_triangle) {}
+    MiniIntersection() : distance(INFINITY) {} 
+
+    float distance;         // dist to intersection 
+    unsigned int triangle;  // triangle number
+};
+
 // Find the closest intersection with any primitive
-Intersection findClosestIntersectionBVH(
+MiniIntersection findClosestIntersectionBVH(
         BVH const& bvh, 
         BVHNode const& node, 
         Primitives const& primitives, 
@@ -15,19 +25,18 @@ Intersection findClosestIntersectionBVH(
 
     // does this ray miss us all together?
     if(rayIntersectsAABB(node.bounds, ray) == INFINITY)
-        return Intersection(INFINITY);
+        return MiniIntersection();
 
     if(!node.isLeaf()) {
         // we are not at a leaf yet - consider both children
         BVHNode const& left = bvh.getNode(node.leftIndex());
         BVHNode const& right = bvh.getNode(node.rightIndex());
 
-
-        Intersection hitLeft = findClosestIntersectionBVH(bvh, left, primitives, ray);
-        Intersection hitRight = findClosestIntersectionBVH(bvh, right, primitives, ray);
+        MiniIntersection hitLeft = findClosestIntersectionBVH(bvh, left, primitives, ray);
+        MiniIntersection hitRight = findClosestIntersectionBVH(bvh, right, primitives, ray);
 
         if(hitLeft.distance == INFINITY && hitRight.distance == INFINITY)
-            return Intersection(INFINITY);
+            return MiniIntersection();
 
         if(hitLeft.distance < hitRight.distance) 
             return hitLeft;
@@ -36,16 +45,18 @@ Intersection findClosestIntersectionBVH(
     }
     else {
         // we are at a leaf - walk all triangles to find an exact hit.
-        Intersection hit = Intersection(INFINITY);
+        MiniIntersection hit;
 
         for(unsigned int i = node.first(); i < (node.first() + node.count); i++) {
             assert(i < bvh.indicies.size());
             unsigned int triangleIndex = bvh.indicies[i];
             Triangle const& t = primitives.triangles[triangleIndex];
-            auto check = intersect(t, ray);
+            float distance = moller_trumbore(t, ray);
 
-            if(check.distance < hit.distance && check.distance > 0)
-                hit = check;
+            if(distance > 0 && distance < hit.distance) {
+                hit.distance = distance;
+                hit.triangle = triangleIndex;
+            }
         }
 
         return hit;
@@ -53,15 +64,12 @@ Intersection findClosestIntersectionBVH(
 }
 
 // find closest triangle intersection for ray
-Intersection findClosestIntersectionBVH(
+MiniIntersection findClosestIntersectionBVH(
         BVH const& bvh, 
         Primitives const& primitives, 
         Ray const& ray) {
 
     return findClosestIntersectionBVH(bvh, bvh.root(), primitives, ray);
-
-    //FIXME: might be able to decompose this a bit more
-
 }
 
 // return true if ANY triangle is intersected by ray
@@ -73,7 +81,7 @@ bool findAnyIntersectionBVH(
         float maxDist) {
 
     // FIXME: implement properly
-    Intersection i = findClosestIntersectionBVH(bvh, primitives, ray);
+    MiniIntersection i = findClosestIntersectionBVH(bvh, primitives, ray);
     
     return i.distance < maxDist;
 }

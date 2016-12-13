@@ -35,8 +35,7 @@ inline std::ostream& operator<<(std::ostream& os, const Ray& r) {
     return os;
 }
 
-inline std::ostream& operator<<(std::ostream& os, const Intersection& i) {
-    os << "dist " << i.distance;
+inline std::ostream& operator<<(std::ostream& os, const FancyIntersection& i) {
     os << " impact " << i.impact;
     os << " normal " << i.normal;
     os << " internal " << i.internal;
