@@ -1,0 +1,37 @@
+{
+    "load_meshes" : {
+        "dragon" : "dragon.obj"
+    },
+    "world" : {
+        "objects" : [
+            {
+                "kind" : "mesh",
+                "mesh_name" : "dragon",
+                "transform" : {
+                    "translate" : { "x" : -1, "y" : 2, "z" : -1},
+                    "rotate" : { "x" : 0, "y" : -15.00, "z" : 0.00}
+                }
+            },
+            {
+                "kind" : "plane",
+                "normal" : { "x" : 0, "y" : 1, "z" : 0},
+                "center" : { "x" : 0, "y" : -1, "z" : 0}
+            }
+        ],
+        "lights" : 
+        [
+            {
+                "kind" : "point",
+                "color" : {"red" : 10, "green" : 10, "blue" : 10},
+                "position" : { "x" : -1, "y" : 8, "z" : 3}
+            }
+        ]
+        
+    },
+    "camera" : {
+        "origin" : { "x" : 1, "y" : 4, "z" : 1},
+        "look_angle" : { "yaw" : -135, "pitch" : 30},
+        "fov" : 40
+    }
+}
+
