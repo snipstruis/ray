@@ -29,7 +29,7 @@ inline BVH* buildStupidBVH(Scene& s) {
 
 void subdivide(TriangleSet const& triangles, BVH& bvh, BVHNode& node, std::uint32_t start, std::uint32_t count, int axis) {
 
-    if(count <= 100) {
+    if(count <= 150) {
         std::cout << "subdivide leaf start " << start << " count " << count << " axis " << axis <<std::endl;;
         // ok, leafy time.
         node.leftFirst = start;

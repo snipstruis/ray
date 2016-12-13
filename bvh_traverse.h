@@ -58,7 +58,6 @@ MiniIntersection findClosestIntersectionBVH(
                 hit.triangle = triangleIndex;
             }
         }
-
         return hit;
     }
 }
@@ -73,17 +72,45 @@ MiniIntersection findClosestIntersectionBVH(
 }
 
 // return true if ANY triangle is intersected by ray
+// (that is, stops as soon as we have a hit)
 bool findAnyIntersectionBVH(
         BVH const& bvh, 
         BVHNode const& node, 
         Primitives const& primitives, 
         Ray const& ray,
         float maxDist) {
+    // must be looking inside a finite distance
+    // with maxDist == INFINITY, we'll get junk results (see below) 
+    assert(maxDist < INFINITY);
 
-    // FIXME: implement properly
-    MiniIntersection i = findClosestIntersectionBVH(bvh, primitives, ray);
-    
-    return i.distance < maxDist;
+    // does this ray miss us all together?
+    if(rayIntersectsAABB(node.bounds, ray) == INFINITY)
+        return false;
+
+    if(!node.isLeaf()) {
+        // we are not at a leaf yet - consider both children
+        if(findAnyIntersectionBVH(bvh, bvh.getNode(node.leftIndex()), primitives, ray, maxDist))
+            return true;
+        if(findAnyIntersectionBVH(bvh, bvh.getNode(node.rightIndex()), primitives, ray, maxDist))
+            return true;
+
+        return false; // no hit
+    }
+    else {
+        // at a leaf - walk triangles and test for a hit.
+        for(unsigned int i = node.first(); i < (node.first() + node.count); i++) {
+            assert(i < bvh.indicies.size());
+            unsigned int triangleIndex = bvh.indicies[i];
+            Triangle const& t = primitives.triangles[triangleIndex];
+            float distance = moller_trumbore(t, ray);
+
+            // this will go wrong if maxDist == INFINITY (ie moller_trumbore() returns INFINITY 
+            // for no hit), hence the assert at the start of this function
+            if(distance > 0 && distance < maxDist) 
+                return true;
+        }
+        return false; // no hit
+    }
 }
 
 // return true if ANY triangle is intersected by ray
