@@ -90,22 +90,29 @@ struct BVH {
 };
 
 // recursively check that every node fully contains its child bounds
-void sanityCheckAABBRecurse(BVH const& bvh, BVHNode const& node, AABB const& aabb) {
-    if(node.isLeaf())
-        return;
+void sanityCheckAABBRecurse(BVH const& bvh, BVHNode const& node, AABB const& aabb, TriangleSet const& triangles) {
+    if(node.isLeaf()) {
+        // ensure all triangles are inside aabb
+        // this will actually be done twice per left right now (note the double recursion below).
+        for(unsigned int i = node.first(); i < (node.first() + node.count); i++) {
+            Triangle const& t = triangles[bvh.indicies[i]];
+            assert(containsTriangle(node.bounds, t));
+        }
+    }
+    else {
+        auto const& left = bvh.getNode(node.leftIndex());
+        auto const& right = bvh.getNode(node.rightIndex());
 
-    auto const& left = bvh.getNode(node.leftIndex());
-    auto const& right = bvh.getNode(node.rightIndex());
+        assert(containsAABB(aabb, left.bounds));
+        assert(containsAABB(aabb, right.bounds));
 
-    assert(containsAABB(aabb, left.bounds));
-    assert(containsAABB(aabb, right.bounds));
+        // firstly check THIS aabb against every child aabb
+        sanityCheckAABBRecurse(bvh, left, aabb, triangles);
+        sanityCheckAABBRecurse(bvh, right, aabb, triangles);
 
-    // firstly check THIS aabb against every child aabb
-    sanityCheckAABBRecurse(bvh, left, aabb);
-    sanityCheckAABBRecurse(bvh, right, aabb);
-
-    sanityCheckAABBRecurse(bvh, left, left.bounds);
-    sanityCheckAABBRecurse(bvh, right, right.bounds);
+        sanityCheckAABBRecurse(bvh, left, left.bounds, triangles);
+        sanityCheckAABBRecurse(bvh, right, right.bounds, triangles);
+    }
 }
 
 // walk the whole BVH, explode if the bvh is insane. 
@@ -159,9 +166,10 @@ void doSanityCheckBVH(BVH& bvh, TriangleSet const& triangles) {
             std::cout << std::endl;
         }
     }
-    std::cout << "sanity check OK" <<std::endl;
 
-    sanityCheckAABBRecurse(bvh, bvh.root(), bvh.root().bounds);
+    sanityCheckAABBRecurse(bvh, bvh.root(), bvh.root().bounds, triangles);
+
+    std::cout << "sanity check OK" <<std::endl;
 }
 
 void sanityCheckBVH(BVH& bvh, TriangleSet const& triangles) {
