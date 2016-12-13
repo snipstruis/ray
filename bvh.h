@@ -59,7 +59,7 @@ struct BVH {
 
     BVHNode const& getNode(unsigned int index) const {
         assert(index < nodes.size());
-        assert(index < nextFree);
+        // assert(index < nextFree);
         assert(index != 1); // index 1 is never allocated
         return nodes[index];
     }
@@ -139,16 +139,24 @@ void doSanityCheckBVH(BVH& bvh, TriangleSet const& triangles) {
         // first non-root node should be at 2
         assert(bvh.root().leftFirst == 2);
         // walk nodes
-        for(std::uint32_t i = 2; i < bvh.nodeCount() + 2; i++) {
+        for(std::uint32_t i = 2; i < bvh.nodeCount() + 1; i++) {
             auto const& node = bvh.getNode(i);
+            std::cout << "i : " << i;
+
             if(node.isLeaf()) {
+                std::cout << " first: " << node.first();
+                std::cout << " count: " << node.count;
+
                 assert(node.leftFirst < bvh.indicies.size());
                 assert(node.leftFirst + node.count <= bvh.indicies.size());
             } 
             else {
+                std::cout << " left: " << node.leftIndex();
+                std::cout << " right: " << node.rightIndex();
                 assert(node.leftFirst > i);
                 assert(node.leftFirst < bvh.nodeCount() + 2);
             }
+            std::cout << std::endl;
         }
     }
     std::cout << "sanity check OK" <<std::endl;
