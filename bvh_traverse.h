@@ -160,7 +160,7 @@ BVHIntersectDiag findBoundsBVH(
     // does this ray miss us all together?
     if(rayIntersectsAABB(node.bounds, ray.origin, rayInvDir) == INFINITY)
     {
-        BVHIntersectDiag result(INFINITY, 0, depth);
+        BVHIntersectDiag result(INFINITY, 0, 0);
         return result;
     }
 
@@ -172,6 +172,8 @@ BVHIntersectDiag findBoundsBVH(
         if(hitLeft.distance == INFINITY && hitRight.distance == INFINITY){
             if(hitLeft.depth > hitRight.depth)
                 return hitLeft;
+            else
+                return hitRight;
         }
 
         if(hitLeft.distance < hitRight.distance) 
