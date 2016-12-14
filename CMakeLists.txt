@@ -6,18 +6,18 @@ project(ray)
 message(STATUS "build type ${CMAKE_BUILD_TYPE}")
 
 find_package(OpenGL)
-find_package(OpenCL)
+#find_package(OpenCL)
 
 MESSAGE(STATUS "Using OpenGL include dir ${OPENGL_INCLUDE_DIR}")
 MESSAGE(STATUS "Using OpenGL lib ${OPENGL_gl_LIBRARY}")
-MESSAGE(STATUS "Using OpenCL include dir ${OpenCL_INCLUDE_DIRS}")
-MESSAGE(STATUS "Using OpenCL libs ${OpenCL_LIBRARIES}")
+#MESSAGE(STATUS "Using OpenCL include dir ${OpenCL_INCLUDE_DIRS}")
+#MESSAGE(STATUS "Using OpenCL libs ${OpenCL_LIBRARIES}")
 
 ####### Compile flags
 # common flags
 
 if(NOT WIN32)
-    set(CMAKE_CXX_FLAGS "-march=native --std=c++1y -Wall -Wextra -fno-rtti -Wno-unused-parameter")
+    set(CMAKE_CXX_FLAGS "-march=native --std=c++1z -Wall -Wextra -fno-rtti -Wno-unused-parameter")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
 
     # explicitly turn on color diags as this doesn't work automatically under ninja 
