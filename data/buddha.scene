@@ -9,7 +9,7 @@
                 "mesh_name" : "buddha",
                 "transform" : {
                     "translate" : { "x" : -1, "y" : 2, "z" : -1},
-                    "rotate" : { "x" : 0, "y" : 40.00, "z" : 0.00}
+                    "rotate" : { "x" : 0, "y" : 130.00, "z" : 0.00}
                 }
             }
         ],
@@ -23,10 +23,6 @@
         ]
         
     },
-    "camera" : {
-        "origin" : { "x" : 1, "y" : 4, "z" : 1},
-        "look_angle" : { "yaw" : -135, "pitch" : 35},
-        "fov" : 20
-    }
+    "camera" : {"fov":20,"look_angle":{"pitch":35,"yaw":-142},"origin":{"x":1,"y":4,"z":1}}
 }
 
