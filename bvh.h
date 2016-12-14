@@ -146,7 +146,6 @@ void doSanityCheckBVH(BVH& bvh, TriangleSet const& triangles) {
         // walk nodes
         for(std::uint32_t i = 2; i < bvh.nodeCount() + 1; i++) {
             auto const& node = bvh.getNode(i);
-            std::cout << "i : " << i;
 
             if(node.isLeaf()) {
                 triangleCount += node.count;
@@ -157,7 +156,6 @@ void doSanityCheckBVH(BVH& bvh, TriangleSet const& triangles) {
                 assert(node.leftFirst > i);
                 assert(node.leftFirst < bvh.nodeCount() + 2);
             }
-            std::cout << std::endl;
         }
         // if this blows up, there are some triangles not accounted for in the BVH
         assert(triangleCount == triangles.size());
