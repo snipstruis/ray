@@ -100,9 +100,8 @@ Color trace(Ray const& ray,
             Primitives const& primitives,
             Lights const& lights,
             Color const& alpha){
-
     if(ray.ttl<=0) return alpha;
-
+    
     MiniIntersection hit = findClosestIntersectionBVH(bvh, primitives, ray);
     if(hit.distance==INFINITY) 
         return alpha;
@@ -172,30 +171,38 @@ Color trace(Ray const& ray,
     return color;
 }
 
-// for a given ray, return the leaf bounds thing
-/*Color bvhIntersect(Ray const& ray,
-            BVH const& bvh,
-            Primitives const& primitives) {
-    auto res = findBoundsBVH(bvh, primitives, ray);
-    if(res.nodeNum == 0)
-        return BLACK;
-
-    float max = bvh.nodeCount();
-    float ratio = res.nodeNum/max;
-    return Color(ratio, 0.0f, 1-ratio);
-}
-*/
-
 enum class Mode {
     Default,
     Microseconds,
     Normal,
-    BVH_Intersect
+    NodeIndex,
+    SplitsTraversed,
+    TrianglesChecked,
+    NodesChecked,
 };
+
+char const * const modestr[] = {
+    "GOTTA GO FAST",
+    "frametime",
+    "normal",
+    "node index",
+    "splits traversed",
+    "triangles checked",
+    "nodes Checked"
+};
+
+Color value_to_color(float x){
+    //x*=2; return x<0.5f? Color(1-x,x,0) : Color(0, 1-(x-1),x-1);
+    x*=5;if(x<1) {      return Color(  0,  0,  x);} // black -> blue
+    else if(x<2) {x-=1; return Color(  0,  x,  1);} // blue  -> cyan
+    else if(x<3) {x-=2; return Color(  0,  1,1-x);} // cyan  -> green
+    else if(x<4) {x-=3; return Color(  x,  1,  0);} // green -> yellow
+    else         {x-=4; return Color(  1,1-x,  0);} // yellow-> red
+}
 
 // main render starting loop
 // assumes screenbuffer is big enough to handle the width*height pixels (per the camera)
-inline void renderFrame(Scene& s, BVH& bvh, std::vector<Color>& screenBuffer, Mode mode){
+inline void renderFrame(Scene& s, BVH& bvh, std::vector<Color>& screenBuffer, Mode mode, float vis_scale){
     // draw pixels
     int const width  = s.camera.width;
     int const height = s.camera.height;
@@ -222,7 +229,7 @@ inline void renderFrame(Scene& s, BVH& bvh, std::vector<Color>& screenBuffer, Mo
                 auto end = std::chrono::high_resolution_clock::now();
                 auto frametime = 
                     std::chrono::duration_cast<std::chrono::duration<float,std::micro>>(end-start).count();
-                screenBuffer[idx].r = frametime;
+                screenBuffer[idx] = value_to_color(0.01*vis_scale*frametime);
             }
         }
         break;
@@ -236,7 +243,7 @@ inline void renderFrame(Scene& s, BVH& bvh, std::vector<Color>& screenBuffer, Mo
                 if(hit.distance < INFINITY) {
                     Triangle const& tri = s.primitives.triangles[hit.triangle];
                     auto fancy = FancyIntersect(hit.distance, tri, r);
-                    screenBuffer[idx] = Color(fancy.normal.x, fancy.normal.y, fancy.normal.z);
+                    screenBuffer[idx] = Color(1.f+0.5f*fancy.normal.x, 1.f+0.5f*fancy.normal.y, 1.f+0.5f*fancy.normal.z);
                 }
                 else {
                     screenBuffer[idx] = BLACK;
@@ -244,13 +251,21 @@ inline void renderFrame(Scene& s, BVH& bvh, std::vector<Color>& screenBuffer, Mo
             }
         }
         break;
-    case Mode::BVH_Intersect:
+    default:
         #pragma omp parallel for schedule(auto) collapse(2)
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 Ray r = s.camera.makeRay(x, y);
                 int idx = (height-y-1) * width+ x;
-                //screenBuffer[idx] = bvhIntersect(r, bvh, s.primitives);
+                auto diag = BVHIntersectDiag();
+                MiniIntersection intersect = 
+                    findClosestIntersectionBVH_DIAG(bvh, s.primitives, r, &diag);
+                float intensity = 
+                    mode==Mode::TrianglesChecked? vis_scale*0.001f*diag.trianglesChecked
+                  : mode==Mode::SplitsTraversed?  vis_scale*0.001f*diag.splitsTraversed
+                  : mode==Mode::NodesChecked?     vis_scale*0.001f*diag.nodesChecked
+                  : mode==Mode::NodeIndex?        vis_scale*0.001f*diag.nodeIndex : 1.f;
+                screenBuffer[idx] = value_to_color(intensity);
             }
         }
         break;
