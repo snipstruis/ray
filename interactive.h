@@ -76,6 +76,7 @@ GuiAction handleEvents(Scene& s, Mode *vis)
                     case SDL_SCANCODE_1: *vis = Mode::Microseconds; break;
                     case SDL_SCANCODE_2: *vis = Mode::Normal; break;
                     case SDL_SCANCODE_3: SMOOTHING = !SMOOTHING; break;
+                    case SDL_SCANCODE_4: *vis = Mode::BVH_Intersect; break;
                     default:
                         break;
                 }
@@ -117,7 +118,7 @@ int interactiveLoop(Scene& s, BVH& b, std::string const& imgDir) {
 
     auto now = std::chrono::high_resolution_clock::now();
 
-    Mode mode=Mode::Default;
+    Mode mode=Mode::Normal;
 
     while(true){
         SDL_GL_GetDrawableSize(win, &s.camera.width, &s.camera.height);

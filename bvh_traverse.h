@@ -16,25 +16,44 @@ struct MiniIntersection {
     unsigned int triangle;  // triangle number
 };
 
+// for a leaf - walk all triangles to find an exact hit.
+MiniIntersection findIntersectingTriangle(
+        BVH const& bvh, 
+        BVHNode const& node, 
+        Primitives const& primitives, 
+        Ray const& ray) {
+    MiniIntersection hit;
+
+    for(unsigned int i = node.first(); i < (node.first() + node.count); i++) {
+        assert(i < bvh.indicies.size());
+        unsigned int triangleIndex = bvh.indicies[i];
+        Triangle const& t = primitives.triangles[triangleIndex];
+        float distance = moller_trumbore(t, ray);
+
+        if(distance > 0 && distance < hit.distance) {
+            hit.distance = distance;
+            hit.triangle = triangleIndex;
+        }
+    }
+    return hit;
+}
+
 // Find the closest intersection with any primitive
 MiniIntersection findClosestIntersectionBVH(
         BVH const& bvh, 
         BVHNode const& node, 
-        Primitives const& primitives, 
+        Primitives const& prims, 
         Ray const& ray,
-        glm::vec3 const& rayInvDirection) {
+        glm::vec3 const& rayInvDir) {
 
     // does this ray miss us all together?
-    if(rayIntersectsAABB(node.bounds, ray.origin, rayInvDirection) == INFINITY)
+    if(rayIntersectsAABB(node.bounds, ray.origin, rayInvDir) == INFINITY)
         return MiniIntersection();
 
     if(!node.isLeaf()) {
         // we are not at a leaf yet - consider both children
-        BVHNode const& left = bvh.getNode(node.leftIndex());
-        BVHNode const& right = bvh.getNode(node.rightIndex());
-
-        MiniIntersection hitLeft = findClosestIntersectionBVH(bvh, left, primitives, ray, rayInvDirection);
-        MiniIntersection hitRight = findClosestIntersectionBVH(bvh, right, primitives, ray, rayInvDirection);
+        auto hitLeft = findClosestIntersectionBVH(bvh, bvh.getNode(node.leftIndex()), prims, ray, rayInvDir);
+        auto hitRight = findClosestIntersectionBVH(bvh, bvh.getNode(node.rightIndex()), prims, ray, rayInvDir);
 
         if(hitLeft.distance == INFINITY && hitRight.distance == INFINITY)
             return MiniIntersection();
@@ -45,21 +64,7 @@ MiniIntersection findClosestIntersectionBVH(
             return hitRight;
     }
     else {
-        // we are at a leaf - walk all triangles to find an exact hit.
-        MiniIntersection hit;
-
-        for(unsigned int i = node.first(); i < (node.first() + node.count); i++) {
-            assert(i < bvh.indicies.size());
-            unsigned int triangleIndex = bvh.indicies[i];
-            Triangle const& t = primitives.triangles[triangleIndex];
-            float distance = moller_trumbore(t, ray);
-
-            if(distance > 0 && distance < hit.distance) {
-                hit.distance = distance;
-                hit.triangle = triangleIndex;
-            }
-        }
-        return hit;
+        return findIntersectingTriangle(bvh, node, prims, ray);
     }
 }
 
@@ -129,4 +134,69 @@ bool findAnyIntersectionBVH(
 	glm::vec3 invDirection(1.0f/ray.direction[0], 1.0f/ray.direction[1], 1.0f/ray.direction[2]);
 
     return findAnyIntersectionBVH(bvh, bvh.root(), primitives, ray, invDirection, maxDist);
+}
+
+// used to visualise which node/bounds we intersected with
+struct BVHIntersectDiag {
+    BVHIntersectDiag() : distance(INFINITY), nodeNum(0), depth(0) {}
+    BVHIntersectDiag(float _distance, int _nodeNum, int _depth) 
+        : distance(_distance), nodeNum(_nodeNum), depth(_depth) {}
+
+    float distance;
+    int nodeNum; // index in node array
+    int depth; 
+};
+
+BVHIntersectDiag findBoundsBVH(
+        BVH const& bvh, 
+        std::uint32_t nodeNum,
+        Primitives const& prims, 
+        Ray const& ray,
+        glm::vec3 const& rayInvDir,
+        int depth) {
+
+    auto const& node = bvh.getNode(nodeNum);
+
+    // does this ray miss us all together?
+    if(rayIntersectsAABB(node.bounds, ray.origin, rayInvDir) == INFINITY)
+    {
+        BVHIntersectDiag result(INFINITY, 0, depth);
+        return result;
+    }
+
+    if(!node.isLeaf()) {
+        // we are not at a leaf yet - consider both children
+        auto hitLeft = findBoundsBVH(bvh, node.leftIndex(), prims, ray, rayInvDir, depth+1);
+        auto hitRight = findBoundsBVH(bvh, node.rightIndex(), prims, ray, rayInvDir, depth+1);
+
+        if(hitLeft.distance == INFINITY && hitRight.distance == INFINITY){
+            if(hitLeft.depth > hitRight.depth)
+                return hitLeft;
+        }
+
+        if(hitLeft.distance < hitRight.distance) 
+            return hitLeft;
+        else
+            return hitRight;
+    }
+    else {
+        auto hit = findIntersectingTriangle(bvh, node, prims, ray);
+        BVHIntersectDiag result(INFINITY, nodeNum, depth);
+        if(hit.distance < INFINITY) {
+            result.distance = hit.distance;
+        }
+
+        return result;
+    }
+}
+
+BVHIntersectDiag findBoundsBVH(
+        BVH const& bvh, 
+        Primitives const& primitives, 
+        Ray const& ray) {
+
+    // calculate 1/direction here once, as it's used repeatedly throughout the recursive chain
+	glm::vec3 invDirection(1.0f/ray.direction[0], 1.0f/ray.direction[1], 1.0f/ray.direction[2]);
+
+    return findBoundsBVH(bvh, 0, primitives, ray, invDirection, 0);
 }
