@@ -28,7 +28,7 @@ int main(int argc, char* argv[]){
         return -1;
     }
 
-    BVH* b = buildBVH(s);
+    BVH* b = getBVH(s);
     assert(b);
 
     auto ret = interactiveLoop(s, *b, imgDir);
