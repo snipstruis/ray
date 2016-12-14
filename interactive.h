@@ -118,7 +118,7 @@ int interactiveLoop(Scene& s, BVH& b, std::string const& imgDir) {
 
     auto now = std::chrono::high_resolution_clock::now();
 
-    Mode mode=Mode::Normal;
+    Mode mode=Mode::Default;
 
     while(true){
         SDL_GL_GetDrawableSize(win, &s.camera.width, &s.camera.height);
