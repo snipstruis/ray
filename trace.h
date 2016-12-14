@@ -191,6 +191,15 @@ char const * const modestr[] = {
     "nodes Checked"
 };
 
+Color value_to_color(float x){
+    //x*=2; return x<0.5f? Color(1-x,x,0) : Color(0, 1-(x-1),x-1);
+    x*=5;if(x<1) {      return Color(  0,  0,  x);} // black -> blue
+    else if(x<2) {x-=1; return Color(  0,  x,  1);} // blue  -> cyan
+    else if(x<3) {x-=2; return Color(  0,  1,1-x);} // cyan  -> green
+    else if(x<4) {x-=3; return Color(  x,  1,  0);} // green -> yellow
+    else         {x-=4; return Color(  1,1-x,  0);} // yellow-> red
+}
+
 // main render starting loop
 // assumes screenbuffer is big enough to handle the width*height pixels (per the camera)
 inline void renderFrame(Scene& s, BVH& bvh, std::vector<Color>& screenBuffer, Mode mode, float vis_scale){
@@ -234,7 +243,7 @@ inline void renderFrame(Scene& s, BVH& bvh, std::vector<Color>& screenBuffer, Mo
                 if(hit.distance < INFINITY) {
                     Triangle const& tri = s.primitives.triangles[hit.triangle];
                     auto fancy = FancyIntersect(hit.distance, tri, r);
-                    screenBuffer[idx] = Color(fancy.normal.x, fancy.normal.y, fancy.normal.z);
+                    screenBuffer[idx] = Color(1.f+0.5f*fancy.normal.x, 1.f+0.5f*fancy.normal.y, 1.f+0.5f*fancy.normal.z);
                 }
                 else {
                     screenBuffer[idx] = BLACK;
@@ -256,7 +265,7 @@ inline void renderFrame(Scene& s, BVH& bvh, std::vector<Color>& screenBuffer, Mo
                   : mode==Mode::SplitsTraversed?  vis_scale*0.001f*diag.splitsTraversed
                   : mode==Mode::NodesChecked?     vis_scale*0.001f*diag.nodesChecked
                   : mode==Mode::NodeIndex?        vis_scale*0.001f*diag.nodeIndex : 1.f;
-                screenBuffer[idx] = Color(intensity,intensity,intensity);
+                screenBuffer[idx] = value_to_color(intensity);
             }
         }
         break;
