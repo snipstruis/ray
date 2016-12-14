@@ -25,6 +25,8 @@ void subdivide(
         unsigned int start, 
         unsigned int count, 
         unsigned int lastAxis) {
+    assert(count > 0);
+    assert(start + count < bvh.indicies.size());
 
     // out params for the splitter. Note they are only defined if shouldSplit == true
     unsigned int splitAxis; 
@@ -47,47 +49,47 @@ void subdivide(
         std::cout << "leaf AABB " << node.bounds << " count " << node.count << std::endl;
     } else {
         // not creating a leaf, we're splitting - create a subdivision
-        assert(splitAxis < 3);
+       
         // we can't split a single triangle - shouldn't have recursed this far.
         // it's arguable we should have never gotten this deep (3's a good limit)
         assert(count > 1);
-
-        int i = start;
-        int j = start + count - 1;
-
-        // swap elements to be on the correct side of the split point
-        while (i < j) {
-            assert(bvh.indicies[i] < triangles.size());
-            assert(bvh.indicies[j] < triangles.size());
-
-            if(triangles[bvh.indicies[i]].getCentroid()[splitAxis] < splitPoint) {
-                i++;
-                continue;
-            }
-            if(triangles[bvh.indicies[j]].getCentroid()[splitAxis] > splitPoint) {
-                j--;
-                continue;
-            }
-
-            std::swap(bvh.indicies[i], bvh.indicies[j]);
-
-            i++;
-            j--;
-        }
+        assert(splitAxis < 3);
 
         // alloc child nodes
         node.leftFirst = bvh.nextFree;
         BVHNode& left = bvh.allocNextNode();
         BVHNode& right = bvh.allocNextNode();
-        
-        std::uint32_t halfCount = count / 2;
 
-        // beware odd numbers..!
-        std::uint32_t secondRange = halfCount + (count % 2);
+        // partition elements around the splitValue
+        int i = start;
+        int j = start + count - 1;
+
+        while (i < j) {
+            if(triangles[bvh.indicies[i]].getCentroid()[splitAxis] < splitPoint) {
+                i++;
+                continue;
+            }
+            if(!(triangles[bvh.indicies[j]].getCentroid()[splitAxis] < splitPoint)) {
+                j--;
+                continue;
+            }
+            std::swap(bvh.indicies[i], bvh.indicies[j]);
+            i++;
+        }
+        // i now points at the first elem of the right group
+        unsigned int leftCount = start - i;
+        unsigned int rightCount = start + count - i;
+        unsigned int rightStart = i;
+        
+        assert(leftCount > 0);
+        assert(rightCount > 0);
+        assert(leftCount + rightCount == count);
+        assert(rightStart > start);
+        assert(rightStart + rightCount == start + count);
         
         // recurse
-        subdivide<Splitter>(triangles, bvh, left, start, halfCount, splitAxis);
-        subdivide<Splitter>(triangles, bvh, right, (start + halfCount), secondRange, splitAxis);
+        subdivide<Splitter>(triangles, bvh, left, start, leftCount, splitAxis);
+        subdivide<Splitter>(triangles, bvh, right, rightStart, rightCount, splitAxis);
 
         // now subdivide's done, combine aabb 
         combineAABB(node.bounds, left.bounds, right.bounds);
