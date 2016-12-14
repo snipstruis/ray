@@ -25,14 +25,15 @@ void subdivide(
         unsigned int start, 
         unsigned int count, 
         unsigned int lastAxis) {
+    
     assert(count > 0);
-    assert(start + count < bvh.indicies.size());
+    assert(start + count <= bvh.indicies.size());
 
     // out params for the splitter. Note they are only defined if shouldSplit == true
     unsigned int splitAxis; 
-    float splitPoint;
+    float splitValue;
 
-    bool shouldSplit = Splitter::GetSplit(splitAxis, splitPoint, triangles, bvh, node, start, count, lastAxis);
+    bool shouldSplit = Splitter::GetSplit(splitAxis, splitValue, triangles, bvh, node, start, count, lastAxis);
 
     // are we creating a leaf?
     if(!shouldSplit) {
@@ -60,16 +61,18 @@ void subdivide(
         BVHNode& left = bvh.allocNextNode();
         BVHNode& right = bvh.allocNextNode();
 
+        std::cout << "subdiv start " << start << " count " << count; 
+        std::cout<< " splitVal " << splitValue;
         // partition elements around the splitValue
         int i = start;
         int j = start + count - 1;
 
         while (i < j) {
-            if(triangles[bvh.indicies[i]].getCentroid()[splitAxis] < splitPoint) {
+            if(triangles[bvh.indicies[i]].getCentroid()[splitAxis] < splitValue) {
                 i++;
                 continue;
             }
-            if(!(triangles[bvh.indicies[j]].getCentroid()[splitAxis] < splitPoint)) {
+            if(!(triangles[bvh.indicies[j]].getCentroid()[splitAxis] < splitValue)) {
                 j--;
                 continue;
             }
@@ -77,10 +80,21 @@ void subdivide(
             i++;
         }
         // i now points at the first elem of the right group
-        unsigned int leftCount = start - i;
+        std::cout << " i " << i;
+        std::cout << " j " << j;
+        unsigned int leftCount = i - start;
         unsigned int rightCount = start + count - i;
         unsigned int rightStart = i;
         
+        std::cout << std::endl;
+        if(count < 10) {
+            for(int k = start; k < (start +count); k++) {
+                std::cout << triangles[bvh.indicies[k]].getCentroid()[splitAxis] << " ";
+            }
+        }
+        std::cout << std::endl;
+        std::cout << " leftcount " << leftCount << " rightCount " << rightCount << " rightStart " << rightStart;
+        std::cout<<std::endl;
         assert(leftCount > 0);
         assert(rightCount > 0);
         assert(leftCount + rightCount == count);
@@ -138,7 +152,7 @@ inline BVH* buildStupidBVH(Scene& s) {
     return bvh;
 }
 
-struct MedianSplitter {
+struct AverageSplitter {
     static bool GetSplit(
             unsigned int& axis,             
             float& splitPoint,              
@@ -154,18 +168,14 @@ struct MedianSplitter {
         // blindly move to next axis
         axis = (lastAxis + 1) % 3;
 
-        std::vector<float> v;
-        v.reserve(count);
-
+        float sum = 0.0f;
         for (std::uint32_t i = start; i < (start + count) ; i++) {
             unsigned int index = bvh.indicies[i];
             Triangle const& t = triangles[index];
-            v.emplace_back(t.getCentroid()[axis]);
+            sum += t.getCentroid()[axis];
         }
 
-        // find median
-        std::nth_element(v.begin(), v.begin() + (v.size()/2), v.end());
-        splitPoint = v[count/2];
+        splitPoint = sum / (float)count;
 
         return true; // do split
     }
@@ -174,7 +184,7 @@ struct MedianSplitter {
 // this one is not much better, but does subdivide.
 inline BVH* buildMedianBVH(Scene& s) {
     std::cout << "building median BVH" << std::endl;
-    BVH* bvh = buildBVH<MedianSplitter>(s);
+    BVH* bvh = buildBVH<AverageSplitter>(s);
     return bvh;
 }
 
