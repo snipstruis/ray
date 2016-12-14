@@ -72,9 +72,9 @@ MiniIntersection traverseBVH(
             Triangle const& t = prims.triangles[triangleIndex];
             float distance = moller_trumbore(t, ray);
 
-            if constexpr(MODE==ANY){ // if checking for closest intersection
+            if constexpr(MODE==ANY){ // if checking for any intersection whatsoever
                 if(distance > 0 && distance < maxDist) return hit;
-            }else{
+            }else{ // if we want to find the closest intersection
                 if(distance > 0 && distance < hit.distance) {
                     if constexpr(MODE==DIAG) diag->nodeIndex = nodeIndex;
                     hit.distance = distance;

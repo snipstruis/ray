@@ -243,7 +243,9 @@ inline void renderFrame(Scene& s, BVH& bvh, std::vector<Color>& screenBuffer, Mo
                 if(hit.distance < INFINITY) {
                     Triangle const& tri = s.primitives.triangles[hit.triangle];
                     auto fancy = FancyIntersect(hit.distance, tri, r);
-                    screenBuffer[idx] = Color(1.f+0.5f*fancy.normal.x, 1.f+0.5f*fancy.normal.y, 1.f+0.5f*fancy.normal.z);
+                    screenBuffer[idx] = Color((1.f+fancy.normal.x)/2.f, 
+                                              (1.f+fancy.normal.y)/2.f, 
+                                              (1.f+fancy.normal.z)/2.f);
                 }
                 else {
                     screenBuffer[idx] = BLACK;
@@ -258,8 +260,7 @@ inline void renderFrame(Scene& s, BVH& bvh, std::vector<Color>& screenBuffer, Mo
                 Ray r = s.camera.makeRay(x, y);
                 int idx = (height-y-1) * width+ x;
                 auto diag = BVHIntersectDiag();
-                MiniIntersection intersect = 
-                    findClosestIntersectionBVH_DIAG(bvh, s.primitives, r, &diag);
+                findClosestIntersectionBVH_DIAG(bvh, s.primitives, r, &diag);
                 float intensity = 
                     mode==Mode::TrianglesChecked? vis_scale*0.001f*diag.trianglesChecked
                   : mode==Mode::SplitsTraversed?  vis_scale*0.001f*diag.splitsTraversed
