@@ -13,13 +13,13 @@ struct MiniIntersection {
     MiniIntersection() : distance(INFINITY) {} 
     float distance;         // dist to intersection 
     unsigned int triangle;  // triangle number
+    int nodeIndex;
 };
 
 // used to visualise which node/bounds we intersected with
 struct BVHIntersectDiag {
-    BVHIntersectDiag() :  nodeIndex(0), splitsTraversed(0), 
+    BVHIntersectDiag() : splitsTraversed(0), 
         trianglesChecked(0), nodesChecked(0) {}
-    int nodeIndex;
     int splitsTraversed;
     int trianglesChecked;
     int nodesChecked;
@@ -76,7 +76,7 @@ MiniIntersection traverseBVH(
                 if(distance > 0 && distance < maxDist) return hit;
             }else{ // if we want to find the closest intersection
                 if(distance > 0 && distance < hit.distance) {
-                    if constexpr(MODE==DIAG) diag->nodeIndex = nodeIndex;
+                    if constexpr(MODE==DIAG) hit.nodeIndex = nodeIndex;
                     hit.distance = distance;
                     hit.triangle = triangleIndex;
                 }
