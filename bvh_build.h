@@ -61,7 +61,7 @@ void subdivide(
         BVHNode& left = bvh.allocNextNode();
         BVHNode& right = bvh.allocNextNode();
 
-        std::cout << "subdiv start " << start << " count " << count; 
+        std::cout << "subdiv start " << start << " count " << count << " axis " << splitAxis; 
         std::cout<< " splitVal " << splitValue;
         // partition elements around the splitValue
         int i = start;
@@ -88,7 +88,7 @@ void subdivide(
         
         std::cout << std::endl;
         if(count < 10) {
-            for(int k = start; k < (start +count); k++) {
+            for(unsigned int k = start; k < (start +count); k++) {
                 std::cout << triangles[bvh.indicies[k]].getCentroid()[splitAxis] << " ";
             }
         }
@@ -168,14 +168,36 @@ struct AverageSplitter {
         // blindly move to next axis
         axis = (lastAxis + 1) % 3;
 
-        float sum = 0.0f;
+        glm::vec3 total;
+        glm::vec3 min(INFINITY, INFINITY, INFINITY);
+        glm::vec3 max(-INFINITY, -INFINITY, -INFINITY);
+
         for (std::uint32_t i = start; i < (start + count) ; i++) {
             unsigned int index = bvh.indicies[i];
             Triangle const& t = triangles[index];
-            sum += t.getCentroid()[axis];
+            auto centroid = t.getCentroid();
+
+            total += centroid;
+            // FIXME: is there a glm func to do this (glm::min/max return the whole vec, not piecewise)
+            min = glm::vec3(std::min(min.x,centroid.x), std::min(min.y,centroid.y),std::min(min.z,centroid.z));
+            max = glm::vec3(std::max(max.x,centroid.x), std::max(max.y,centroid.y),std::max(max.z,centroid.z));
         }
 
-        splitPoint = sum / (float)count;
+        // find greatest len axis
+        // FIXME: there must be a lib funciton to do this
+        glm::vec3 lengths = max - min;
+        if(lengths[0] > lengths[1])
+            axis = 0;
+        else
+            axis = 1;
+
+        if(lengths[2] > lengths[axis])
+            axis = 2;
+
+        std::cout << " min " << min << " max " << max<< std::endl;
+        std::cout << " lengths " << lengths << " total " << total << std::endl;
+        // and return the average of the greatest axis..
+        splitPoint = total[axis] * (1.0f/count);
 
         return true; // do split
     }
