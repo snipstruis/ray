@@ -173,7 +173,7 @@ Color trace(Ray const& ray,
 }
 
 // for a given ray, return the leaf bounds thing
-Color bvhIntersect(Ray const& ray,
+/*Color bvhIntersect(Ray const& ray,
             BVH const& bvh,
             Primitives const& primitives) {
     auto res = findBoundsBVH(bvh, primitives, ray);
@@ -183,8 +183,8 @@ Color bvhIntersect(Ray const& ray,
     float max = bvh.nodeCount();
     float ratio = res.nodeNum/max;
     return Color(ratio, 0.0f, 1-ratio);
-
 }
+*/
 
 enum class Mode {
     Default,
@@ -250,7 +250,7 @@ inline void renderFrame(Scene& s, BVH& bvh, std::vector<Color>& screenBuffer, Mo
             for (int x = 0; x < width; x++) {
                 Ray r = s.camera.makeRay(x, y);
                 int idx = (height-y-1) * width+ x;
-                screenBuffer[idx] = bvhIntersect(r, bvh, s.primitives);
+                //screenBuffer[idx] = bvhIntersect(r, bvh, s.primitives);
             }
         }
         break;
