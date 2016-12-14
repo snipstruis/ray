@@ -229,7 +229,7 @@ inline void renderFrame(Scene& s, BVH& bvh, std::vector<Color>& screenBuffer, Mo
                 auto end = std::chrono::high_resolution_clock::now();
                 auto frametime = 
                     std::chrono::duration_cast<std::chrono::duration<float,std::micro>>(end-start).count();
-                screenBuffer[idx].r =vis_scale*frametime;
+                screenBuffer[idx] = value_to_color(0.01*vis_scale*frametime);
             }
         }
         break;
