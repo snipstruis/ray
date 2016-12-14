@@ -109,12 +109,12 @@ struct StupidSplitter {
 };
 
 inline BVH* buildStupidBVH(Scene& s) {
+    std::cout << "building stupid BVH" << std::endl;
     BVH* bvh = buildBVH<StupidSplitter>(s);
 
     // as we have a single node, it should be a leaf
     assert(bvh->nodeCount() == 1);
     assert(bvh->root().isLeaf());
-    std::cout << "stupid AABB " << bvh->root().bounds << std::endl;
     return bvh;
 }
 
@@ -158,6 +158,7 @@ struct MedianSplitter {
 
 // this one is not much better, but does subdivide.
 inline BVH* buildMedianBVH(Scene& s) {
+    std::cout << "building median BVH" << std::endl;
     BVH* bvh = buildBVH<MedianSplitter>(s);
     return bvh;
 }
