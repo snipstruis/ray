@@ -1,6 +1,6 @@
 
 #include "interactive.h"
-#include "bvh_build_simple.h"
+#include "bvh_build.h"
 
 #include <string>
 #include <iostream>
