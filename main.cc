@@ -1,6 +1,5 @@
 
 #include "interactive.h"
-#include "bvh_build.h"
 
 #include <string>
 #include <iostream>
@@ -28,11 +27,5 @@ int main(int argc, char* argv[]){
         return -1;
     }
 
-    BVH* b = getBVH(s);
-    assert(b);
-
-    auto ret = interactiveLoop(s, *b, imgDir);
-
-    delete b;
-    return ret;
+    return interactiveLoop(s, imgDir);
 }

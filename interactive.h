@@ -1,6 +1,7 @@
 #pragma once
 
 #include "bvh.h"
+#include "bvh_build.h"
 #include "camera.h"
 #include "loader.h"
 #include "output.h"
@@ -19,8 +20,7 @@
 
 // this file contains all machinery to operate interactive mode - ie whenever there is a visible window 
 
-
-void setWindowTitle(Scene const& s, SDL_Window *win, float frametime_ms, Mode mode)
+void setWindowTitle(Scene const& s, SDL_Window *win, float frametime_ms, Mode mode, BVHMethod bvh)
 {
     char title[1024];
 
@@ -28,6 +28,7 @@ void setWindowTitle(Scene const& s, SDL_Window *win, float frametime_ms, Mode mo
             "%s "
             "%dx%d "
             "@ %2.3fms(%0.0f) "
+            "bvh=%s "
             "o=(%0.3f, %0.3f, %0.3f) " 
             "y=%0.0f "
             "p=%0.0f "
@@ -35,6 +36,7 @@ void setWindowTitle(Scene const& s, SDL_Window *win, float frametime_ms, Mode mo
             modestr[(int)mode],
             s.camera.width, s.camera.height,
             frametime_ms, 1000.f/frametime_ms,
+            BVHMethodStr(bvh),
             s.camera.origin[0], s.camera.origin[1], s.camera.origin[2],
             glm::degrees(s.camera.yaw), glm::degrees(s.camera.pitch), 
             glm::degrees(s.camera.fov)
@@ -51,7 +53,7 @@ enum GuiAction {
 
 // process input
 // returns action to be performed
-GuiAction handleEvents(Scene& s, Mode *vis, float *vis_scale)
+GuiAction handleEvents(Scene& s, Mode *vis, float *vis_scale, BVHMethod& bvh)
 {
     SDL_Event e;
 
@@ -83,6 +85,9 @@ GuiAction handleEvents(Scene& s, Mode *vis, float *vis_scale)
                     case SDL_SCANCODE_5: *vis = Mode::SplitsTraversed; break;
                     case SDL_SCANCODE_6: *vis = Mode::NodesChecked; break;
                     case SDL_SCANCODE_7: *vis = Mode::NodeIndex; break;
+                    case SDL_SCANCODE_B: 
+                        bvh = (BVHMethod)((bvh + 1) % __BVHMethod_MAX);
+                        break;
                     default:
                         break;
                 }
@@ -112,7 +117,7 @@ GuiAction handleEvents(Scene& s, Mode *vis, float *vis_scale)
 // @s: pre-populated scene
 // @imgDir: location to write screenshots
 //
-int interactiveLoop(Scene& s, BVH& b, std::string const& imgDir) {
+int interactiveLoop(Scene& s, std::string const& imgDir) {
     SDL_Window *win = SDL_CreateWindow("Roaytroayzah (initialising)", 10, 10, 640, 640, 
                                        SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
     SDL_GL_CreateContext(win);
@@ -131,24 +136,34 @@ int interactiveLoop(Scene& s, BVH& b, std::string const& imgDir) {
     Mode mode=Mode::Default;
     float vis_scale = 1.f;
 
+    BVHMethod bvhMethod = BVHMethod_MEDIAN;
+    BVH* bvh = buildBVH(s, bvhMethod);
+
     while(true){
         SDL_GL_GetDrawableSize(win, &s.camera.width, &s.camera.height);
 
-        GuiAction a = handleEvents(s,&mode,&vis_scale);
+        BVHMethod oldMethod = bvhMethod;
+        GuiAction a = handleEvents(s,&mode,&vis_scale,bvhMethod);
+
         if (a==GA_QUIT)
             break;
         else if (a==GA_SCREENSHOT)
             WriteTgaImage(imgDir, s.camera.width, s.camera.height, screenBuffer);
 
+        if(oldMethod != bvhMethod) {
+            std::cout << "BVH method " << BVHMethodStr(oldMethod) << "->";
+            std::cout << BVHMethodStr(bvhMethod ) << std::endl;
+            delete bvh;
+            bvh = buildBVH(s, bvhMethod);
+        }
+
         // FIXME: maybe save a bit of work by only doing this if camera's moved
         s.camera.buildCamera();
-
-        // should be a no-op unless the window's resized
         screenBuffer.resize(s.camera.width * s.camera.height);
 
         glViewport(0, 0, s.camera.width, s.camera.height);
 
-        renderFrame(s, b, screenBuffer, mode, vis_scale);
+        renderFrame(s, *bvh, screenBuffer, mode, vis_scale);
        
         // blit to screen
         glDrawPixels(s.camera.width, s.camera.height, GL_RGB, GL_FLOAT, screenBuffer.data());
@@ -164,7 +179,7 @@ int interactiveLoop(Scene& s, BVH& b, std::string const& imgDir) {
         static float avg = frametime;
         avg = 0.95f*avg + 0.05f*frametime;
 
-        setWindowTitle(s, win, avg, mode);
+        setWindowTitle(s, win, avg, mode, bvhMethod);
         SDL_GL_SwapWindow(win);
     }
 

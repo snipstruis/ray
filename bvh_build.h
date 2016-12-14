@@ -1,6 +1,21 @@
 #pragma once
 
 #include "bvh.h"
+#include "scene.h"
+
+enum BVHMethod {
+    BVHMethod_STUPID,
+    BVHMethod_MEDIAN,
+    __BVHMethod_MAX
+};
+
+const char* BVHMethodStr(BVHMethod m) {
+    switch(m) {
+        case BVHMethod_STUPID: return "STUPID";
+        case BVHMethod_MEDIAN: return "MEDIAN";
+        case __BVHMethod_MAX: return "shouldnt happen";
+    };
+}
 
 template <class Splitter>
 void subdivide(
@@ -161,9 +176,14 @@ inline BVH* buildMedianBVH(Scene& s) {
     return bvh;
 }
 
-inline BVH* getBVH(Scene& s) {
-//    BVH* bvh = buildStupidBVH(s);
-    BVH* bvh = buildMedianBVH(s);
+inline BVH* buildBVH(Scene& s, BVHMethod method) {
+    BVH* bvh;
+
+    switch(method) {
+        case BVHMethod_STUPID: bvh = buildStupidBVH(s); break;
+        case BVHMethod_MEDIAN: bvh = buildMedianBVH(s); break;
+        case __BVHMethod_MAX: assert(false); break; // shouldn't happen
+    };
 
     std::cout << "bvh node count " << bvh->nextFree << std::endl;
     std::cout << "triangle count " << s.primitives.triangles.size() << std::endl;
