@@ -3,24 +3,6 @@
 #include "bvh.h"
 
 #if 0
-        float sum = 0.0f;
-        // non-leaf node.
-        for (std::uint32_t i = start; i < (start + count) ; i++) {
-            assert(i < bvh.indicies.size());
-            unsigned int index = bvh.indicies[i];
-
-            assert(index < triangles.size());
-            Triangle const& t = triangles[index];
-
-            // do this with centoids?
-            sum += t.v[0][axis] + t.v[1][axis] + t.v[2][axis];
-        }
-
-        // get average. div by 3*triangles (ie once for each vertex)
-        float average = sum / (count * 3.0f);
-        
-        int nextAxis = (axis + 1) % 3;
-    }
 }
 #endif
 
@@ -96,10 +78,10 @@ void subdivide(TriangleSet const& triangles, BVH& bvh, BVHNode& node, unsigned i
 
 template<class Splitter>
 inline BVH* buildBVH(Scene& s) {
-    BVH* bvh = new BVH;
+    BVH* bvh = new BVH(s.primitives.triangles.size());
 
-    // setup index map
-    bvh->indicies.resize(s.primitives.triangles.size());
+    // setup index map. bvh constructor should have resized indicies
+    assert(bvh->indicies.size() >= s.primitives.triangles.size());
     for (unsigned int i = 0; i < s.primitives.triangles.size(); i++)
         bvh->indicies[i] = i;
 
@@ -136,39 +118,26 @@ inline BVH* buildStupidBVH(Scene& s) {
     return bvh;
 }
 
-#if 0
-// this one is not much better, but does subdivide.
-inline BVH* buildSimpleBVH(Scene& s) {
-    BVH* bvh = new BVH(s.primitives.triangles.size());
+struct MedianSplitter {
+    static bool GetSplit(
+            unsigned int& axis,             
+            float& splitPoint,              
+            TriangleSet const& triangles,   
+            BVH& bvh,                       
+            BVHNode& node,                  
+            std::uint32_t start,            
+            std::uint32_t count,            
+            unsigned int lastAxis) {
+        if(count <= 3)
+            return false; // don't split
 
-    bvh->root().leftFirst = 2;
-    bvh->root().count = 0;
+        // blindly move to next axis
+        axis = (lastAxis + 1) % 3;
 
-    for (unsigned int i = 0; i < s.primitives.triangles.size(); i++)
-        bvh->indicies[i] = i;
-
-    subdivide(s.primitives.triangles, *bvh, bvh->root(), 0, s.primitives.triangles.size(), 0);
-
-    std::cout << "bvh node count " << bvh->nextFree << std::endl;
-    std::cout << "triangle count " << s.primitives.triangles.size() << std::endl;
-    std::cout << "simple root AABB " << bvh->root().bounds << std::endl;
-
-    assert(bvh->root().leftFirst ==2);
-    assert(bvh->root().count == 0);
-
-    return bvh;
-}
-
-#endif
-
-inline BVH* getBVH(Scene& s) {
-    BVH* b = buildStupidBVH(s);
-    sanityCheckBVH(*b, s.primitives.triangles);
-    return b;
-}
-#if 0
         float sum = 0.0f;
-        // non-leaf node.
+
+        std::vector<float> values(count);
+
         for (std::uint32_t i = start; i < (start + count) ; i++) {
             assert(i < bvh.indicies.size());
             unsigned int index = bvh.indicies[i];
@@ -178,8 +147,30 @@ inline BVH* getBVH(Scene& s) {
 
             // do this with centoids?
             sum += t.v[0][axis] + t.v[1][axis] + t.v[2][axis];
+            //values.emplace_back(t.getCentroid[axis]);
         }
 
         // get average. div by 3*triangles (ie once for each vertex)
-        float average = sum / (count * 3.0f);
-#endif
+        splitPoint = sum / (count * 3.0f);
+        return true; // do split
+    }
+};
+
+// this one is not much better, but does subdivide.
+inline BVH* buildMedianBVH(Scene& s) {
+    BVH* bvh = buildBVH<MedianSplitter>(s);
+    return bvh;
+}
+
+inline BVH* getBVH(Scene& s) {
+//    BVH* bvh = buildStupidBVH(s);
+    BVH* bvh = buildMedianBVH(s);
+
+    std::cout << "bvh node count " << bvh->nextFree << std::endl;
+    std::cout << "triangle count " << s.primitives.triangles.size() << std::endl;
+    std::cout << "root AABB " << bvh->root().bounds << std::endl;
+
+    sanityCheckBVH(*bvh, s.primitives.triangles);
+
+    return bvh;
+}
