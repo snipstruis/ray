@@ -2,12 +2,14 @@
 
 #include "bvh.h"
 
-#if 0
-}
-#endif
-
 template <class Splitter>
-void subdivide(TriangleSet const& triangles, BVH& bvh, BVHNode& node, unsigned int start, unsigned int count, unsigned int lastAxis) {
+void subdivide(
+        TriangleSet const& triangles, 
+        BVH& bvh, 
+        BVHNode& node, 
+        unsigned int start, 
+        unsigned int count, 
+        unsigned int lastAxis) {
 
     // out params for the splitter. Note they are only defined if shouldSplit == true
     unsigned int splitAxis; 
@@ -38,6 +40,7 @@ void subdivide(TriangleSet const& triangles, BVH& bvh, BVHNode& node, unsigned i
         int i = start;
         int j = start + count - 1;
 
+        // swap elements to be on the correct side of the split point
         while (i < j) {
             assert(bvh.indicies[i] < triangles.size());
             assert(bvh.indicies[j] < triangles.size());
@@ -134,24 +137,19 @@ struct MedianSplitter {
         // blindly move to next axis
         axis = (lastAxis + 1) % 3;
 
-        float sum = 0.0f;
-
-        std::vector<float> values(count);
+        std::vector<float> v;
+        v.reserve(count);
 
         for (std::uint32_t i = start; i < (start + count) ; i++) {
-            assert(i < bvh.indicies.size());
             unsigned int index = bvh.indicies[i];
-
-            assert(index < triangles.size());
             Triangle const& t = triangles[index];
-
-            // do this with centoids?
-            sum += t.v[0][axis] + t.v[1][axis] + t.v[2][axis];
-            //values.emplace_back(t.getCentroid[axis]);
+            v.emplace_back(t.getCentroid()[axis]);
         }
 
-        // get average. div by 3*triangles (ie once for each vertex)
-        splitPoint = sum / (count * 3.0f);
+        // find median
+        std::nth_element(v.begin(), v.begin() + (v.size()/2), v.end());
+        splitPoint = v[count/2];
+
         return true; // do split
     }
 };
