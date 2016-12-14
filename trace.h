@@ -100,9 +100,8 @@ Color trace(Ray const& ray,
             Primitives const& primitives,
             Lights const& lights,
             Color const& alpha){
-
     if(ray.ttl<=0) return alpha;
-
+    
     MiniIntersection hit = findClosestIntersectionBVH(bvh, primitives, ray);
     if(hit.distance==INFINITY) 
         return alpha;
@@ -172,30 +171,29 @@ Color trace(Ray const& ray,
     return color;
 }
 
-// for a given ray, return the leaf bounds thing
-/*Color bvhIntersect(Ray const& ray,
-            BVH const& bvh,
-            Primitives const& primitives) {
-    auto res = findBoundsBVH(bvh, primitives, ray);
-    if(res.nodeNum == 0)
-        return BLACK;
-
-    float max = bvh.nodeCount();
-    float ratio = res.nodeNum/max;
-    return Color(ratio, 0.0f, 1-ratio);
-}
-*/
-
 enum class Mode {
     Default,
     Microseconds,
     Normal,
-    BVH_Intersect
+    NodeIndex,
+    SplitsTraversed,
+    TrianglesChecked,
+    NodesChecked,
+};
+
+char const * const modestr[] = {
+    "GOTTA GO FAST",
+    "frametime",
+    "normal",
+    "node index",
+    "splits traversed",
+    "triangles checked",
+    "nodes Checked"
 };
 
 // main render starting loop
 // assumes screenbuffer is big enough to handle the width*height pixels (per the camera)
-inline void renderFrame(Scene& s, BVH& bvh, std::vector<Color>& screenBuffer, Mode mode){
+inline void renderFrame(Scene& s, BVH& bvh, std::vector<Color>& screenBuffer, Mode mode, float vis_scale){
     // draw pixels
     int const width  = s.camera.width;
     int const height = s.camera.height;
@@ -222,7 +220,7 @@ inline void renderFrame(Scene& s, BVH& bvh, std::vector<Color>& screenBuffer, Mo
                 auto end = std::chrono::high_resolution_clock::now();
                 auto frametime = 
                     std::chrono::duration_cast<std::chrono::duration<float,std::micro>>(end-start).count();
-                screenBuffer[idx].r = frametime;
+                screenBuffer[idx].r =vis_scale*frametime;
             }
         }
         break;
@@ -244,13 +242,21 @@ inline void renderFrame(Scene& s, BVH& bvh, std::vector<Color>& screenBuffer, Mo
             }
         }
         break;
-    case Mode::BVH_Intersect:
+    default:
         #pragma omp parallel for schedule(auto) collapse(2)
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 Ray r = s.camera.makeRay(x, y);
                 int idx = (height-y-1) * width+ x;
-                //screenBuffer[idx] = bvhIntersect(r, bvh, s.primitives);
+                auto diag = BVHIntersectDiag();
+                MiniIntersection intersect = 
+                    findClosestIntersectionBVH_DIAG(bvh, s.primitives, r, &diag);
+                float intensity = 
+                    mode==Mode::TrianglesChecked? vis_scale*0.001f*diag.trianglesChecked
+                  : mode==Mode::SplitsTraversed?  vis_scale*0.001f*diag.splitsTraversed
+                  : mode==Mode::NodesChecked?     vis_scale*0.001f*diag.nodesChecked
+                  : mode==Mode::NodeIndex?        vis_scale*0.001f*diag.nodeIndex : 1.f;
+                screenBuffer[idx] = Color(intensity,intensity,intensity);
             }
         }
         break;

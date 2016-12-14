@@ -19,17 +19,20 @@
 
 // this file contains all machinery to operate interactive mode - ie whenever there is a visible window 
 
-void setWindowTitle(Scene const& s, SDL_Window *win, float frametime_ms)
+
+void setWindowTitle(Scene const& s, SDL_Window *win, float frametime_ms, Mode mode)
 {
     char title[1024];
 
     snprintf(title, sizeof(title),
-            "Roaytroayzah %dx%d "
+            "%s "
+            "%dx%d "
             "@ %2.3fms(%0.0f) "
             "o=(%0.3f, %0.3f, %0.3f) " 
             "y=%0.0f "
             "p=%0.0f "
             "f=%0.0f ",
+            modestr[(int)mode],
             s.camera.width, s.camera.height,
             frametime_ms, 1000.f/frametime_ms,
             s.camera.origin[0], s.camera.origin[1], s.camera.origin[2],
@@ -48,7 +51,7 @@ enum GuiAction {
 
 // process input
 // returns action to be performed
-GuiAction handleEvents(Scene& s, Mode *vis)
+GuiAction handleEvents(Scene& s, Mode *vis, float *vis_scale)
 {
     SDL_Event e;
 
@@ -76,7 +79,10 @@ GuiAction handleEvents(Scene& s, Mode *vis)
                     case SDL_SCANCODE_1: *vis = Mode::Microseconds; break;
                     case SDL_SCANCODE_2: *vis = Mode::Normal; break;
                     case SDL_SCANCODE_3: SMOOTHING = !SMOOTHING; break;
-                    case SDL_SCANCODE_4: *vis = Mode::BVH_Intersect; break;
+                    case SDL_SCANCODE_4: *vis = Mode::TrianglesChecked; break;
+                    case SDL_SCANCODE_5: *vis = Mode::SplitsTraversed; break;
+                    case SDL_SCANCODE_6: *vis = Mode::NodesChecked; break;
+                    case SDL_SCANCODE_7: *vis = Mode::NodeIndex; break;
                     default:
                         break;
                 }
@@ -94,6 +100,10 @@ GuiAction handleEvents(Scene& s, Mode *vis)
         s.camera.moveRight(-0.2f);
     if(kbd[SDL_SCANCODE_D])
         s.camera.moveRight(0.2f);
+    if(kbd[SDL_SCANCODE_COMMA])
+        *vis_scale *= 0.9;
+    if(kbd[SDL_SCANCODE_PERIOD])
+        *vis_scale *= 1.1;
     
     return GA_NONE;
 }
@@ -119,11 +129,12 @@ int interactiveLoop(Scene& s, BVH& b, std::string const& imgDir) {
     auto now = std::chrono::high_resolution_clock::now();
 
     Mode mode=Mode::Default;
+    float vis_scale = 1.f;
 
     while(true){
         SDL_GL_GetDrawableSize(win, &s.camera.width, &s.camera.height);
 
-        GuiAction a = handleEvents(s,&mode);
+        GuiAction a = handleEvents(s,&mode,&vis_scale);
         if (a==GA_QUIT)
             break;
         else if (a==GA_SCREENSHOT)
@@ -137,7 +148,7 @@ int interactiveLoop(Scene& s, BVH& b, std::string const& imgDir) {
 
         glViewport(0, 0, s.camera.width, s.camera.height);
 
-        renderFrame(s, b, screenBuffer, mode);
+        renderFrame(s, b, screenBuffer, mode, vis_scale);
        
         // blit to screen
         glDrawPixels(s.camera.width, s.camera.height, GL_RGB, GL_FLOAT, screenBuffer.data());
@@ -153,7 +164,7 @@ int interactiveLoop(Scene& s, BVH& b, std::string const& imgDir) {
         static float avg = frametime;
         avg = 0.95f*avg + 0.05f*frametime;
 
-        setWindowTitle(s, win, avg);
+        setWindowTitle(s, win, avg, mode);
         SDL_GL_SwapWindow(win);
     }
 
