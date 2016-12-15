@@ -14,15 +14,16 @@ struct MiniIntersection {
     float distance;         // dist to intersection 
     unsigned int triangle;  // triangle number
     int nodeIndex;
+    int leafDepth=0;
 };
 
 // used to visualise which node/bounds we intersected with
 struct BVHIntersectDiag {
     BVHIntersectDiag() : splitsTraversed(0), 
-        trianglesChecked(0), nodesChecked(0) {}
+        trianglesChecked(0), leafsChecked(0){}
     int splitsTraversed;
     int trianglesChecked;
-    int nodesChecked;
+    int leafsChecked;
 };
 
 // Find the closest intersection with any primitive
@@ -57,13 +58,16 @@ MiniIntersection traverseBVH(
         if(hitLeft.distance == INFINITY && hitRight.distance == INFINITY)
             return MiniIntersection();
 
-        if(hitLeft.distance < hitRight.distance) 
+        if(hitLeft.distance < hitRight.distance){
+            if(MODE==DIAG) hitLeft.leafDepth++;
             return hitLeft;
-        else
+        } else {
+            if(MODE==DIAG) hitRight.leafDepth++;
             return hitRight;
+        }
     } else {    
         // at a leaf - walk triangles and test for a hit.
-        if constexpr(MODE==DIAG) diag->nodesChecked++;
+        if constexpr(MODE==DIAG) diag->leafsChecked++;
         MiniIntersection hit;
         for(unsigned int i = node.first(); i < (node.first() + node.count); i++) {
             if constexpr(MODE==DIAG) diag->trianglesChecked++;

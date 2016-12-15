@@ -1,5 +1,4 @@
-#pragma once
-
+#pragma once 
 #include "bvh_traverse.h"
 #include "color.h"
 #include "basics.h"
@@ -179,7 +178,8 @@ enum class Mode {
     NodeIndex,
     SplitsTraversed,
     TrianglesChecked,
-    NodesChecked,
+    LeafsChecked,
+    LeafNode
 };
 
 char const * const modestr[] = {
@@ -189,7 +189,8 @@ char const * const modestr[] = {
     "node index",
     "splits traversed",
     "triangles checked",
-    "nodes Checked"
+    "leafs checked",
+    "leaf depth"
 };
 
 Color value_to_color(float x){
@@ -265,8 +266,9 @@ inline void renderFrame(Scene& s, BVH& bvh, std::vector<Color>& screenBuffer, Mo
                 float intensity = 
                     mode==Mode::TrianglesChecked? vis_scale*0.001f*diag.trianglesChecked
                   : mode==Mode::SplitsTraversed?  vis_scale*0.001f*diag.splitsTraversed
-                  : mode==Mode::NodesChecked?     vis_scale*0.001f*diag.nodesChecked
-                  : mode==Mode::NodeIndex&&hit.distance!=INFINITY?vis_scale*0.001f*hit.nodeIndex : 0;
+                  : mode==Mode::LeafsChecked?     vis_scale*0.001f*diag.leafsChecked
+                  : mode==Mode::NodeIndex&&hit.distance!=INFINITY?vis_scale*0.001f*hit.nodeIndex 
+                  : mode==Mode::LeafNode?         vis_scale*0.001f*hit.leafDepth: 0;
                 screenBuffer[idx] = value_to_color(intensity);
             }
         }

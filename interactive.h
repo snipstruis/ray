@@ -81,9 +81,10 @@ GuiAction handleEvents(Scene& s, Mode *vis, float *vis_scale, BVHMethod& bvh)
                     case SDL_SCANCODE_0: *vis = Mode::Default; break;
                     case SDL_SCANCODE_1: *vis = Mode::Microseconds; break;
                     case SDL_SCANCODE_2: *vis = Mode::Normal; break;
+                    case SDL_SCANCODE_3: *vis = Mode::LeafNode; break;
                     case SDL_SCANCODE_4: *vis = Mode::TrianglesChecked; break;
                     case SDL_SCANCODE_5: *vis = Mode::SplitsTraversed; break;
-                    case SDL_SCANCODE_6: *vis = Mode::NodesChecked; break;
+                    case SDL_SCANCODE_6: *vis = Mode::LeafsChecked; break;
                     case SDL_SCANCODE_7: *vis = Mode::NodeIndex; break;
                     case SDL_SCANCODE_B: 
                         bvh = (BVHMethod)((bvh + 1) % __BVHMethod_MAX);
