@@ -7,7 +7,6 @@
 #include "utils.h"
 
 #include <cmath>
-#include <chrono>
 #include <vector>
 
 // calculate point light colour output

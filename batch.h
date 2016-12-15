@@ -4,6 +4,8 @@
 #include "utils.h"
 
 int batchRender(Scene& s, std::string const& imgDir, int width, int height) {
+    Timer t;
+
     ScreenBuffer screenBuffer;
     screenBuffer.resize(width * height);
 
@@ -18,5 +20,9 @@ int batchRender(Scene& s, std::string const& imgDir, int width, int height) {
 
     delete bvh;
 
-    return WriteTgaImage(imgDir, s.camera.width, s.camera.height, screenBuffer) ? 0 : -1;
+    bool result = WriteTgaImage(imgDir, s.camera.width, s.camera.height, screenBuffer);
+
+    std::cout << "render time " << t.sample() << " sec" << std::endl;
+
+    return result ? 0 : -1;
 }

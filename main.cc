@@ -32,7 +32,7 @@ int main(int argc, char* argv[]){
         return -1;
     }
 
-    bool batch = true;
+    bool batch = false;
     if(batch)
         return batchRender(s, imgDir, width, height);
     else
