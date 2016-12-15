@@ -1,11 +1,10 @@
 \section{features}
-A fully interactive whitted-style raytracer with run time scene loading.
+A fully interactive whitted-style raytracer with run time scene loading. Accelerated rendering using BVH traversal.
 
 \subsection{Run time scene loader}
     \begin{enumerate}
     \item Json scene loader
         \begin{enumerate}
-        \item Spheres, planes
         \item Triangle meshes --- loaded from file, and transformed into the world (translate, rotate, scale)
         \item Point and Spot lights
         \item camera
@@ -73,10 +72,19 @@ There is a collection of test scenes, objects and materials in the data director
     \item mouse movement - rotate camera (yaw/pitch)
     \item mouse wheel - zoom in/out (changes FOV)
     \item R - reset camera view to default (possibly set from scene file)
+    \item M - Toggle barycentric smoothing
+    \item P - write screenshot image
+    \item C - print the current camera parameters
+    \item B - change BVH construction method
     \item ESC - quit
     \item 0 - view ray-traced image (default)
     \item 1 - visualise per-pixel render time (more red = more render time)
-    \item 2 - visualise surface normals (usefull for debugging and verifying smoothed normals)
+    \item 2 - visualise surface normals (useful for debugging and verifying smoothed normals)
+    \item 3 - visualise BVH leaf nodes
+    \item 4 - visualise triangles checked
+    \item 5 - visualise BVH splits traversed
+    \item 6 - visualise BVH leaves checked 
+    \item 7 - visualise BVH node index
     \end{enumerate}
 
 \section{External Packages}
