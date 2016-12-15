@@ -8,8 +8,7 @@
                 "kind" : "mesh",
                 "mesh_name" : "bunny",
                 "transform" : {
-                    "translate" : { "x" : -1, "y" : 2, "z" : -1},
-                    "rotate" : { "x" : 0, "y" : -15.00, "z" : 0.00}
+                    "translate" : { "x" : -1, "y" : 2, "z" : -1}
                 }
             },
             {
