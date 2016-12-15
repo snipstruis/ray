@@ -157,9 +157,6 @@ struct AverageSplitter {
         if(count <= 3)
             return false; // don't split
 
-        // blindly move to next axis
-        axis = (lastAxis + 1) % 3;
-
         glm::vec3 total;
         glm::vec3 min(INFINITY, INFINITY, INFINITY);
         glm::vec3 max(-INFINITY, -INFINITY, -INFINITY);
