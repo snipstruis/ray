@@ -43,7 +43,7 @@ inline std::ostream& operator<<(std::ostream& os, const FancyIntersection& i) {
     return os;
 }
 
-inline std::ostream& operator<<(std::ostream& os, const Triangle& t) {
+inline std::ostream& operator<<(std::ostream& os, const TrianglePosition& t) {
     os << "v=(0: " << t.v[0];
     os << " 1: " << t.v[1];
     os << " 2: " << t.v[2];

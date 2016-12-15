@@ -69,7 +69,7 @@ MiniIntersection traverseBVH(
             if constexpr(MODE==DIAG) diag->trianglesChecked++;
             assert(i < bvh.indicies.size());
             unsigned int triangleIndex = bvh.indicies[i];
-            Triangle const& t = prims.triangles[triangleIndex];
+            TrianglePosition const& t = prims.pos[triangleIndex];
             float distance = moller_trumbore(t, ray);
 
             if constexpr(MODE==ANY){ // if checking for any intersection whatsoever

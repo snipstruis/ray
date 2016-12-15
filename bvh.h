@@ -90,11 +90,11 @@ struct BVH {
 };
 
 // recursively check that every node fully contains its child bounds
-void sanityCheckAABBRecurse(BVH const& bvh, BVHNode const& node, TriangleSet const& triangles) {
+void sanityCheckAABBRecurse(BVH const& bvh, BVHNode const& node, TrianglePosSet const& triangles) {
     if(node.isLeaf()) {
         // ensure all triangles are inside aabb
         for(unsigned int i = node.first(); i < (node.first() + node.count); i++) {
-            Triangle const& t = triangles[bvh.indicies[i]];
+            TrianglePosition const& t = triangles[bvh.indicies[i]];
             assert(containsTriangle(node.bounds, t));
         }
     }
@@ -115,7 +115,7 @@ void sanityCheckAABBRecurse(BVH const& bvh, BVHNode const& node, TriangleSet con
 // should compile out on release builds
 // this is debug only code, it's certainly not especially efficient
 // see also sanityCheck() below for a version that automatically compiles out 
-void doSanityCheckBVH(BVH& bvh, TriangleSet const& triangles) {
+void doSanityCheckBVH(BVH& bvh, TrianglePosSet const& triangles) {
     // check triangle refs are sane
     for(std::uint32_t i : bvh.indicies) {
         assert(i < triangles.size());
@@ -169,7 +169,7 @@ void doSanityCheckBVH(BVH& bvh, TriangleSet const& triangles) {
     std::cout << "sanity check OK" <<std::endl;
 }
 
-void sanityCheckBVH(BVH& bvh, TriangleSet const& triangles) {
+void sanityCheckBVH(BVH& bvh, TrianglePosSet const& triangles) {
 #ifndef NDEBUG
     doSanityCheckBVH(bvh, triangles);
 #endif

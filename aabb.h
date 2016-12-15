@@ -32,7 +32,7 @@ inline std::ostream& operator<<(std::ostream& os, const AABB& a) {
 // find the AABB for @count triangles, starting at @start
 // uses BVH-style indirect mapping in indicies
 inline void calcAABBIndirect(AABB& result, 
-        TriangleSet const& triangles,
+        TrianglePosSet const& triangles,
         TriangleMapping const& indicies, 
         unsigned int start, 
         unsigned int count) {
@@ -47,7 +47,7 @@ inline void calcAABBIndirect(AABB& result,
     result.low[2] = result.high[2] = triangles[start].v[0][2];
 
     for(unsigned int i = start; i < (start + count); i++) {
-        Triangle const& t = triangles[indicies[i]];
+        TrianglePosition const& t = triangles[indicies[i]];
 
         for(unsigned int j = 0; j < 3; j++) {
             result.low[0] = std::min(result.low[0], t.v[j][0]);
@@ -93,7 +93,7 @@ inline bool containsAABB(AABB const& outer, AABB const& inner) {
         outer.high[2] >= inner.high[2];
 }
 
-inline bool containsTriangle(AABB const& outer, Triangle const& t) {
+inline bool containsTriangle(AABB const& outer, TrianglePosition const& t) {
     outer.sanityCheck();
     bool result = true;
 
