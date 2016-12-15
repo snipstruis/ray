@@ -168,7 +168,7 @@ struct AverageSplitter {
 
             total += centroid;
             min = glm::min(min, centroid);
-            max = glm::max(min, centroid);
+            max = glm::max(max, centroid);
         }
 
         // find greatest len axis
