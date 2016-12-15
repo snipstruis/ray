@@ -12,10 +12,20 @@
 
 #include <iostream>
 
+void setDefaults(Camera& c) {
+    c.startingOrigin = glm::vec3(0, 0, 0);
+    c.startingPitch = 0;
+    c.startingYaw = 0;
+    c.startingFov = PI/2;
+
+    c.resetView();
+}
+
 BOOST_AUTO_TEST_CASE(camera_setup_zero)
 {
     // all defaults
     Camera c;
+    setDefaults(c);
     
     BOOST_CHECK(VEC3_EQ(c.origin, glm::vec3(0, 0, 0)));
     BOOST_CHECK(VEC3_EQ(c.top_left, glm::vec3(-1, 1, 1)));
@@ -26,6 +36,8 @@ BOOST_AUTO_TEST_CASE(camera_setup_zero)
 BOOST_AUTO_TEST_CASE(camera_setup_45fov)
 {
     Camera c;
+    setDefaults(c);
+
     c.fov = PI/3;
     c.buildCamera();
     
@@ -41,6 +53,8 @@ BOOST_AUTO_TEST_CASE(camera_setup_45fov)
 BOOST_AUTO_TEST_CASE(camera_rotation_yaw)
 {
     Camera c;
+    setDefaults(c);
+
     c.yaw = PI/2;
     c.buildCamera();
 
@@ -53,6 +67,8 @@ BOOST_AUTO_TEST_CASE(camera_rotation_yaw)
 BOOST_AUTO_TEST_CASE(camera_rotation_pitch)
 {
     Camera c;
+    setDefaults(c);
+
     c.pitch = -PI/2;
     c.buildCamera();
 
