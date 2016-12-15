@@ -80,21 +80,13 @@ void subdivide(
             i++;
         }
         // i now points at the first elem of the right group
-        std::cout << " i " << i;
-        std::cout << " j " << j;
         unsigned int leftCount = i - start;
         unsigned int rightCount = start + count - i;
         unsigned int rightStart = i;
         
-        std::cout << std::endl;
-        if(count < 10) {
-            for(unsigned int k = start; k < (start +count); k++) {
-                std::cout << triangles[bvh.indicies[k]].getCentroid()[splitAxis] << " ";
-            }
-        }
-        std::cout << std::endl;
         std::cout << " leftcount " << leftCount << " rightCount " << rightCount << " rightStart " << rightStart;
         std::cout<<std::endl;
+
         assert(leftCount > 0);
         assert(rightCount > 0);
         assert(leftCount + rightCount == count);
@@ -211,7 +203,7 @@ inline BVH* buildMedianBVH(Scene& s) {
 }
 
 inline BVH* buildBVH(Scene& s, BVHMethod method) {
-    BVH* bvh;
+    BVH* bvh = nullptr;
 
     switch(method) {
         case BVHMethod_STUPID: bvh = buildStupidBVH(s); break;
