@@ -9,7 +9,8 @@
 #include <vector>
 
 struct Mesh {
-    std::vector<Triangle> triangles;
+    TriangleSet triangles;
+    TrianglePosSet pos;
 };
 
 typedef std::map<std::string, Mesh> MeshMap;

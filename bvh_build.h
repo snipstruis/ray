@@ -19,7 +19,7 @@ const char* BVHMethodStr(BVHMethod m) {
 
 template <class Splitter>
 void subdivide(
-        TriangleSet const& triangles, 
+        TrianglePosSet const& triangles, 
         BVH& bvh, 
         BVHNode& node, 
         unsigned int start, 
@@ -120,7 +120,7 @@ inline BVH* buildBVH(Scene& s) {
         bvh->indicies[i] = i;
 
     // recurse and subdivide
-    subdivide<Splitter>(s.primitives.triangles, *bvh, bvh->root(), 0, s.primitives.triangles.size(), 2);
+    subdivide<Splitter>(s.primitives.pos, *bvh, bvh->root(), 0, s.primitives.triangles.size(), 2);
     return bvh;
 }
 
@@ -131,7 +131,7 @@ struct StupidSplitter {
     static bool GetSplit(
             unsigned int& axis,             // out: axis on which to split
             float& splitPoint,              // out: point on this axis at which to split
-            TriangleSet const& triangles,   // in: master triangle array
+            TrianglePosSet const& triangles,   // in: master triangle array
             BVH& bvh,                       // in: BVH root 
             BVHNode& node,                  // in: current bvh node (to split)
             std::uint32_t start,            // in: start index in triangle array
@@ -156,7 +156,7 @@ struct AverageSplitter {
     static bool GetSplit(
             unsigned int& axis,             
             float& splitPoint,              
-            TriangleSet const& triangles,   
+            TrianglePosSet const& triangles,   
             BVH& bvh,                       
             BVHNode& node,                  
             std::uint32_t start,            
@@ -174,7 +174,7 @@ struct AverageSplitter {
 
         for (std::uint32_t i = start; i < (start + count) ; i++) {
             unsigned int index = bvh.indicies[i];
-            Triangle const& t = triangles[index];
+            TrianglePosition const& t = triangles[index];
             auto centroid = t.getCentroid();
 
             total += centroid;
@@ -223,7 +223,7 @@ inline BVH* buildBVH(Scene& s, BVHMethod method) {
     std::cout << "triangle count " << s.primitives.triangles.size() << std::endl;
     std::cout << "root AABB " << bvh->root().bounds << std::endl;
 
-    sanityCheckBVH(*bvh, s.primitives.triangles);
+    sanityCheckBVH(*bvh, s.primitives.pos);
 
     return bvh;
 }

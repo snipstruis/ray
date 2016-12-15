@@ -175,9 +175,8 @@ Mesh loadMesh(Scene& s, std::string const& filename){
             auto n2 = makeVec3FromNormals(attrib, shape.mesh.indices[base + 1].normal_index);
             auto n3 = makeVec3FromNormals(attrib, shape.mesh.indices[base + 2].normal_index);
 
-            Triangle t(v1, v2, v3, n1, n2, n3, globalMatID);
-
-            mesh.triangles.emplace_back(t);
+            mesh.pos.emplace_back(v1,v2,v3);
+            mesh.triangles.emplace_back(n1,n2,n3,globalMatID);
         }
     }
 
@@ -202,22 +201,19 @@ void transformMeshIntoScene(Scene& s,
         glm::mat4x4 const& nTransform) {
 
     for(auto const& mt : mesh.triangles) {
-        Triangle t(
-            // verticies
-            transformV3(mt.v[0], vTransform), 
-            transformV3(mt.v[1], vTransform), 
-            transformV3(mt.v[2], vTransform), 
+        s.primitives.triangles.emplace_back(
             // normals
             glm::normalize(transformV3(mt.n[0], nTransform)), 
             glm::normalize(transformV3(mt.n[1], nTransform)), 
             glm::normalize(transformV3(mt.n[2], nTransform)), 
             mt.mat);
+    }
 
-//        std::cout << "MT " << mt <<std::endl;
-//        std::cout << "T " << t <<std::endl;
-//        std::cout << std::endl;
-
-        s.primitives.triangles.emplace_back(t);
+    for(auto const& mt : mesh.pos){
+        s.primitives.pos.emplace_back(
+            transformV3(mt.v[0], vTransform), 
+            transformV3(mt.v[1], vTransform), 
+            transformV3(mt.v[2], vTransform));
     }
 }
 
