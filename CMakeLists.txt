@@ -81,12 +81,15 @@ message(STATUS "image output dir ${IMG_OUTPUT_DIR}")
 # note that it will start this with the wd set to source, so it can find any test objects
 
 macro(add_scene key scenefile)
-    set(N "run-ray-${key}") 
-
-    #    message(STATUS "adding target ${N} for scenefile ${scenefile}")
-
-    add_custom_target(${N}
+    add_custom_target("run-ray-${key}"
         COMMAND ray ${scenefile} ${IMG_OUTPUT_DIR}
+        DEPENDS ray 
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/data
+        USES_TERMINAL
+        )
+
+    add_custom_target("batch-ray-${key}"
+        COMMAND ray --batch ${scenefile} ${IMG_OUTPUT_DIR}
         DEPENDS ray 
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/data
         USES_TERMINAL

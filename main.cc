@@ -1,8 +1,13 @@
 
 #include "interactive.h"
+#include "batch.h"
 
 #include <string>
 #include <iostream>
+
+// default width/height
+int width = 640;
+int height = 640;
 
 int main(int argc, char* argv[]){
 
@@ -27,5 +32,9 @@ int main(int argc, char* argv[]){
         return -1;
     }
 
-    return interactiveLoop(s, imgDir);
+    bool batch = true;
+    if(batch)
+        return batchRender(s, imgDir, width, height);
+    else
+        return interactiveLoop(s, imgDir, width, height);
 }
