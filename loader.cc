@@ -19,9 +19,9 @@ using json = nlohmann::json;
 
 glm::vec3 readXYZ(json const& o) {
     glm::vec3 res;
-    res[0] = o["x"];
-    res[1] = o["y"];
-    res[2] = o["z"];
+    res.x = o["x"];
+    res.y = o["y"];
+    res.z = o["z"];
     return res;
 }
 
@@ -78,25 +78,52 @@ glm::mat4 handleTransform(json const& o, bool rotateOnly) {
 // this function grabs 3 consecutive points and builds a vec3
 // index is the tuple number - ie index 2 starts at array index 6
 glm::vec3 makeVec3FromVerticies(tinyobj::attrib_t const& attrib, int index) {
+    assert(index >= 0);
     int i = index * 3;
-    glm::vec3 result(attrib.vertices[i], attrib.vertices[i + 1], attrib.vertices[i + 2]);
-    return result;
+    return glm::vec3(attrib.vertices[i], attrib.vertices[i + 1], attrib.vertices[i + 2]);
 }
 
 glm::vec3 makeVec3FromNormals(tinyobj::attrib_t const& attrib, int index) {
-    // apparently index can go <0, which I guess means no normal
-    if(index < 0){
-        std::cout << "warning: missing normal " << std::endl;
-        return glm::vec3(0,0,0);
-    }
-
+    assert(index >= 0);
     int i = index * 3;
-    glm::vec3 result(attrib.normals[i], attrib.normals[i + 1], attrib.normals[i + 2]);
-    return result;
+    return glm::vec3(attrib.normals[i], attrib.normals[i + 1], attrib.normals[i + 2]);
+}
+
+TrianglePosition BuildTrianglePos(tinyobj::attrib_t const& attrib, tinyobj::shape_t const& shape, int base) {
+    return TrianglePosition(
+        makeVec3FromVerticies(attrib, shape.mesh.indices[base].vertex_index),
+        makeVec3FromVerticies(attrib, shape.mesh.indices[base + 1].vertex_index),
+        makeVec3FromVerticies(attrib, shape.mesh.indices[base + 2].vertex_index));
+}
+
+// build the non-vertex parts of a triangle. requires a TrianglePos in case it needs to calculate its own normals
+Triangle BuildTriangle(
+        TrianglePosition const& pos,
+        tinyobj::attrib_t const& attrib, 
+        tinyobj::shape_t const& shape, 
+        int base, 
+        int globalMatID) {
+
+    int i1 = shape.mesh.indices[base].normal_index;
+    int i2 = shape.mesh.indices[base + 1].normal_index;
+    int i3 = shape.mesh.indices[base + 2].normal_index;
+    // if normals are missing in the input file, we'll get a -1 here 
+    if(i1 < 0 || i2 < 0 || i3 < 0) {
+        // we'll generate our own normals then.. With blackjack.. in fact, forget the normals.
+        std::cout << "WARNING: missing normal" << std::endl;
+        glm::vec3 n = glm::normalize(glm::cross(pos.v[1] - pos.v[0], pos.v[2] - pos.v[0]));
+        return Triangle(n, n, n, globalMatID);
+    } else {
+        return Triangle(
+            makeVec3FromNormals(attrib, i1),
+            makeVec3FromNormals(attrib, i2),
+            makeVec3FromNormals(attrib, i3),
+            globalMatID
+            );
+    }
 }
 
 int createMaterial(Scene& s, tinyobj::material_t const& m){
-
     // create a new mat on the back of the existing array.
     s.primitives.materials.emplace_back(
             Color(m.diffuse[0], m.diffuse[1], m.diffuse[2]), // diffuse color
@@ -115,21 +142,22 @@ int createMaterial(Scene& s, tinyobj::material_t const& m){
 }
 
 Mesh loadMesh(Scene& s, std::string const& filename){
+    std::cout << "loading mesh " << filename << std::endl;
+
     std::string err;
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
 
-    std::cout << "loading " << filename << std::endl;
-
     bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, filename.c_str());
     if(!ret) {
         std::stringstream ss;
-        ss << "ERROR loading object - " << err;
+        ss << "ERROR loading mesh - " << err;
         throw std::runtime_error(ss.str());
     }
         
     std::cout << "material count " << materials.size() << std::endl;
+
     Mesh mesh;
 
     // we need to map local to global material number - track that here. 
@@ -167,16 +195,11 @@ Mesh loadMesh(Scene& s, std::string const& filename){
                     globalMatID = it->second;
                 }
             }
+            // the array indicies of mesh.pos & mesh.triangles must line up - be careful here.
+            assert(mesh.pos.size() == mesh.triangles.size());
 
-            auto v1 = makeVec3FromVerticies(attrib, shape.mesh.indices[base].vertex_index);
-            auto v2 = makeVec3FromVerticies(attrib, shape.mesh.indices[base + 1].vertex_index);
-            auto v3 = makeVec3FromVerticies(attrib, shape.mesh.indices[base + 2].vertex_index);
-            auto n1 = makeVec3FromNormals(attrib, shape.mesh.indices[base].normal_index);
-            auto n2 = makeVec3FromNormals(attrib, shape.mesh.indices[base + 1].normal_index);
-            auto n3 = makeVec3FromNormals(attrib, shape.mesh.indices[base + 2].normal_index);
-
-            mesh.pos.emplace_back(v1,v2,v3);
-            mesh.triangles.emplace_back(n1,n2,n3,globalMatID);
+            mesh.pos.push_back(BuildTrianglePos(attrib, shape, base));
+            mesh.triangles.push_back(BuildTriangle(mesh.pos.back(), attrib, shape, base, globalMatID));
         }
     }
 
@@ -345,6 +368,7 @@ bool setupScene(Scene& s, std::string const& filename)
     return true;
 }
 
+// print camera in a form suitable for pasting in the scene file
 void printCamera(Camera const& c) {
     json origin;
     origin["x"] = c.origin[0];
