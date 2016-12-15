@@ -167,9 +167,8 @@ struct AverageSplitter {
             auto centroid = t.getCentroid();
 
             total += centroid;
-            // FIXME: is there a glm func to do this (glm::min/max return the whole vec, not piecewise)
-            min = glm::vec3(std::min(min.x,centroid.x), std::min(min.y,centroid.y),std::min(min.z,centroid.z));
-            max = glm::vec3(std::max(max.x,centroid.x), std::max(max.y,centroid.y),std::max(max.z,centroid.z));
+            min = glm::min(min, centroid);
+            max = glm::max(min, centroid);
         }
 
         // find greatest len axis
