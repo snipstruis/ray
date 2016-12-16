@@ -79,7 +79,7 @@ void subdivide(
             // .. we could miss triangles here
             if(valMin <= leftMax)
                 leftIndicies.push_back(idx);
-            if(valMax => rightMin)
+            if(valMax >= rightMin)
                 rightIndicies.push_back(idx);
         }
 

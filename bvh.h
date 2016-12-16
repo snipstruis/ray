@@ -158,8 +158,11 @@ void doSanityCheckBVH(BVH& bvh, TrianglePosSet const& triangles) {
                 assert(node.leftFirst < bvh.nodeCount() + 2);
             }
         }
-        // if this blows up, there are some triangles not accounted for in the BVH
-        assert(triangleCount == triangles.size());
+        // triangles can be accounted for than once in the bvh. This assert will blow if there's 
+        // some missing. but it's no longer actually sufficient. A triangle could be missing all together and
+        // another double-counted, and this wouldn't find it. Really need to walk the triangle array, and 
+        // search the BVH for every triangle
+        assert(triangleCount >= triangles.size());
         std::cout << "bvh triangle count " << triangleCount << " triangles " << triangles.size() << std::endl;
     }
 
