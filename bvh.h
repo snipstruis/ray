@@ -53,8 +53,9 @@ struct BVH {
     } 
 
     BVH(unsigned int triangleCount) : nextFree(2) {
-        nodes.resize(triangleCount* 2); 
-        indicies.resize(triangleCount);
+        // FIXME:should we be smarter here?
+        nodes.resize(triangleCount* 3); 
+        //indicies.resize(triangleCount);
     } 
 
     BVHNode const& getNode(unsigned int index) const {

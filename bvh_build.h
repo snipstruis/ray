@@ -24,27 +24,28 @@ void subdivide(
         TrianglePosSet const& triangles, 
         BVH& bvh, 
         BVHNode& node, 
-        unsigned int start, 
-        unsigned int count, 
+        TriangleMapping const& fromIndicies,
         unsigned int lastAxis) {
     
-    assert(count > 0);
-    assert(start + count <= bvh.indicies.size());
-
+    assert(fromIndicies.size() > 0);
     // out params for the splitter. Note they are only defined if shouldSplit == true
     unsigned int splitAxis; 
     float leftMax, rightMin;
 
-    bool shouldSplit=Splitter::GetSplit(triangles, bvh, node, start, count, lastAxis, splitAxis, leftMax, rightMin);
+    bool shouldSplit=Splitter::GetSplit(triangles, bvh, node, fromIndicies, lastAxis, splitAxis, leftMax, rightMin);
 
     // are we creating a leaf?
     if(!shouldSplit) {
         // ok, leafy time.
-        //std::cout << "subdivide leaf start " << start << " count " << count << " axis " << axis <<std::endl;;
-        node.leftFirst = start;
 
+        // we're going to append the indicies to the central array, and just remember the start+count in this node. 
+        node.leftFirst = bvh.indicies.size();
         // give this node a count, which by definition makes it a leaf
-        node.count = count;
+        node.count = fromIndicies.size();
+        // glue our index set on the back...
+        for(unsigned int idx : fromIndicies) 
+            bvh.indicies.push_back(idx);
+
         assert(node.isLeaf());
         assert(node.leftFirst == node.first());
 
@@ -55,7 +56,7 @@ void subdivide(
        
         // we can't split a single triangle - shouldn't have recursed this far.
         // it's arguable we should have never gotten this deep (3's a good limit)
-        assert(count > 1);
+        assert(fromIndicies.size() > 1);
         assert(splitAxis < 3);
 
         // alloc child nodes
@@ -63,44 +64,43 @@ void subdivide(
         BVHNode& left = bvh.allocNextNode();
         BVHNode& right = bvh.allocNextNode();
 
-        std::cout << "subdiv start " << start << " count " << count << " axis " << splitAxis; 
-        std::cout<< " leftMax" << leftMax << " rightMin " << rightMin;
+        std::cout << "subdiv total count "<< fromIndicies.size() << " axis " << splitAxis; 
+        std::cout<< " leftMax " << leftMax << " rightMin " << rightMin << std::endl;
 
-        // partition elements around the splitValue
-        int i = start;
-        int j = start + count - 1;
-
-#if 0
-        while (i < j) {
-            if(triangles[bvh.indicies[i]].getCentroid()[splitAxis] < splitValue) {
-                i++;
-                continue;
-            }
-            if(!(triangles[bvh.indicies[j]].getCentroid()[splitAxis] < splitValue)) {
-                j--;
-                continue;
-            }
-            std::swap(bvh.indicies[i], bvh.indicies[j]);
-            i++;
+        // walk the index array, build left and right sides.
+        TriangleMapping leftIndicies, rightIndicies;
+        for(unsigned int i = 0; i < fromIndicies.size(); i++) {
+            unsigned int idx = fromIndicies[i];
+            float valMin = triangles[idx].getMinCoord(splitAxis);
+            float valMax = triangles[idx].getMaxCoord(splitAxis);
+            
+            std::cout << "idx " << idx;
+            std::cout << " valMin " << valMin << " valMax " << valMax;
+            std::cout << " leftMax " << leftMax << " rightMin " << rightMin << std::endl;;
+            // FIXME: beware of >= or <= cases (hairy with floats)
+            // .. we could miss triangles here
+            if(valMin < leftMax)
+                leftIndicies.push_back(idx);
+            if(valMax > rightMin)
+                rightIndicies.push_back(idx);
         }
-#endif
-        // i now points at the first elem of the right group
-        unsigned int leftCount = i - start;
-        unsigned int rightCount = start + count - i;
-        unsigned int rightStart = i;
-        
-        std::cout << " leftcount " << leftCount << " rightCount " << rightCount << " rightStart " << rightStart;
-        std::cout<<std::endl;
 
-        assert(leftCount > 0);
-        assert(rightCount > 0);
-        assert(leftCount + rightCount == count);
-        assert(rightStart > start);
-        assert(rightStart + rightCount == start + count);
-        
+        std::cout << " leftcount " << leftIndicies.size();
+        std::cout << " rightCount " << rightIndicies.size() ;
+        std::cout << std::endl;
+
+        // if either of these fire, we've not 'split', we've put all the triangles on one side
+        // (in which case, it's either a bad split value, or we should have created a leaf)
+        assert(leftIndicies.size() > 0);
+        assert(rightIndicies.size() > 0);
+
+        // left and right can't contain more triangles than we were supplied with
+        assert(leftIndicies.size() <= fromIndicies.size());
+        assert(rightIndicies.size() <= fromIndicies.size());
+
         // recurse
-        subdivide<Splitter>(triangles, bvh, left, start, leftCount, splitAxis);
-        subdivide<Splitter>(triangles, bvh, right, rightStart, rightCount, splitAxis);
+        subdivide<Splitter>(triangles, bvh, left, leftIndicies, splitAxis);
+        subdivide<Splitter>(triangles, bvh, right, rightIndicies, splitAxis);
 
         // now subdivide's done, combine aabb 
         combineAABB(node.bounds, left.bounds, right.bounds);
@@ -114,10 +114,10 @@ inline BVH* buildBVH(Scene& s) {
     // setup "from" index map
     TriangleMapping indicies(s.primitives.triangles.size());
     for (unsigned int i = 0; i < s.primitives.triangles.size(); i++)
-        bvh->indicies[i] = i;
+        indicies[i] = i;
 
     // recurse and subdivide
-    subdivide<Splitter>(s.primitives.pos, *bvh, bvh->root(), 0, s.primitives.triangles.size(), 2);
+    subdivide<Splitter>(s.primitives.pos, *bvh, bvh->root(), indicies, 2);
     return bvh;
 }
 
@@ -129,8 +129,7 @@ struct StupidSplitter {
             TrianglePosSet const& triangles,// in: master triangle array
             BVH& bvh,                       // in: BVH root 
             BVHNode& node,                  // in: current bvh node (to split)
-            std::uint32_t start,            // in: start index in triangle array
-            std::uint32_t count,            // in: num triangles (ie start+count <= triangles.size())
+            TriangleMapping const& indicies,// in: set of triangle indicies to split 
             unsigned int lastAxis,          // in: the axis on which the parent was split
             unsigned int& axis,             // out: axis on which to split
             float& leftMax,                 // out: max point to include in left set 
@@ -155,21 +154,20 @@ struct AverageSplitter {
             TrianglePosSet const& triangles,   
             BVH& bvh,                       
             BVHNode& node,                  
-            std::uint32_t start,            
-            std::uint32_t count,            
+            TriangleMapping const& indicies,
             unsigned int lastAxis,
             unsigned int& axis,             
             float& leftMax, 
             float& rightMin) {   
-        if(count <= 3)
+        if(indicies.size() <= 3)
             return false; // don't split
 
         glm::vec3 total;
         glm::vec3 min(INFINITY, INFINITY, INFINITY);
         glm::vec3 max(-INFINITY, -INFINITY, -INFINITY);
 
-        for (std::uint32_t i = start; i < (start + count) ; i++) {
-            unsigned int index = bvh.indicies[i];
+        for (unsigned int i = 0; i < indicies.size() ; i++) {
+            unsigned int index = indicies[i];
             TrianglePosition const& t = triangles[index];
             auto centroid = t.getCentroid();
 
@@ -193,7 +191,7 @@ struct AverageSplitter {
         std::cout << " min " << min << " max " << max<< std::endl;
         std::cout << " lengths " << lengths << " total " << total << std::endl;
         // and return the average of the greatest axis..
-        leftMax = rightMin = total[axis] * (1.0f/count);
+        leftMax = rightMin = total[axis] * (1.0f/indicies.size());
 
         return true; // do split
     }
@@ -212,13 +210,12 @@ struct SAHSplitter{
             TrianglePosSet const& triangles,   
             BVH& bvh,                       
             BVHNode& node,                  
-            std::uint32_t start,            
-            std::uint32_t count,            
+            TriangleMapping const& indicies,
             unsigned int lastAxis,
             unsigned int& axis,             
             float& leftMax, 
             float& rightMin) {   
-        if(count <= 3)
+        if(indicies.size() <= 3)
             return false;
 
         // size of the aabb
@@ -237,7 +234,7 @@ struct SAHSplitter{
             // we keep a running total of the size of the left and right bounding box
             AABB left = {{INFINITY,INFINITY,INFINITY},{-INFINITY,-INFINITY,-INFINITY}};
             AABB right= {{INFINITY,INFINITY,INFINITY},{-INFINITY,-INFINITY,-INFINITY}};
-            for(int t = start; t<(start+count); t++){ // for each triangle
+            for(unsigned int t = 0; t<indicies.size(); t++){ // for each triangle
                 unsigned int index = bvh.indicies[t];
                 for(int v=0; v<3; v++){ // for each vertex
                     auto const& p = triangles[index].v[v];
