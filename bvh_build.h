@@ -111,8 +111,8 @@ template<class Splitter>
 inline BVH* buildBVH(Scene& s) {
     BVH* bvh = new BVH(s.primitives.triangles.size());
 
-    // setup index map. bvh constructor should have resized indicies
-    assert(bvh->indicies.size() >= s.primitives.triangles.size());
+    // setup "from" index map
+    TriangleMapping indicies(s.primitives.triangles.size());
     for (unsigned int i = 0; i < s.primitives.triangles.size(); i++)
         bvh->indicies[i] = i;
 
