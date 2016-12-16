@@ -77,9 +77,9 @@ void subdivide(
             std::cout << " leftMax " << leftMax << " rightMin " << rightMin << std::endl;;
             // FIXME: beware of >= or <= cases (hairy with floats)
             // .. we could miss triangles here
-            if(valMin <= leftMax)
+            if(valMax <= leftMax)
                 leftIndicies.push_back(idx);
-            if(valMax >= rightMin)
+            if(valMin >= rightMin)
                 rightIndicies.push_back(idx);
         }
 
@@ -159,9 +159,6 @@ struct SAHSplitter{
             unsigned int& splitAxis,             
             float& leftMax, 
             float& rightMin) {   
-        if(indicies.size() <= 3)
-            return false;
-
         // size of the aabb
         glm::vec3 diff = node.bounds.high - node.bounds.low;
 
@@ -175,7 +172,7 @@ struct SAHSplitter{
             AABB right= {{INFINITY,INFINITY,INFINITY},{-INFINITY,-INFINITY,-INFINITY}};
             float triangles_in_left  = 0;
             float triangles_in_right = 0;
-            for(unsigned int t = 0; t<indicies.size(); t++){ // for each triangle
+            for(int t = node.first(); t<(node.first()+node.count); t++){ // for each triangle
                 TrianglePosition const& triangle = triangles[indicies[t]];
                 // find out if the triangle belongs to left, right or both ...
                 bool in_left = false;
@@ -213,9 +210,8 @@ struct SAHSplitter{
                 if((al*triangles_in_left + ar*triangles_in_right)<(area*triangle_count)){
                     // we should split, set all the output variables
                     split_good_enough = true;
-                    float lowSplit = fmin(left.low[axis], right.low[axis]);
-                    float highSplit= fmax(left.high[axis],right.high[axis]);
-                    leftMax = rightMin = trySplitPoint; // write to OUT
+                    leftMax  = fmax(left.low[axis], right.low[axis]);
+                    rightMin = fmin(left.high[axis],right.high[axis]);
                     splitAxis  = axis;
                 }
             }
