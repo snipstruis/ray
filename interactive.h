@@ -137,7 +137,7 @@ int interactiveLoop(Scene& s, std::string const& imgDir) {
     Mode mode=Mode::Default;
     float vis_scale = 1.f;
 
-    BVHMethod bvhMethod = BVHMethod_STUPID;
+    BVHMethod bvhMethod = BVHMethod_SAH;
     BVH* bvh = buildBVH(s, bvhMethod);
 
     while(true){

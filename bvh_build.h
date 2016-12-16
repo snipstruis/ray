@@ -26,11 +26,15 @@ void subdivide(
         unsigned int lastAxis) {
     
     assert(fromIndicies.size() > 0);
+
+    // the set of triangles in this node is already known, so calculate the bounds now before calling the
+    calcAABBIndirect(node.bounds, triangles, fromIndicies, 0, fromIndicies.size());
+
     // out params for the splitter. Note they are only defined if shouldSplit == true
     unsigned int splitAxis; 
     float leftMax, rightMin;
 
-    bool shouldSplit = Splitter::GetSplit(triangles, node, fromIndicies, lastAxis, splitAxis, leftMax, rightMin);
+    bool shouldSplit=Splitter::GetSplit(triangles, fromIndicies, node.bounds, lastAxis, splitAxis, leftMax,rightMin);
 
     // are we creating a leaf?
     if(!shouldSplit) {
@@ -47,7 +51,6 @@ void subdivide(
         assert(node.isLeaf());
         assert(node.leftFirst == node.first());
 
-        calcAABBIndirect(node.bounds, triangles, bvh.indicies, node.first(), node.count);
         std::cout << "leaf AABB " << node.bounds << " count " << node.count << std::endl;
     } else {
         // not creating a leaf, we're splitting - create a subdivision
@@ -104,8 +107,8 @@ void subdivide(
         subdivide<Splitter>(triangles, bvh, left, leftIndicies, splitAxis);
         subdivide<Splitter>(triangles, bvh, right, rightIndicies, splitAxis);
 
-        // now subdivide's done, combine aabb 
-        combineAABB(node.bounds, left.bounds, right.bounds);
+        // now the child node should be set up, its indicies should 
+        // be valid
     }
 }
 
@@ -129,8 +132,8 @@ inline BVH* buildBVH(Scene& s) {
 struct StupidSplitter {
     static bool GetSplit(
             TrianglePosSet const& triangles,// in: master triangle array
-            BVHNode& node,                  // in: current bvh node (to split)
             TriangleMapping const& indicies,// in: set of triangle indicies to split 
+            AABB const& bounds,             // in: bounds of this set of triangles
             unsigned int lastAxis,          // in: the axis on which the parent was split
             unsigned int& axis,             // out: axis on which to split
             float& leftMax,                 // out: max point to include in left set 
@@ -154,26 +157,26 @@ inline BVH* buildStupidBVH(Scene& s) {
 struct SAHSplitter{
     static bool GetSplit(
             TrianglePosSet const& triangles,   
-            BVHNode& node,                  
             TriangleMapping const& indicies,
+            AABB const& bounds,
             unsigned int lastAxis,
             unsigned int& splitAxis,             
             float& leftMax, 
             float& rightMin) {   
         // size of the aabb
-        glm::vec3 diff = node.bounds.high - node.bounds.low;
+        glm::vec3 diff = bounds.high - bounds.low;
 
         // try a few places to split and find the one resulting in the smallest area
         float smallest_area_so_far = INFINITY;
         bool split_good_enough = false;
         for(int axis=0; axis<3; axis++) for(int split=1; split<8; split++){
-            float trySplitPoint = node.bounds.low[axis] + (split*(diff[axis]/8.f));
+            float trySplitPoint = bounds.low[axis] + (split*(diff[axis]/8.f));
             // we keep a running total of the size of the left and right bounding box
             AABB left = {{INFINITY,INFINITY,INFINITY},{-INFINITY,-INFINITY,-INFINITY}};
             AABB right= {{INFINITY,INFINITY,INFINITY},{-INFINITY,-INFINITY,-INFINITY}};
             float triangles_in_left  = 0;
             float triangles_in_right = 0;
-            for(int t = node.first(); t<(node.first()+node.count); t++){ // for each triangle
+            for(int t = 0; t < indicies.size(); t++){ // for each triangle
                 TrianglePosition const& triangle = triangles[indicies[t]];
                 // find out if the triangle belongs to left, right or both ...
                 bool in_left = false;
