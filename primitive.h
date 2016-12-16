@@ -21,6 +21,18 @@ struct TrianglePosition{
             (v[0][2] + v[1][2] + v[2][2]) / 3.0f); // z
     }
 
+    // for a given axis, return the minimum vertex coordinate
+    float getMinCoord(unsigned int axis) const {
+        assert(axis < 3);
+        return std::min(v[0][axis], std::min(v[1][axis], v[2][axis]));
+    }
+
+    // for a given axis, return the max vertex coordinate
+    float getMaxCoord(unsigned int axis) const {
+        assert(axis < 3);
+        return std::max(v[0][axis], std::max(v[1][axis], v[2][axis]));
+    }
+
     glm::vec3 v[3];
 };
 

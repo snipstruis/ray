@@ -15,33 +15,33 @@
 // BVHNode
 struct BVHNode {
     BVHNode(): leftFirst(0), count(0) {}
-    BVHNode(std::uint32_t _leftFirst, std::uint32_t _count): leftFirst(_leftFirst), count(_count) {}
+    BVHNode(unsigned int _leftFirst, unsigned int _count): leftFirst(_leftFirst), count(_count) {}
 
     bool isLeaf() const {
         return count > 0;
     }
 
     // only valid for non-leaves
-    std::uint32_t leftIndex() const {
+    unsigned int leftIndex() const {
         assert(!isLeaf());
         return leftFirst;
     }
 
     // only valid for non-leaves
-    std::uint32_t rightIndex() const {
+    unsigned int rightIndex() const {
         assert(!isLeaf());
         return leftFirst + 1;
     }
 
     // only valid for leaves
-    std::uint32_t first() const {
+    unsigned int first() const {
         assert(isLeaf());
         return leftFirst;
     }
 
     AABB bounds;
-    std::uint32_t leftFirst;
-    std::uint32_t count;
+    unsigned int leftFirst;
+    unsigned int count;
 };
 
 // check sizes are as expected - prevent accidental cache performance degredation
@@ -53,8 +53,9 @@ struct BVH {
     } 
 
     BVH(unsigned int triangleCount) : nextFree(2) {
-        nodes.resize(triangleCount* 2); 
-        indicies.resize(triangleCount);
+        // FIXME:should we be smarter here?
+        nodes.resize(triangleCount* 3); 
+        //indicies.resize(triangleCount);
     } 
 
     BVHNode const& getNode(unsigned int index) const {
@@ -79,14 +80,14 @@ struct BVH {
         return nodes[nextFree++];
     }
 
-    std::uint32_t nodeCount() const {
+    unsigned int nodeCount() const {
         assert(nextFree >= 2);
         return nextFree - 1; // includes root node, but skips the empty 1 node
     }
 
     std::vector<BVHNode> nodes;
     TriangleMapping indicies;
-    std::uint32_t nextFree;
+    unsigned int nextFree;
 };
 
 // recursively check that every node fully contains its child bounds
@@ -117,12 +118,12 @@ void sanityCheckAABBRecurse(BVH const& bvh, BVHNode const& node, TrianglePosSet 
 // see also sanityCheck() below for a version that automatically compiles out 
 void doSanityCheckBVH(BVH& bvh, TrianglePosSet const& triangles) {
     // check triangle refs are sane
-    for(std::uint32_t i : bvh.indicies) {
+    for(unsigned int i : bvh.indicies) {
         assert(i < triangles.size());
         
         // check uniqueness
         bool found = false;
-        for(std::uint32_t j : bvh.indicies) {
+        for(unsigned int j : bvh.indicies) {
             if(found) {
                 assert(j != i);
             } 
@@ -144,7 +145,7 @@ void doSanityCheckBVH(BVH& bvh, TrianglePosSet const& triangles) {
 
         unsigned int triangleCount = 0;
         // walk nodes
-        for(std::uint32_t i = 2; i < bvh.nodeCount() + 1; i++) {
+        for(unsigned int i = 2; i < bvh.nodeCount() + 1; i++) {
             auto const& node = bvh.getNode(i);
 
             if(node.isLeaf()) {

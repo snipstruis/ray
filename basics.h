@@ -13,7 +13,7 @@ struct Color;
 typedef std::vector<Color> ScreenBuffer;
 
 // indirect mapping into the triangle array(s). used in bvh (et al)
-typedef std::vector<std::uint32_t> TriangleMapping;
+typedef std::vector<unsigned int> TriangleMapping;
 
 const int STARTING_TTL = 10; // probably should be configurable or dynamically calculated
 
