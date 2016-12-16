@@ -6,6 +6,7 @@
 enum BVHMethod {
     BVHMethod_STUPID,
     BVHMethod_MEDIAN,
+    BVHMethod_SAH,
     __BVHMethod_MAX
 };
 
@@ -13,6 +14,7 @@ const char* BVHMethodStr(BVHMethod m) {
     switch(m) {
         case BVHMethod_STUPID: return "STUPID";
         case BVHMethod_MEDIAN: return "MEDIAN";
+        case BVHMethod_SAH:    return "SAH";
         case __BVHMethod_MAX: return "shouldnt happen";
     };
 }
@@ -33,7 +35,7 @@ void subdivide(
     unsigned int splitAxis; 
     float splitValue;
 
-    bool shouldSplit = Splitter::GetSplit(splitAxis, splitValue, triangles, bvh, node, start, count, lastAxis);
+    bool shouldSplit = Splitter::GetSplit(triangles, bvh, node, start, count, lastAxis, splitAxis, splitValue);
 
     // are we creating a leaf?
     if(!shouldSplit) {
@@ -121,14 +123,14 @@ inline BVH* buildBVH(Scene& s) {
 // Useful for testing worst case scenarios, or feeling bad about yourself.
 struct StupidSplitter {
     static bool GetSplit(
-            unsigned int& axis,             // out: axis on which to split
-            float& splitPoint,              // out: point on this axis at which to split
-            TrianglePosSet const& triangles,   // in: master triangle array
+            TrianglePosSet const& triangles,// in: master triangle array
             BVH& bvh,                       // in: BVH root 
             BVHNode& node,                  // in: current bvh node (to split)
             std::uint32_t start,            // in: start index in triangle array
             std::uint32_t count,            // in: num triangles (ie start+count <= triangles.size())
-            unsigned int lastAxis) {        // in: the axis on which the parent was split
+            unsigned int lastAxis,          // in: the axis on which the parent was split
+            unsigned int& axis,             // out: axis on which to split
+            float& splitPoint){             // out: point on this axis at which to split
 
         return false; // stop splitting
     }
@@ -146,14 +148,14 @@ inline BVH* buildStupidBVH(Scene& s) {
 
 struct AverageSplitter {
     static bool GetSplit(
-            unsigned int& axis,             
-            float& splitPoint,              
             TrianglePosSet const& triangles,   
             BVH& bvh,                       
             BVHNode& node,                  
             std::uint32_t start,            
             std::uint32_t count,            
-            unsigned int lastAxis) {
+            unsigned int lastAxis,
+            unsigned int& axis,             
+            float& splitPoint) {
         if(count <= 3)
             return false; // don't split
 
@@ -199,12 +201,77 @@ inline BVH* buildMedianBVH(Scene& s) {
     return bvh;
 }
 
+// Surface Area Heuristic splitter
+struct SAHSplitter{
+    static bool GetSplit(
+            TrianglePosSet const& triangles,   
+            BVH& bvh,                       
+            BVHNode& node,                  
+            std::uint32_t start,            
+            std::uint32_t count,            
+            unsigned int lastAxis,
+            unsigned int& axis,             
+            float& splitPoint) {
+        if(count <= 3)
+            return false;
+
+        // size of the aabb
+        glm::vec3 diff = node.bounds.high - node.bounds.low;
+
+        // find biggest axis and write to OUT
+        int const biggestAxis = diff[0]>diff[1] ? 
+                                diff[0]>diff[2] ? 0 : 2
+                              : diff[1]>diff[2] ? 1 : 2;
+        axis = biggestAxis; // write to OUT
+
+        // try a few places to split and find the one resulting in the smallest area
+        float smallest_area_so_far=INFINITY;
+        for(int i=1; i<8; i++){ // for each split
+            float trySplitPoint = node.bounds.low[axis] + (i*(diff[axis]/8.f));
+            // we keep a running total of the size of the left and right bounding box
+            AABB left = {{INFINITY,INFINITY,INFINITY},{-INFINITY,-INFINITY,-INFINITY}};
+            AABB right= {{INFINITY,INFINITY,INFINITY},{-INFINITY,-INFINITY,-INFINITY}};
+            for(int t = start; t<(start+count); t++){ // for each triangle
+                unsigned int index = bvh.indicies[t];
+                for(int v=0; v<3; v++){ // for each vertex
+                    auto const& p = triangles[index].v[v];
+                    if(p[biggestAxis] < trySplitPoint){
+                        left.low = glm::min(left.low,p);
+                        left.high= glm::max(left.high,p);
+                    }else{
+                        right.low = glm::min(right.low,p);
+                        right.high= glm::max(right.high,p);
+                    }
+                }
+            }
+            float area = surfaceAreaAABB(left.high-left.low)
+                       + surfaceAreaAABB(right.high-right.low);
+            if(area<smallest_area_so_far){
+                smallest_area_so_far = area;
+                splitPoint = trySplitPoint; // write to OUT
+            }
+        }
+
+        // TODO
+        // now that we have found a split point, partition the trianges along that axis
+
+        return true;
+    }
+};
+
+BVH* buildSAHBVH(Scene& s){
+    std::cout << "building SAH BVH" << std::endl;
+    BVH* bvh = buildBVH<SAHSplitter>(s);
+    return bvh;
+}
+
 inline BVH* buildBVH(Scene& s, BVHMethod method) {
     BVH* bvh = nullptr;
 
     switch(method) {
         case BVHMethod_STUPID: bvh = buildStupidBVH(s); break;
         case BVHMethod_MEDIAN: bvh = buildMedianBVH(s); break;
+        case BVHMethod_SAH:    bvh = buildSAHBVH(s);    break;
         case __BVHMethod_MAX: assert(false); break; // shouldn't happen
     };
 

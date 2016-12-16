@@ -136,3 +136,10 @@ float rayIntersectsAABB(AABB const& a, glm::vec3 const& rayOrigin, glm::vec3 con
     return tmin;
 }
 
+inline float surfaceAreaAABB(glm::vec3 const& diff){
+    float xy = diff.x*diff.y;
+    float yz = diff.y*diff.z;
+    float zx = diff.z*diff.z;
+    return 2.f*(xy+yz+zx);
+}
+
