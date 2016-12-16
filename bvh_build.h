@@ -33,9 +33,9 @@ void subdivide(
 
     // out params for the splitter. Note they are only defined if shouldSplit == true
     unsigned int splitAxis; 
-    float splitValue;
+    float leftMax, rightMin;
 
-    bool shouldSplit = Splitter::GetSplit(triangles, bvh, node, start, count, lastAxis, splitAxis, splitValue);
+    bool shouldSplit=Splitter::GetSplit(triangles, bvh, node, start, count, lastAxis, splitAxis, leftMax, rightMin);
 
     // are we creating a leaf?
     if(!shouldSplit) {
@@ -64,11 +64,13 @@ void subdivide(
         BVHNode& right = bvh.allocNextNode();
 
         std::cout << "subdiv start " << start << " count " << count << " axis " << splitAxis; 
-        std::cout<< " splitVal " << splitValue;
+        std::cout<< " leftMax" << leftMax << " rightMin " << rightMin;
+
         // partition elements around the splitValue
         int i = start;
         int j = start + count - 1;
 
+#if 0
         while (i < j) {
             if(triangles[bvh.indicies[i]].getCentroid()[splitAxis] < splitValue) {
                 i++;
@@ -81,6 +83,7 @@ void subdivide(
             std::swap(bvh.indicies[i], bvh.indicies[j]);
             i++;
         }
+#endif
         // i now points at the first elem of the right group
         unsigned int leftCount = i - start;
         unsigned int rightCount = start + count - i;
@@ -130,7 +133,8 @@ struct StupidSplitter {
             std::uint32_t count,            // in: num triangles (ie start+count <= triangles.size())
             unsigned int lastAxis,          // in: the axis on which the parent was split
             unsigned int& axis,             // out: axis on which to split
-            float& splitPoint){             // out: point on this axis at which to split
+            float& leftMax,                 // out: max point to include in left set 
+            float& rightMin) {              // out: min point to include in right set
 
         return false; // stop splitting
     }
@@ -155,7 +159,8 @@ struct AverageSplitter {
             std::uint32_t count,            
             unsigned int lastAxis,
             unsigned int& axis,             
-            float& splitPoint) {
+            float& leftMax, 
+            float& rightMin) {   
         if(count <= 3)
             return false; // don't split
 
@@ -188,7 +193,7 @@ struct AverageSplitter {
         std::cout << " min " << min << " max " << max<< std::endl;
         std::cout << " lengths " << lengths << " total " << total << std::endl;
         // and return the average of the greatest axis..
-        splitPoint = total[axis] * (1.0f/count);
+        leftMax = rightMin = total[axis] * (1.0f/count);
 
         return true; // do split
     }
@@ -211,7 +216,8 @@ struct SAHSplitter{
             std::uint32_t count,            
             unsigned int lastAxis,
             unsigned int& axis,             
-            float& splitPoint) {
+            float& leftMax, 
+            float& rightMin) {   
         if(count <= 3)
             return false;
 
@@ -248,7 +254,7 @@ struct SAHSplitter{
                        + surfaceAreaAABB(right.high-right.low);
             if(area<smallest_area_so_far){
                 smallest_area_so_far = area;
-                splitPoint = trySplitPoint; // write to OUT
+                leftMax = rightMin = trySplitPoint; // write to OUT
             }
         }
 
