@@ -210,52 +210,68 @@ struct SAHSplitter{
             std::uint32_t start,            
             std::uint32_t count,            
             unsigned int lastAxis,
-            unsigned int& axis,             
+            unsigned int& splitAxis,             
             float& splitPoint) {
-        if(count <= 3)
-            return false;
-
         // size of the aabb
         glm::vec3 diff = node.bounds.high - node.bounds.low;
 
-        // find biggest axis and write to OUT
-        int const biggestAxis = diff[0]>diff[1] ? 
-                                diff[0]>diff[2] ? 0 : 2
-                              : diff[1]>diff[2] ? 1 : 2;
-        axis = biggestAxis; // write to OUT
-
         // try a few places to split and find the one resulting in the smallest area
-        float smallest_area_so_far=INFINITY;
-        for(int i=1; i<8; i++){ // for each split
-            float trySplitPoint = node.bounds.low[axis] + (i*(diff[axis]/8.f));
+        float smallest_area_so_far = INFINITY;
+        bool split_good_enough = false;
+        for(int axis=0; axis<3; axis++) for(int split=1; split<8; split++){
+            float trySplitPoint = node.bounds.low[axis] + (split*(diff[axis]/8.f));
             // we keep a running total of the size of the left and right bounding box
             AABB left = {{INFINITY,INFINITY,INFINITY},{-INFINITY,-INFINITY,-INFINITY}};
             AABB right= {{INFINITY,INFINITY,INFINITY},{-INFINITY,-INFINITY,-INFINITY}};
+            float triangles_in_left  = 0;
+            float triangles_in_right = 0;
             for(int t = start; t<(start+count); t++){ // for each triangle
-                unsigned int index = bvh.indicies[t];
-                for(int v=0; v<3; v++){ // for each vertex
-                    auto const& p = triangles[index].v[v];
-                    if(p[biggestAxis] < trySplitPoint){
+                TrianglePosition const& triangle = triangles[bvh.indicies[t]];
+                // find out if the triangle belongs to left, right or both ...
+                bool in_left = false;
+                bool in_right= false;
+                for(int vertex=0; vertex<3; vertex++){
+                    glm::vec3 p = triangle.v[vertex];
+                    if(p[axis] < trySplitPoint) in_left = true; else in_right = true;
+                }
+                // ... then grow the bounding boxes if it contains the triangle
+                if(in_left){
+                    for(int vertex=0; vertex<3; vertex++){
+                        glm::vec3 p = triangle.v[vertex];
                         left.low = glm::min(left.low,p);
                         left.high= glm::max(left.high,p);
-                    }else{
+                        triangles_in_left++;
+                    }
+                }
+                if(in_right){
+                    for(int vertex=0; vertex<3; vertex++){
+                        glm::vec3 p = triangle.v[vertex];
                         right.low = glm::min(right.low,p);
                         right.high= glm::max(right.high,p);
+                        triangles_in_right++;
                     }
                 }
             }
-            float area = surfaceAreaAABB(left.high-left.low)
-                       + surfaceAreaAABB(right.high-right.low);
+            // now check if the split is the best so far
+            float al = surfaceAreaAABB(left);
+            float ar = surfaceAreaAABB(right);
+            float area= al+ar;
             if(area<smallest_area_so_far){
                 smallest_area_so_far = area;
-                splitPoint = trySplitPoint; // write to OUT
+                // if it is the best so far, check if we should split at all
+                float triangle_count = triangles_in_right+triangles_in_left;
+                if((al*triangles_in_left + ar*triangles_in_right)<(area*triangle_count)){
+                    // we should split, set all the output variables
+                    split_good_enough = true;
+                    float lowSplit = fmin(left.low[axis], right.low[axis]);
+                    float highSplit= fmax(left.high[axis],right.high[axis]);
+                    splitPoint = trySplitPoint;
+                    splitAxis  = axis;
+                }
             }
         }
 
-        // TODO
-        // now that we have found a split point, partition the trianges along that axis
-
-        return true;
+        return split_good_enough;
     }
 };
 
