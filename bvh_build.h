@@ -177,8 +177,8 @@ struct SAHSplitter{
             // we keep a running total of the size of the left and right bounding box
             AABB left = {{INFINITY,INFINITY,INFINITY},{-INFINITY,-INFINITY,-INFINITY}};
             AABB right= {{INFINITY,INFINITY,INFINITY},{-INFINITY,-INFINITY,-INFINITY}};
-            float triangles_in_left  = 0;
-            float triangles_in_right = 0;
+            int triangles_in_left  = 0;
+            int triangles_in_right = 0;
             for(int t = 0; t < indicies.size(); t++){ // for each triangle
                 TrianglePosition const& triangle = triangles[indicies[t]];
                 // find out if the triangle belongs to left, right or both ...
@@ -213,9 +213,11 @@ struct SAHSplitter{
             if(area<smallest_area_so_far){
                 smallest_area_so_far = area;
                 // if it is the best so far, check if we should split at all
-                float triangle_count = triangles_in_right+triangles_in_left;
+                int triangle_count = triangles_in_right+triangles_in_left;
                 if((al*triangles_in_left + ar*triangles_in_right)<(area*triangle_count)){
                     // we should split, set all the output variables
+                    assert(triangles_in_left  != triangle_count);
+                    assert(triangles_in_right != triangle_count);
                     split_good_enough = true;
                     leftMax  = fmax(left.low[axis], right.low[axis]);
                     rightMin = fmin(left.high[axis],right.high[axis]);
