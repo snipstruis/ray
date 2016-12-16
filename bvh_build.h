@@ -77,9 +77,10 @@ void subdivide(
             std::cout << " leftMax " << leftMax << " rightMin " << rightMin << std::endl;;
             // FIXME: beware of >= or <= cases (hairy with floats)
             // .. we could miss triangles here
-            if(valMax <= leftMax)
+            // We want to include the triangle if at least one part of it is within the range
+            if(valMin <= leftMax)
                 leftIndicies.push_back(idx);
-            if(valMin >= rightMin)
+            if(valMax >= rightMin)
                 rightIndicies.push_back(idx);
         }
 
