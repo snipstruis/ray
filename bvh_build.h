@@ -77,9 +77,9 @@ void subdivide(
             std::cout << " leftMax " << leftMax << " rightMin " << rightMin << std::endl;;
             // FIXME: beware of >= or <= cases (hairy with floats)
             // .. we could miss triangles here
-            if(valMin < leftMax)
+            if(valMin <= leftMax)
                 leftIndicies.push_back(idx);
-            if(valMax > rightMin)
+            if(valMax => rightMin)
                 rightIndicies.push_back(idx);
         }
 
@@ -93,8 +93,11 @@ void subdivide(
         assert(rightIndicies.size() > 0);
 
         // left and right can't contain more triangles than we were supplied with
-        assert(leftIndicies.size() <= fromIndicies.size());
-        assert(rightIndicies.size() <= fromIndicies.size());
+        // note that this is <, not <=. if either child contains all the triangles,
+        // we don't have a stopping condition, and we'll recurse forever. and the
+        // universe hates this.
+        assert(leftIndicies.size() < fromIndicies.size());
+        assert(rightIndicies.size() < fromIndicies.size());
 
         // recurse
         subdivide<Splitter>(triangles, bvh, left, leftIndicies, splitAxis);
