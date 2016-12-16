@@ -75,9 +75,9 @@ void subdivide(
             float valMin = triangles[idx].getMinCoord(splitAxis);
             float valMax = triangles[idx].getMaxCoord(splitAxis);
             
-            std::cout << "idx " << idx;
-            std::cout << " valMin " << valMin << " valMax " << valMax;
-            std::cout << " leftMax " << leftMax << " rightMin " << rightMin << std::endl;;
+//            std::cout << "idx " << idx;
+//            std::cout << " valMin " << valMin << " valMax " << valMax;
+//            std::cout << " leftMax " << leftMax << " rightMin " << rightMin << std::endl;;
             // FIXME: beware of >= or <= cases (hairy with floats)
             // .. we could miss triangles here
             // We want to include the triangle if at least one part of it is within the range
@@ -106,9 +106,12 @@ void subdivide(
         // recurse
         subdivide<Splitter>(triangles, bvh, left, leftIndicies, splitAxis);
         subdivide<Splitter>(triangles, bvh, right, rightIndicies, splitAxis);
-
-        // now the child node should be set up, its indicies should 
-        // be valid
+    }
+    // now we're done, node should be fully setup. check
+    assert(surfaceAreaAABB(node.bounds) > 0.0f);
+    assert(node.leftFirst >= 0);
+    if(node.isLeaf()){
+        assert(node.count + node.leftFirst < triangles.size());
     }
 }
 
