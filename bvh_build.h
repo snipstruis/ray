@@ -111,7 +111,7 @@ void subdivide(
     assert(surfaceAreaAABB(node.bounds) > 0.0f);
     assert(node.leftFirst >= 0);
     if(node.isLeaf()){
-        assert(node.count + node.leftFirst < triangles.size());
+        assert((node.count + node.leftFirst) < triangles.size());
     }
 }
 
@@ -184,53 +184,55 @@ struct SAHSplitter{
             // we keep a running total of the size of the left and right bounding box
             AABB left = {{INFINITY,INFINITY,INFINITY},{-INFINITY,-INFINITY,-INFINITY}};
             AABB right= {{INFINITY,INFINITY,INFINITY},{-INFINITY,-INFINITY,-INFINITY}};
-            int triangles_in_left  = 0;
+            int triangles_in_left = 0;
             int triangles_in_right = 0;
             for(int t:indicies){ // for each triangle
                 TrianglePosition const& triangle = triangles[t];
-                // find out if the triangle belongs to left, right or both ...
-                bool in_left = false;
-                bool in_right= false;
+                // find out if the triangle belongs to left, right or both
+                // the bounding boxes can't overlap, but since bounding boxes
+                // are inclusive there is an edge case where the triangle lies
+                // exactly on the split plane.
+                int vertices_in_left = 0;
+                int vertices_in_right= 0;
                 for(int vertex=0; vertex<3; vertex++){
                     glm::vec3 p = triangle.v[vertex];
-                    if(p[axis] < trySplitPoint) in_left = true; else in_right = true;
-                }
-                // ... then grow the bounding boxes if it contains the triangle
-                if(in_left){
-                    for(int vertex=0; vertex<3; vertex++){
+                    if(p[axis] <= trySplitPoint){
+                        vertices_in_left++;
                         glm::vec3 p = triangle.v[vertex];
                         left.low = glm::min(left.low,p);
                         left.high= glm::max(left.high,p);
                     }
-                    triangles_in_left++;
-                }
-                if(in_right){
-                    for(int vertex=0; vertex<3; vertex++){
+                    if(p[axis] >= trySplitPoint){
+                        vertices_in_right++;
                         glm::vec3 p = triangle.v[vertex];
                         right.low = glm::min(right.low,p);
                         right.high= glm::max(right.high,p);
                     }
-                    triangles_in_right++;
                 }
+                if(vertices_in_left>0)   triangles_in_left++;
+                if(vertices_in_right>0)  triangles_in_right++;
             }
             // now check if the split is the best so far
             float al = surfaceAreaAABB(left);
             float ar = surfaceAreaAABB(right);
             float area= al+ar;
-            if(area<smallest_area_so_far){
-                smallest_area_so_far = area;
+            int triangle_count = indicies.size();
+            if(area<smallest_area_so_far 
+             && triangles_in_left != triangle_count
+             && triangles_in_right!= triangle_count){
                 // if it is the best so far, check if we should split at all
-                int triangle_count = indicies.size();//triangles_in_left+triangles_in_right;
-                if((al*triangles_in_left + ar*triangles_in_right)<(area*triangle_count)){
+                printf("  testing: al%f*tl%d+ar%f*tr%d < a%f*t%d\n",al,triangles_in_left,ar,triangles_in_right,area,triangle_count);
+                if((al*(float)triangles_in_left + ar*(float)triangles_in_right)<(area*(float)triangle_count)){
+                    printf("    best so far: area:%f triangle_L:%d triangle_R:%d total:%d\n", area, triangles_in_left, triangles_in_right, triangle_count);
+                    printf("      left:%f<%f right:%f<%f\n", left.low[axis], left.high[axis], right.low[axis], right.high[axis]);
                     // we should split, set all the output variables
                     assert(triangle_count > 1);
                     assert(triangles_in_left >= 1);
                     assert(triangles_in_right >= 1);
                     assert(triangles_in_left  != triangle_count);
                     assert(triangles_in_right != triangle_count);
+                    smallest_area_so_far = area;
                     split_good_enough = true;
-                    printf("    best so far: area:%f triangle_L:%d triangle_R:%d total:%d\n", area, triangles_in_left, triangles_in_right, triangle_count);
-                    printf("      left:%f<%f right:%f<%f\n", left.low[axis], left.high[axis], right.low[axis], right.high[axis]);
                     rightMin = fmax(right.low[axis], left.low[axis]);
                     leftMax  = fmin(right.high[axis], left.high[axis]);
                     splitAxis= axis;
