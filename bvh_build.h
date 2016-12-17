@@ -201,16 +201,16 @@ struct SAHSplitter{
                         glm::vec3 p = triangle.v[vertex];
                         left.low = glm::min(left.low,p);
                         left.high= glm::max(left.high,p);
-                        triangles_in_left++;
                     }
+                    triangles_in_left++;
                 }
                 if(in_right){
                     for(int vertex=0; vertex<3; vertex++){
                         glm::vec3 p = triangle.v[vertex];
                         right.low = glm::min(right.low,p);
                         right.high= glm::max(right.high,p);
-                        triangles_in_right++;
                     }
+                    triangles_in_right++;
                 }
             }
             // now check if the split is the best so far
@@ -220,7 +220,7 @@ struct SAHSplitter{
             if(area<smallest_area_so_far){
                 smallest_area_so_far = area;
                 // if it is the best so far, check if we should split at all
-                int triangle_count = triangles_in_left+triangles_in_right;
+                int triangle_count = indicies.size();//triangles_in_left+triangles_in_right;
                 if((al*triangles_in_left + ar*triangles_in_right)<(area*triangle_count)){
                     // we should split, set all the output variables
                     assert(triangle_count > 1);
@@ -229,8 +229,8 @@ struct SAHSplitter{
                     assert(triangles_in_left  != triangle_count);
                     assert(triangles_in_right != triangle_count);
                     split_good_enough = true;
-                    printf("    best so far: a:%f l:%d r:%d t:%d ", area, triangles_in_left, triangles_in_right, triangle_count);
-                    printf("lh:%f rh:%f ll:%f rl:%f\n", left.high[axis], right.high[axis], left.low[axis], right.low[axis]);
+                    printf("    best so far: area:%f triangle_L:%d triangle_R:%d total:%d\n", area, triangles_in_left, triangles_in_right, triangle_count);
+                    printf("      left:%f<%f right:%f<%f\n", left.low[axis], left.high[axis], right.low[axis], right.high[axis]);
                     rightMin = fmax(right.low[axis], left.low[axis]);
                     leftMax  = fmin(right.high[axis], left.high[axis]);
                     splitAxis= axis;
@@ -238,6 +238,7 @@ struct SAHSplitter{
             }
         }
 
+        printf("  RESULT: %s\n", split_good_enough?"split good enough":"not worth splitting");
         return split_good_enough;
     }
 };
