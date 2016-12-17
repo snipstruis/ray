@@ -55,8 +55,10 @@ MiniIntersection traverseBVH(
         auto hitLeft  = traverseBVH<MODE>(bvh, node.leftIndex(),  prims, ray, rayInvDir, maxDist, diag);
         auto hitRight = traverseBVH<MODE>(bvh, node.rightIndex(), prims, ray, rayInvDir, maxDist, diag);
 
-        if(hitLeft.distance == INFINITY && hitRight.distance == INFINITY)
+        if(hitLeft.distance == INFINITY && hitRight.distance == INFINITY){
+            if(MODE==DIAG) hitLeft.leafDepth++;
             return MiniIntersection();
+        }
 
         if(hitLeft.distance < hitRight.distance){
             if(MODE==DIAG) hitLeft.leafDepth++;

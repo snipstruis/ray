@@ -165,22 +165,29 @@ struct SAHSplitter{
             unsigned int lastAxis,
             unsigned int& splitAxis,             
             float& leftMax, 
-            float& rightMin) {   
+            float& rightMin) {
+        assert(indicies.size()>0);
         // size of the aabb
         glm::vec3 diff = bounds.high - bounds.low;
 
         // try a few places to split and find the one resulting in the smallest area
         float smallest_area_so_far = INFINITY;
         bool split_good_enough = false;
+        printf("splitting bounding box x:%f<%f, y:%f<%f, z:%f<%f\n",
+                bounds.low.x, bounds.high.x,
+                bounds.low.y, bounds.high.y,
+                bounds.low.z, bounds.high.z);
+                     
         for(int axis=0; axis<3; axis++) for(int split=1; split<8; split++){
-            float trySplitPoint = bounds.low[axis] + (split*(diff[axis]/8.f));
+            float trySplitPoint = bounds.low[axis] + ((float)split*(diff[axis]/8.f));
+            printf("  trying split %c=%f\n","xyz"[axis],trySplitPoint);
             // we keep a running total of the size of the left and right bounding box
             AABB left = {{INFINITY,INFINITY,INFINITY},{-INFINITY,-INFINITY,-INFINITY}};
             AABB right= {{INFINITY,INFINITY,INFINITY},{-INFINITY,-INFINITY,-INFINITY}};
             int triangles_in_left  = 0;
             int triangles_in_right = 0;
-            for(int t = 0; t < indicies.size(); t++){ // for each triangle
-                TrianglePosition const& triangle = triangles[indicies[t]];
+            for(int t:indicies){ // for each triangle
+                TrianglePosition const& triangle = triangles[t];
                 // find out if the triangle belongs to left, right or both ...
                 bool in_left = false;
                 bool in_right= false;
@@ -213,15 +220,20 @@ struct SAHSplitter{
             if(area<smallest_area_so_far){
                 smallest_area_so_far = area;
                 // if it is the best so far, check if we should split at all
-                int triangle_count = triangles_in_right+triangles_in_left;
+                int triangle_count = triangles_in_left+triangles_in_right;
                 if((al*triangles_in_left + ar*triangles_in_right)<(area*triangle_count)){
                     // we should split, set all the output variables
+                    assert(triangle_count > 1);
+                    assert(triangles_in_left >= 1);
+                    assert(triangles_in_right >= 1);
                     assert(triangles_in_left  != triangle_count);
                     assert(triangles_in_right != triangle_count);
                     split_good_enough = true;
-                    leftMax  = fmax(left.low[axis], right.low[axis]);
-                    rightMin = fmin(left.high[axis],right.high[axis]);
-                    splitAxis  = axis;
+                    printf("    best so far: a:%f l:%d r:%d t:%d ", area, triangles_in_left, triangles_in_right, triangle_count);
+                    printf("lh:%f rh:%f ll:%f rl:%f\n", left.high[axis], right.high[axis], left.low[axis], right.low[axis]);
+                    rightMin = fmax(right.low[axis], left.low[axis]);
+                    leftMax  = fmin(right.high[axis], left.high[axis]);
+                    splitAxis= axis;
                 }
             }
         }
