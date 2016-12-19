@@ -35,7 +35,6 @@ struct AvgTimer {
         else
             average = diff;
 
-        std::cout <<"av" << average <<std::endl;
         return average;
     }
 
