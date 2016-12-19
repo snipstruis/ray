@@ -83,9 +83,6 @@ message(STATUS "image output dir ${IMG_OUTPUT_DIR}")
 macro(add_scene key scenefile)
     set(SUFFIX "ray-${key}") 
 
-    message(STATUS " target is $<TARGET_FILE:ray>")
-    #    message(STATUS "adding target ${N} for scenefile ${scenefile}")
-
     # add run-ray-XYZ target
     add_custom_target("run-${SUFFIX}"
         COMMAND ray ${scenefile} ${IMG_OUTPUT_DIR}
