@@ -25,7 +25,7 @@ void setWindowTitle(Scene const& s, SDL_Window *win, float frametime_ms, Mode mo
     char title[1024];
 
     snprintf(title, sizeof(title),
-            "%s "
+            "%s %s"
             "%dx%d "
             "@ %2.3fms(%0.0f) "
             "bvh=%s "
@@ -33,7 +33,7 @@ void setWindowTitle(Scene const& s, SDL_Window *win, float frametime_ms, Mode mo
             "y=%0.0f "
             "p=%0.0f "
             "f=%0.0f ",
-            modestr[(int)mode],
+            modestr[(int)mode], traversalstr[(int)traversalMode],
             s.camera.width, s.camera.height,
             frametime_ms, 1000.f/frametime_ms,
             BVHMethodStr(bvh),
@@ -86,9 +86,8 @@ GuiAction handleEvents(Scene& s, Mode *vis, float *vis_scale, BVHMethod& bvh)
                     case SDL_SCANCODE_5: *vis = Mode::SplitsTraversed; break;
                     case SDL_SCANCODE_6: *vis = Mode::LeafsChecked; break;
                     case SDL_SCANCODE_7: *vis = Mode::NodeIndex; break;
-                    case SDL_SCANCODE_B: 
-                        bvh = (BVHMethod)((bvh + 1) % __BVHMethod_MAX);
-                        break;
+                    case SDL_SCANCODE_B: bvh = (BVHMethod)((bvh + 1) % __BVHMethod_MAX); break;
+                    case SDL_SCANCODE_T: traversalMode = (TraversalMode)(((int)traversalMode + 1) % (int)TraversalMode::MAX); break;
                     default:
                         break;
                 }
