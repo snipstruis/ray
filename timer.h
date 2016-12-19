@@ -24,7 +24,7 @@ struct Timer {
 struct AvgTimer {
     AvgTimer() : average(0.0f) {}
 
-    float Sample() {
+    float sample() {
         float diff = timer.sample();
 
         if(average > 0.0f)
@@ -36,7 +36,7 @@ struct AvgTimer {
     }
 
     // clear average
-    void Reset() {
+    void reset() {
         average = 0.0f;
     }
 

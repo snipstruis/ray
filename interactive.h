@@ -16,12 +16,12 @@
 #undef main
 
 #include <cmath>
-#include <chrono>
 #include <vector>
 
 // this file contains all machinery to operate interactive mode - ie whenever there is a visible window 
+// note frametime is in seconds
 
-void setWindowTitle(Scene const& s, SDL_Window *win, float frametime_ms, Mode mode, BVHMethod bvh)
+void setWindowTitle(Scene const& s, SDL_Window *win, float frametime, Mode mode, BVHMethod bvh)
 {
     char title[1024];
 
@@ -36,7 +36,7 @@ void setWindowTitle(Scene const& s, SDL_Window *win, float frametime_ms, Mode mo
             "f=%0.0f ",
             modestr[(int)mode],
             s.camera.width, s.camera.height,
-            frametime_ms, 1000.f/frametime_ms,
+            frametime*1000.0f, 1.0f/frametime,
             BVHMethodStr(bvh),
             s.camera.origin[0], s.camera.origin[1], s.camera.origin[2],
             glm::degrees(s.camera.yaw), glm::degrees(s.camera.pitch), 
@@ -138,8 +138,6 @@ int interactiveLoop(Scene& s, std::string const& imgDir) {
 
     ScreenBuffer screenBuffer; // will be sized on first loop
 
-    auto now = std::chrono::high_resolution_clock::now();
-
     Mode mode=Mode::Default;
     float vis_scale = 1.f;
 
@@ -173,19 +171,11 @@ int interactiveLoop(Scene& s, std::string const& imgDir) {
         // blit to screen
         glDrawPixels(s.camera.width, s.camera.height, GL_RGB, GL_FLOAT, screenBuffer.data());
 
-        auto last = now;
-        now = std::chrono::high_resolution_clock::now();
-        float frametime = 
-                std::chrono::duration_cast<std::chrono::duration<float,std::milli>>(now - last).count();
+        float frametime = frameTimer.sample();
+        if(frametime > 1.0f)
+            std::cout << "long render - frametime=" << frametime << "s" << std::endl;
 
-        if(frametime > 1000)
-            std::cout << "long render - frametime=" << frametime/1000.0f << "s" << std::endl;
-
-        static float avg = frametime;
-        avg = 0.95f*avg + 0.05f*frametime;
-        float frametime = frameTimer.Sample();
-
-        setWindowTitle(s, win, avg, mode, bvhMethod);
+        setWindowTitle(s, win, frametime, mode, bvhMethod);
         SDL_GL_SwapWindow(win);
     }
 
