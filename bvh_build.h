@@ -192,13 +192,6 @@ struct CentroidSAHSplitter {
             glm::vec3 const c = triangles[i].getCentroid();
             bounds = unionPoint(bounds,c);
         }
-        
-        static AABB last_aabb;
-        if(bounds==last_aabb){
-            printf("SAME BOUNDS AS LAST CALL!\n");
-            exit(1);
-        }
-        last_aabb = bounds;
 
         // find longest axis
         glm::vec3 diff = bounds.high - bounds.low;
@@ -295,7 +288,13 @@ struct CentroidSAHSplitter {
                 split_good_enough?"winner":"NOT SPLITTING",
                 minIdx, second_index, 
                 cost[minIdx], leftMax, rightMin);
-
+        
+        static AABB last_aabb;
+        if(bounds==last_aabb){
+            printf("    >>> SAME BOUNDS AS LAST CALL! <<<\n");
+            exit(1);
+        }
+        last_aabb = bounds;
         //if(callnr>10) exit(0);
         return split_good_enough;
     }
