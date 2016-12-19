@@ -163,7 +163,7 @@ inline BVH* buildStupidBVH(Scene& s) {
     std::cout << "building stupid BVH" << std::endl;
     BVH* bvh = buildBVH<StupidSplitter>(s);
 
-    // as we have a single node, it should be a leaf
+    // For the stupid splitter, we should have a single node, and it should be a leaf
     assert(bvh->nodeCount() == 1);
     assert(bvh->root().isLeaf());
     return bvh;
@@ -304,10 +304,6 @@ struct CentroidSAHSplitter {
 inline BVH* buildCentroidSAHBVH(Scene& s) {
     std::cout << "building centroid SAH BVH" << std::endl;
     BVH* bvh = buildBVH<CentroidSAHSplitter>(s);
-
-    // as we have a single node, it should be a leaf
-    assert(bvh->nodeCount() == 1);
-    assert(bvh->root().isLeaf());
     return bvh;
 }
 
