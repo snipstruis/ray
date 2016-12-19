@@ -40,6 +40,10 @@ inline float volumeAABB(AABB const& a) {
     return (a.high[0] - a.low[0]) * (a.high[1] - a.low[1]) * (a.high[2] - a.low[2]);
 }
 
+inline glm::vec3 centroidAABB(AABB const& a){
+    return 0.5f*(a.high+a.low);
+}
+
 inline std::ostream& operator<<(std::ostream& os, const AABB& a) {
     os << a.low << ":" << a.high << " volume " << volumeAABB(a);
     return os;
