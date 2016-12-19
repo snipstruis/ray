@@ -81,16 +81,37 @@ message(STATUS "image output dir ${IMG_OUTPUT_DIR}")
 # note that it will start this with the wd set to source, so it can find any test objects
 
 macro(add_scene key scenefile)
-    set(N "run-ray-${key}") 
+    set(SUFFIX "ray-${key}") 
 
+    message(STATUS " target is $<TARGET_FILE:ray>")
     #    message(STATUS "adding target ${N} for scenefile ${scenefile}")
 
-    add_custom_target(${N}
+    # add run-ray-XYZ target
+    add_custom_target("run-${SUFFIX}"
         COMMAND ray ${scenefile} ${IMG_OUTPUT_DIR}
         DEPENDS ray 
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/data
         USES_TERMINAL
         )
+
+    # add batch-ray-XYZ target (doesn't do anything yet)
+    add_custom_target("batch-${SUFFIX}"
+        COMMAND ray ${scenefile} ${IMG_OUTPUT_DIR}
+        DEPENDS ray 
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/data
+        USES_TERMINAL
+        )
+
+    # add debug-ray-XYZ target
+    # assumes debugger is lldb
+    # FIXME: assumes binary name
+    add_custom_target("debug-${SUFFIX}"
+        COMMAND lldb ${CMAKE_CURRENT_BINARY_DIR}/ray -- ${scenefile} ${IMG_OUTPUT_DIR}
+        DEPENDS ray 
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/data
+        USES_TERMINAL
+        )
+
 endmacro(add_scene)    
 
 # so, this first line creates a new target run-ray-point for the file scene/point.scene
