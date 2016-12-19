@@ -7,6 +7,7 @@
 #include "output.h"
 #include "render.h"
 #include "scene.h"
+#include "timer.h"
 #include "trace.h"
 
 #define GL_GLEXT_PROTOTYPES
@@ -142,6 +143,7 @@ int interactiveLoop(Scene& s, std::string const& imgDir) {
     Mode mode=Mode::Default;
     float vis_scale = 1.f;
 
+    Timer frameTimer;
     while(true){
         SDL_GL_GetDrawableSize(win, &s.camera.width, &s.camera.height);
 
@@ -181,6 +183,7 @@ int interactiveLoop(Scene& s, std::string const& imgDir) {
 
         static float avg = frametime;
         avg = 0.95f*avg + 0.05f*frametime;
+        float frametime = frameTimer.Sample();
 
         setWindowTitle(s, win, avg, mode, bvhMethod);
         SDL_GL_SwapWindow(win);
