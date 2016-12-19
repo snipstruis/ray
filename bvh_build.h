@@ -124,7 +124,7 @@ void subdivide(
     assert(surfaceAreaAABB(node.bounds) > 0.0f);
     assert(node.leftFirst >= 0);
     if(node.isLeaf()){
-        assert((node.count + node.leftFirst) < bvh.indicies.size());
+        assert((node.leftFirst + node.count) <= bvh.indicies.size());
     }
 }
 

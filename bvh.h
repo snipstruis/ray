@@ -6,7 +6,7 @@
 #include <vector>
 
 // this file contains the core BVH machinery for storage 
-// It doesn't contain any BVH building or storage code
+// It doesn't contain any BVH building or traversal code
 
 // BVHNode
 struct BVHNode {
