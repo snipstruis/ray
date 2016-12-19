@@ -116,7 +116,10 @@ MiniIntersection traverseBVH(
             float distance = moller_trumbore(t, ray);
 
             if constexpr(MODE==IntersectMode::ANY){ // if checking for any intersection whatsoever
-                if(distance > 0 && distance < maxDist) return hit;
+                if(distance > 0 && distance < maxDist){
+                    hit.distance = 0;
+                    return hit;
+                }
             }else{ // if we want to find the closest intersection
                 if(distance > 0 && distance < hit.distance) {
                     if constexpr(MODE==IntersectMode::DIAG) hit.nodeIndex = nodeIndex;
