@@ -51,10 +51,10 @@ FalloffKind readFalloffKind(std::string const& s) {
         throw std::runtime_error("unknown falloff kind");
 }
 
-glm::mat4 handleTransform(json const& o, bool rotateOnly) {
+glm::mat4 handleTransform(json const& o) {
     glm::mat4 result; // is initialised to identity
 
-    if(!rotateOnly && o.find("translate") != o.end()){
+    if(o.find("translate") != o.end()){
         auto const& translate = readXYZ(o["translate"]);
         result = glm::translate(result, translate);
     }
@@ -66,7 +66,7 @@ glm::mat4 handleTransform(json const& o, bool rotateOnly) {
         result = glm::rotate(result, rotate[2], glm::vec3(0.0f, 0.0f, 0.1f));
     }
 
-    if(!rotateOnly && o.find("scale") != o.end()){
+    if(o.find("scale") != o.end()){
         auto const& scale = readXYZ(o["scale"]);
         result = glm::scale(result, scale);
     }
@@ -96,7 +96,8 @@ TrianglePosition BuildTrianglePos(tinyobj::attrib_t const& attrib, tinyobj::shap
         makeVec3FromVerticies(attrib, shape.mesh.indices[base + 2].vertex_index));
 }
 
-// build the non-vertex parts of a triangle. requires a TrianglePos in case it needs to calculate its own normals
+// build the non-vertex parts of a triangle. requires a TrianglePos in case it needs 
+// to calculate its own normals
 Triangle BuildTriangle(
         TrianglePosition const& pos,
         tinyobj::attrib_t const& attrib, 
@@ -114,6 +115,7 @@ Triangle BuildTriangle(
         glm::vec3 n = glm::normalize(glm::cross(pos.v[1] - pos.v[0], pos.v[2] - pos.v[0]));
         return Triangle(n, n, n, globalMatID);
     } else {
+        // normals ARE in the src file - just look them up
         return Triangle(
             makeVec3FromNormals(attrib, i1),
             makeVec3FromNormals(attrib, i2),
@@ -131,7 +133,7 @@ int createMaterial(Scene& s, tinyobj::material_t const& m){
             (1.0f - m.dissolve), // transparency - note 1==opaque in the mat files.
             m.ior,  // refractive index
             -1,     // no checkerboard
-            Color(m.specular[0], m.specular[1], m.specular[2]), //specular highlight color
+            Color(m.specular[0], m.specular[1], m.specular[2]), // specular highlight color
             m.shininess);  // shininess
 
     // return the index of this newly created material.
@@ -208,9 +210,12 @@ Mesh loadMesh(Scene& s, std::string const& filename){
 }
 
 // apply the matrix transform to v
-glm::vec3 transformV3(glm::vec3 v, glm::mat4x4 transform) {
-    // FIXME: ugly, remove temp objects
-    glm::vec4 a(v[0], v[1], v[2], 1);
+// @v: vec3 src vector
+// @transform: transform to apply
+// @w: 4th coordinate for transform - ie the linear transform part.
+//      usually, use 1.0f for verticies, and 0.0 for normals
+glm::vec3 transformV3(glm::vec3 const& v, glm::mat4x4 const& transform, float w) {
+    glm::vec4 a(v[0], v[1], v[2], w);
     glm::vec4 b = transform * a;
     glm::vec3 res(b[0], b[1], b[2]);
     return res;
@@ -218,35 +223,31 @@ glm::vec3 transformV3(glm::vec3 v, glm::mat4x4 transform) {
 
 // walk the whole mesh, copy-n-transform it into the world. 
 // ie stamp it down, based on inputs from the scene.
-void transformMeshIntoScene(Scene& s, 
-        Mesh const& mesh, 
-        glm::mat4x4 const& vTransform,
-        glm::mat4x4 const& nTransform) {
+void transformMeshIntoScene(Scene& s, Mesh const& mesh, glm::mat4x4 const& transform) {
 
     for(auto const& mt : mesh.triangles) {
         s.primitives.triangles.emplace_back(
             // normals
-            glm::normalize(transformV3(mt.n[0], nTransform)), 
-            glm::normalize(transformV3(mt.n[1], nTransform)), 
-            glm::normalize(transformV3(mt.n[2], nTransform)), 
+            glm::normalize(transformV3(mt.n[0], transform, 0.0f)), 
+            glm::normalize(transformV3(mt.n[1], transform, 0.0f)), 
+            glm::normalize(transformV3(mt.n[2], transform, 0.0f)), 
             mt.mat);
     }
 
     for(auto const& mt : mesh.pos){
         s.primitives.pos.emplace_back(
-            transformV3(mt.v[0], vTransform), 
-            transformV3(mt.v[1], vTransform), 
-            transformV3(mt.v[2], vTransform));
+            transformV3(mt.v[0], transform, 1.0f), 
+            transformV3(mt.v[1], transform, 1.0f), 
+            transformV3(mt.v[2], transform, 1.0f));
     }
 }
 
 void handleMesh(Scene& s, MeshMap const& meshes, json const& o) {
-    glm::mat4x4 vTransform, nTransform; // initialised to identity
+    glm::mat4x4 transform; // initialised to identity
 
     // is there a transform for this obj?
     if (o.find("transform") != o.end()) {
-        vTransform = handleTransform(o["transform"], false);
-        nTransform = handleTransform(o["transform"], true);
+        transform = handleTransform(o["transform"]);
     }
 
     // find already loaded mesh
@@ -255,7 +256,7 @@ void handleMesh(Scene& s, MeshMap const& meshes, json const& o) {
     if(it == meshes.end())
         throw std::runtime_error("unknown mesh");
 
-    transformMeshIntoScene(s, it->second, vTransform, nTransform);
+    transformMeshIntoScene(s, it->second, transform);
 }
 
 void handleObject(Scene& s, MeshMap const& meshes, json const& o) {

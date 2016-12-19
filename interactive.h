@@ -174,7 +174,7 @@ int interactiveLoop(Scene& s, std::string const& imgDir) {
         float frametime = 
                 std::chrono::duration_cast<std::chrono::duration<float,std::milli>>(now - last).count();
 
-        if(frametime > 1000)
+       // if(frametime > 1000)
             std::cout << "long render - frametime=" << frametime/1000.0f << "s" << std::endl;
 
         static float avg = frametime;
