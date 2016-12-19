@@ -141,7 +141,7 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
     Mode mode=Mode::Default;
     float vis_scale = 1.f;
 
-    Timer frameTimer;
+    AvgTimer frameTimer;
     while(true){
         SDL_GL_GetDrawableSize(win, &s.camera.width, &s.camera.height);
 
@@ -158,6 +158,8 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
             std::cout << BVHMethodStr(bvhMethod ) << std::endl;
             delete bvh;
             bvh = buildBVH(s, bvhMethod);
+            // clear the frametime average - given we're doing a new type of bvh
+            frameTimer.reset();
         }
 
         // FIXME: maybe save a bit of work by only doing this if camera's moved
