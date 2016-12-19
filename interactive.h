@@ -173,11 +173,11 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
         // blit to screen
         glDrawPixels(s.camera.width, s.camera.height, GL_RGB, GL_FLOAT, screenBuffer.data());
 
-        float frametime = frameTimer.sample();
-        if(frametime > 1.0f)
-            std::cout << "long render - frametime=" << frametime << "s" << std::endl;
+        float frametimeAv = frameTimer.sample();
+        if(frameTimer.timer.lastDiff > 1.0f)
+            std::cout << "long render - frametime=" << frameTimer.timer.lastDiff << "s" << std::endl;
 
-        setWindowTitle(s, win, frametime, mode, bvhMethod);
+        setWindowTitle(s, win, frametimeAv, mode, bvhMethod);
         SDL_GL_SwapWindow(win);
     }
 
