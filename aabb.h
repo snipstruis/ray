@@ -12,12 +12,14 @@
 // axis-aligned bounding box
 // members not named min/max to avoid clashes with library functions
 struct AABB {
-    AABB(){
-        low  = {INFINITY,INFINITY,INFINITY};
-        high = {-INFINITY,-INFINITY,-INFINITY};
-    }
+    AABB() :
+        low{INFINITY,INFINITY,INFINITY},
+        high{-INFINITY,-INFINITY,-INFINITY}
+        {}
+
     AABB& operator=(AABB const& bb){low=bb.low;high=bb.high;return *this;}
-    AABB(glm::vec3 l, glm::vec3 h):low(l),high(h){}
+    AABB(glm::vec3 const& l, glm::vec3 const& h):low(l),high(h){}
+
     void sanityCheck() const {
         assert(low[0] <= high[0]);
         assert(low[1] <= high[1]);
@@ -27,15 +29,19 @@ struct AABB {
     glm::vec3 low, high;
 };
 
+// DANGER - uses == operator directly on floats, be aware
 bool operator==(AABB const& a, AABB const& b){
     return (a.low==b.low) && (a.high==b.high);
 };
 
 static_assert(sizeof(AABB) == 24, "AABB size");
 
+inline float volumeAABB(AABB const& a) {
+    return (a.high[0] - a.low[0]) * (a.high[1] - a.low[1]) * (a.high[2] - a.low[2]);
+}
+
 inline std::ostream& operator<<(std::ostream& os, const AABB& a) {
-    float vol = (a.high[0] - a.low[0]) * (a.high[1] - a.low[1]) * (a.high[2] - a.low[2]);
-    os << a.low << ":" << a.high << " volume " << vol ;
+    os << a.low << ":" << a.high << " volume " << volumeAABB(a);
     return os;
 }
 
