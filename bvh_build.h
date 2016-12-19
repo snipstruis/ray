@@ -1,6 +1,7 @@
 #pragma once
 
 #include "bvh.h"
+#include "bvh_diag.h"
 #include "scene.h"
 
 enum BVHMethod {
