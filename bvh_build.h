@@ -72,6 +72,8 @@ void subdivide(
 
         // walk the index array, build left and right sides.
         TriangleMapping leftIndicies, rightIndicies;
+#if 0   
+        // MIN/MAX BASED
         for(unsigned int i = 0; i < fromIndicies.size(); i++) {
             unsigned int idx = fromIndicies[i];
             float valMin = triangles[idx].getMinCoord(splitAxis);
@@ -88,6 +90,15 @@ void subdivide(
             if(valMax >= rightMin)
                 rightIndicies.push_back(idx);
         }
+#else
+        // CENTROID BASED
+        for(unsigned int idx:fromIndicies){
+            if(triangles[idx].getCentroid()[splitAxis] <= leftMax)
+                leftIndicies.push_back(idx);
+            else
+                rightIndicies.push_back(idx);
+        }
+#endif
 
         std::cout << " leftcount " << leftIndicies.size();
         std::cout << " rightCount " << rightIndicies.size() ;
@@ -102,7 +113,7 @@ void subdivide(
         // note that this is <, not <=. if either child contains all the triangles,
         // we don't have a stopping condition, and we'll recurse forever. and the
         // universe hates this.
-        assert(leftIndicies.size() < fromIndicies.size());
+        assert(leftIndicies.size()  < fromIndicies.size());
         assert(rightIndicies.size() < fromIndicies.size());
 
         // recurse
@@ -159,6 +170,9 @@ inline BVH* buildStupidBVH(Scene& s) {
 }
 
 struct Slice{
+    Slice(){
+        count = 0;
+    }
     AABB aabb;
     int  count;
 };
@@ -167,12 +181,18 @@ struct CentroidSAHSplitter {
     static bool GetSplit(
             TrianglePosSet const& triangles,// in: master triangle array
             TriangleMapping const& indicies,// in: set of triangle indicies to split 
-            AABB const& bounds,             // in: bounds of this set of triangles
+            AABB bounds,                    // in: bounds of this set of triangles
             unsigned int lastAxis,          // in: the axis on which the parent was split
             unsigned int& axis,             // out: axis on which to split
             float& leftMax,                 // out: max point to include in left set 
             float& rightMin) {              // out: min point to include in right set
         if(indicies.size()<=3) return false;
+
+        bounds = AABB();
+        for(int const i:indicies){
+            glm::vec3 const c = triangles[i].getCentroid();
+            bounds = unionPoint(bounds,c);
+        }
 
         // find longest axis
         glm::vec3 diff = bounds.high - bounds.low;
@@ -192,15 +212,11 @@ struct CentroidSAHSplitter {
         // and count the triangle centroids in it
         constexpr int MAX_SLICES = 8;
         Slice slices[MAX_SLICES];
-        for(int i=0; i<MAX_SLICES; i++){
-            slices[i].count = 0;
-            slices[i].aabb ={{INFINITY,INFINITY,INFINITY},{-INFINITY,-INFINITY,-INFINITY}};
-        }
         for(int const idx:indicies){
             glm::vec3 const c = triangles[idx].getCentroid();
             int s = MAX_SLICES*((c[axis] - bounds.low[axis])/(bounds.high[axis]-bounds.low[axis]));
             if(s>=MAX_SLICES) s=MAX_SLICES-1;
-            AABB triangle = {c,c};
+            AABB triangle;
             for(int i=0;i<3;i++) triangle = unionPoint(triangle,triangles[idx].v[i]);
             slices[s].aabb = unionAABB(slices[s].aabb, triangle);
             slices[s].count++;
@@ -225,41 +241,56 @@ struct CentroidSAHSplitter {
         for(int i=0; i<MAX_SLICES-1; i++){
             printf("    ");
             // glue slices together into a left slice and a right slice
-            Slice left; left.count=0; left.aabb={{INFINITY,INFINITY,INFINITY},{-INFINITY,-INFINITY,-INFINITY}};
+            Slice left; 
             for(int j=0; j<=i; j++){
                 printf("L");
                 left.aabb = unionAABB(left.aabb, slices[j].aabb);
                 left.count += slices[j].count;
             }
-            Slice right; right.count=0; right.aabb ={{INFINITY,INFINITY,INFINITY},{-INFINITY,-INFINITY,-INFINITY}};
+            Slice right;
             for(int j=i+1; j<MAX_SLICES; j++){
                 printf("R");
                 right.aabb = unionAABB(right.aabb, slices[j].aabb);
                 right.count += slices[j].count;
             }
-            if(left.count==0 || right.count==0) cost[i] = INFINITY;
-            cost[i] = 1 + (left.count  * surfaceAreaAABB(left.aabb) 
-                          +right.count * surfaceAreaAABB(right.aabb)) 
-                          / boundingArea;
-            printf(" %d|%d: cost:%f, count:%d, x:%f<%f, y:%f<%f, z:%f<%f\n",
-                    i, i+1, cost[i], left.count,
+            float al = surfaceAreaAABB(left.aabb);
+            float ar = surfaceAreaAABB(right.aabb);
+            cost[i] = 1 + (left.count  * al + right.count * ar) / boundingArea;
+            printf(" %d|%d: cost:%f, count:%d/%d, area:%f/%f x:%f<%f, y:%f<%f, z:%f<%f\n",
+                    i, i+1, cost[i], left.count, right.count,
+                    al, ar,
                     left.aabb.low.x, left.aabb.high.x,
                     left.aabb.low.y, left.aabb.high.y,
                     left.aabb.low.z, left.aabb.high.z);
         }
 
         // find minimal permutation
-        int minIdx = 0;
+        int   minIdx = 0;
+        float minCost=cost[0];
         for(int i=1; i<MAX_SLICES-1; i++){
-            if(cost[i]<cost[minIdx]) minIdx = i;
+            if(cost[i]<cost[minIdx]){
+                minIdx = i;
+                minCost = cost[i];
+            }
         }
 
         leftMax  = slices[minIdx].aabb.high[axis];
-        rightMin = slices[minIdx+1].aabb.low[axis];
-        bool split_good_enough = cost[minIdx] < indicies.size();
-        printf("    %s: %d|%d, cost:%f, lmax:%f, rmin:%f\n", split_good_enough?"winner":"NOT SPLITTING",minIdx, minIdx+1, cost[minIdx], leftMax, rightMin);
+        int second_index=0;
+        for(int i=minIdx+1; i<MAX_SLICES; i++){
+            if(slices[i].count>0){
+                rightMin = slices[i].aabb.low[axis];
+                second_index=i;
+                break;
+            }
+        }
 
-        if(callnr>10) exit(0);
+        bool split_good_enough = cost[minIdx] < indicies.size();
+        printf("    %s: %d|%d, cost:%f, lmax:%f, rmin:%f\n", 
+                split_good_enough?"winner":"NOT SPLITTING",
+                minIdx, second_index, 
+                cost[minIdx], leftMax, rightMin);
+
+        //if(callnr>10) exit(0);
         return split_good_enough;
     }
 };
@@ -324,8 +355,7 @@ struct SAHSplitter{
             float trySplitPoint = bounds.low[axis] + ((float)split*(diff[axis]/8.f));
             printf("  trying split %c=%f ","xyz"[axis],trySplitPoint);
             // we keep a running total of the size of the left and right bounding box
-            AABB left = {{INFINITY,INFINITY,INFINITY},{-INFINITY,-INFINITY,-INFINITY}};
-            AABB right= {{INFINITY,INFINITY,INFINITY},{-INFINITY,-INFINITY,-INFINITY}};
+            AABB left, right;
             int triangles_in_left = 0;
             int triangles_in_right = 0;
             for(int t:indicies){ // for each triangle

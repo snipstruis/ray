@@ -12,6 +12,12 @@
 // axis-aligned bounding box
 // members not named min/max to avoid clashes with library functions
 struct AABB {
+    AABB(){
+        low  = {INFINITY,INFINITY,INFINITY};
+        high = {-INFINITY,-INFINITY,-INFINITY};
+    }
+    AABB& operator=(AABB const& bb){low=bb.low;high=bb.high;return *this;}
+    AABB(glm::vec3 l, glm::vec3 h):low(l),high(h){}
     void sanityCheck() const {
         assert(low[0] <= high[0]);
         assert(low[1] <= high[1]);
@@ -145,10 +151,7 @@ float rayIntersectsAABB(AABB const& a, glm::vec3 const& rayOrigin, glm::vec3 con
 }
 
 inline float surfaceAreaAABB(AABB const& aabb){
-    glm::vec3 diff = glm::abs(aabb.high-aabb.low);
-    float xy = diff.x*diff.y;
-    float yz = diff.y*diff.z;
-    float zx = diff.z*diff.z;
-    return 2.f*(xy+yz+zx);
+    glm::vec3 d = aabb.high-aabb.low;
+    return 2.f*(d.x*d.y + d.x*d.z + d.y*d.z);
 }
 
