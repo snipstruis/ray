@@ -1,5 +1,8 @@
 #pragma once
 
+#include "bvh_build.h"
+#include "output.h"
+#include "timer.h"
 #include "trace.h"
 #include "utils.h"
 
@@ -12,7 +15,7 @@ int batchRender(Scene& s, std::string const& imgDir, int width, int height) {
     s.camera.width = width;
     s.camera.height = height;
 
-    BVH* bvh = buildBVH(s, BVHMethod_MEDIAN);
+    BVH* bvh = buildBVH(s, BVHMethod_CENTROID_SAH);
 
     std::cout << "starting batch render" << std::endl;
 

@@ -1,8 +1,13 @@
 
+#include "batch.h"
 #include "interactive.h"
 
 #include <string>
 #include <iostream>
+
+// default dimensions
+int width = 640;
+int height = 640;
 
 int main(int argc, char* argv[]){
 
@@ -12,11 +17,11 @@ int main(int argc, char* argv[]){
     }
 
     std::string sceneFile = argv[1];
-    std::string imgDir;
+    std::string outputDir;
 
     if (argc == 3) {
-        imgDir = argv[2];
-        std::cout << "using img output dir " << imgDir << "\n";
+        outputDir = argv[2];
+        std::cout << "using output dir " << outputDir << "\n";
     }
 
     // setup scene first, so we can bail on error without flashing a window briefly (errors are stdout 
@@ -27,5 +32,9 @@ int main(int argc, char* argv[]){
         return -1;
     }
 
-    return interactiveLoop(s, imgDir);
+	bool batch = false;
+    if(batch)
+         return batchRender(s, outputDir, width, height);
+    else
+         return interactiveLoop(s, outputDir, width, height);
 }

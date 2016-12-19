@@ -119,13 +119,13 @@ GuiAction handleEvents(Scene& s, Mode *vis, float *vis_scale, BVHMethod& bvh)
 // @s: pre-populated scene
 // @imgDir: location to write screenshots
 //
-int interactiveLoop(Scene& s, std::string const& imgDir) {
+int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) {
     // first thing's first, create the BVH
     // do this before opening the window to ease debugging
     BVHMethod bvhMethod = BVHMethod_CENTROID_SAH;
     BVH* bvh = buildBVH(s, bvhMethod);
 
-    SDL_Window *win = SDL_CreateWindow("Roaytroayzah (initialising)", 10, 10, 640, 640, 
+    SDL_Window *win = SDL_CreateWindow("Roaytroayzah (initialising)", 10, 10, width, height, 
                                        SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
     SDL_GL_CreateContext(win);
 
