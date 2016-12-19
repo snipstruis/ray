@@ -2,6 +2,7 @@
 #include "batch.h"
 #include "interactive.h"
 
+#include <deque>
 #include <string>
 #include <iostream>
 
@@ -10,17 +11,30 @@ int width = 640;
 int height = 640;
 
 int main(int argc, char* argv[]){
+    std::deque<std::string> args;
+    for(int i = 1; i < argc; i++)
+        args.push_back(argv[i]);
 
-    if (argc < 2 || argc > 3) {
-        std::cout << "USAGE: " << argv[0] << " <scene file> [image output dir]\n";
+    if (argc < 2 || argc > 4) {
+        std::cout << "USAGE: " << argv[0] << "[-b] <scene file> [image output dir]\n";
+        std::cout << "         -b  batch mode\n";
         return -1;
     }
 
-    std::string sceneFile = argv[1];
+	bool batch = false;
+    if(args.front() == "-b") {
+        std::cout << "batch mode\n";
+        batch = true;
+        args.pop_front();
+    }
+
+    std::string sceneFile = args.front();
+    args.pop_front();
+
     std::string outputDir;
 
-    if (argc == 3) {
-        outputDir = argv[2];
+    if(!args.empty()) {
+        outputDir = args.front();
         std::cout << "using output dir " << outputDir << "\n";
     }
 
@@ -32,7 +46,6 @@ int main(int argc, char* argv[]){
         return -1;
     }
 
-	bool batch = false;
     if(batch)
          return batchRender(s, outputDir, width, height);
     else
