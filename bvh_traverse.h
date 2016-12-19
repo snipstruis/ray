@@ -1,6 +1,7 @@
 #pragma once
 
 #include "aabb.h"
+#include "bvh.h"
 #include "primitive.h"
 #include "debug_print.h"
 

@@ -93,7 +93,7 @@ macro(add_scene key scenefile)
 
     # add batch-ray-XYZ target (doesn't do anything yet)
     add_custom_target("batch-${SUFFIX}"
-        COMMAND ray ${scenefile} ${IMG_OUTPUT_DIR}
+        COMMAND ray -b ${scenefile} ${IMG_OUTPUT_DIR}
         DEPENDS ray 
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/data
         USES_TERMINAL

@@ -7,6 +7,7 @@
 #include "output.h"
 #include "render.h"
 #include "scene.h"
+#include "timer.h"
 #include "trace.h"
 
 #define GL_GLEXT_PROTOTYPES
@@ -15,12 +16,12 @@
 #undef main
 
 #include <cmath>
-#include <chrono>
 #include <vector>
 
 // this file contains all machinery to operate interactive mode - ie whenever there is a visible window 
+// note frametime is in seconds
 
-void setWindowTitle(Scene const& s, SDL_Window *win, float frametime_ms, Mode mode, BVHMethod bvh)
+void setWindowTitle(Scene const& s, SDL_Window *win, float frametime, Mode mode, BVHMethod bvh)
 {
     char title[1024];
 
@@ -35,7 +36,7 @@ void setWindowTitle(Scene const& s, SDL_Window *win, float frametime_ms, Mode mo
             "f=%0.0f ",
             modestr[(int)mode], traversalstr[(int)traversalMode],
             s.camera.width, s.camera.height,
-            frametime_ms, 1000.f/frametime_ms,
+            frametime*1000.0f, 1.0f/frametime,
             BVHMethodStr(bvh),
             s.camera.origin[0], s.camera.origin[1], s.camera.origin[2],
             glm::degrees(s.camera.yaw), glm::degrees(s.camera.pitch), 
@@ -117,13 +118,13 @@ GuiAction handleEvents(Scene& s, Mode *vis, float *vis_scale, BVHMethod& bvh)
 // @s: pre-populated scene
 // @imgDir: location to write screenshots
 //
-int interactiveLoop(Scene& s, std::string const& imgDir) {
+int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) {
     // first thing's first, create the BVH
     // do this before opening the window to ease debugging
     BVHMethod bvhMethod = BVHMethod_CENTROID_SAH;
     BVH* bvh = buildBVH(s, bvhMethod);
 
-    SDL_Window *win = SDL_CreateWindow("Roaytroayzah (initialising)", 10, 10, 640, 640, 
+    SDL_Window *win = SDL_CreateWindow("Roaytroayzah (initialising)", 10, 10, width, height, 
                                        SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
     SDL_GL_CreateContext(win);
 
@@ -136,11 +137,10 @@ int interactiveLoop(Scene& s, std::string const& imgDir) {
 
     ScreenBuffer screenBuffer; // will be sized on first loop
 
-    auto now = std::chrono::high_resolution_clock::now();
-
     Mode mode=Mode::Default;
     float vis_scale = 1.f;
 
+    AvgTimer frameTimer;
     while(true){
         SDL_GL_GetDrawableSize(win, &s.camera.width, &s.camera.height);
 
@@ -157,6 +157,8 @@ int interactiveLoop(Scene& s, std::string const& imgDir) {
             std::cout << BVHMethodStr(bvhMethod ) << std::endl;
             delete bvh;
             bvh = buildBVH(s, bvhMethod);
+            // clear the frametime average - given we're doing a new type of bvh
+            frameTimer.reset();
         }
 
         // FIXME: maybe save a bit of work by only doing this if camera's moved
@@ -170,18 +172,11 @@ int interactiveLoop(Scene& s, std::string const& imgDir) {
         // blit to screen
         glDrawPixels(s.camera.width, s.camera.height, GL_RGB, GL_FLOAT, screenBuffer.data());
 
-        auto last = now;
-        now = std::chrono::high_resolution_clock::now();
-        float frametime = 
-                std::chrono::duration_cast<std::chrono::duration<float,std::milli>>(now - last).count();
+        float frametimeAv = frameTimer.sample();
+        if(frameTimer.timer.lastDiff > 1.0f)
+            std::cout << "long render - frametime=" << frameTimer.timer.lastDiff << "s" << std::endl;
 
-       // if(frametime > 1000)
-            std::cout << "long render - frametime=" << frametime/1000.0f << "s" << std::endl;
-
-        static float avg = frametime;
-        avg = 0.95f*avg + 0.05f*frametime;
-
-        setWindowTitle(s, win, avg, mode, bvhMethod);
+        setWindowTitle(s, win, frametimeAv, mode, bvhMethod);
         SDL_GL_SwapWindow(win);
     }
 
