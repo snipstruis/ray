@@ -36,6 +36,14 @@
                     "translate" : { "x" : -3, "y" : 2, "z" : -3},
                     "rotate" : { "x" : 0, "y" : -15.00, "z" : 0.00}
                 }
+            },
+            {
+                "kind" : "mesh",
+                "mesh_name" : "plane",
+                "transform" : {
+                    "translate" : { "x" : 0, "y" : 0, "z" : 0},
+                    "scale" : { "x" : 50, "y" : 0, "z" : 50}
+                }
             }
         ],
         "lights" : 
