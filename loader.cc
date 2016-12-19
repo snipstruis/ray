@@ -215,10 +215,9 @@ Mesh loadMesh(Scene& s, std::string const& filename){
 // @w: 4th coordinate for transform - ie the linear transform part.
 //      usually, use 1.0f for verticies, and 0.0 for normals
 glm::vec3 transformV3(glm::vec3 const& v, glm::mat4x4 const& transform, float w) {
-    glm::vec4 a(v[0], v[1], v[2], w);
+    glm::vec4 a(v, w);
     glm::vec4 b = transform * a;
-    glm::vec3 res(b[0], b[1], b[2]);
-    return res;
+    return glm::vec3(b); // slice off the first 3 coords of b
 }
 
 // walk the whole mesh, copy-n-transform it into the world. 
