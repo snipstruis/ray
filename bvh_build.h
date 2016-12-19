@@ -26,7 +26,6 @@ void subdivide(
         BVHNode& node, 
         TriangleMapping const& fromIndicies,
         unsigned int lastAxis) {
-    
     assert(fromIndicies.size() > 0);
 
     // the set of triangles in this node is already known, so calculate the bounds now before calling the
@@ -193,6 +192,13 @@ struct CentroidSAHSplitter {
             glm::vec3 const c = triangles[i].getCentroid();
             bounds = unionPoint(bounds,c);
         }
+        
+        static AABB last_aabb;
+        if(bounds==last_aabb){
+            printf("SAME BOUNDS AS LAST CALL!\n");
+            exit(1);
+        }
+        last_aabb = bounds;
 
         // find longest axis
         glm::vec3 diff = bounds.high - bounds.low;
