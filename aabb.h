@@ -79,6 +79,14 @@ inline void combineAABB(AABB& result, AABB const& a, AABB const& b) {
     result.sanityCheck();
 }
 
+inline AABB unionAABB(AABB const& a, AABB const& b){
+    return {glm::min(a.low,b.low),glm::max(a.high,b.high)};
+}
+
+inline AABB unionPoint(AABB const& a, glm::vec3 b){
+    return {glm::min(a.low,b),glm::max(a.high,b)};
+}
+
 // does @outer fully contain @inner?
 inline bool containsAABB(AABB const& outer, AABB const& inner) {
     inner.sanityCheck();

@@ -5,6 +5,7 @@
 
 enum BVHMethod {
     BVHMethod_STUPID,
+    BVHMethod_CENTROID_SAH,
     BVHMethod_SAH,
     __BVHMethod_MAX
 };
@@ -12,6 +13,7 @@ enum BVHMethod {
 const char* BVHMethodStr(BVHMethod m) {
     switch(m) {
         case BVHMethod_STUPID: return "STUPID";
+        case BVHMethod_CENTROID_SAH: return "Centroid SAH";
         case BVHMethod_SAH:    return "SAH";
         case __BVHMethod_MAX: return "shouldnt happen";
     };
@@ -149,6 +151,122 @@ struct StupidSplitter {
 inline BVH* buildStupidBVH(Scene& s) {
     std::cout << "building stupid BVH" << std::endl;
     BVH* bvh = buildBVH<StupidSplitter>(s);
+
+    // as we have a single node, it should be a leaf
+    assert(bvh->nodeCount() == 1);
+    assert(bvh->root().isLeaf());
+    return bvh;
+}
+
+struct Slice{
+    AABB aabb;
+    int  count;
+};
+
+struct CentroidSAHSplitter {
+    static bool GetSplit(
+            TrianglePosSet const& triangles,// in: master triangle array
+            TriangleMapping const& indicies,// in: set of triangle indicies to split 
+            AABB const& bounds,             // in: bounds of this set of triangles
+            unsigned int lastAxis,          // in: the axis on which the parent was split
+            unsigned int& axis,             // out: axis on which to split
+            float& leftMax,                 // out: max point to include in left set 
+            float& rightMin) {              // out: min point to include in right set
+        if(indicies.size()<=3) return false;
+
+        // find longest axis
+        glm::vec3 diff = bounds.high - bounds.low;
+        axis = diff[0] > diff[1] ?  
+               diff[0] > diff[2] ? 0 : 2
+             : diff[1] > diff[2] ? 1 : 2;
+        
+        static long long callnr=0;
+        printf("%-4lldsplitting bounding box x:%f<%f, y:%f<%f, z:%f<%f across %c axis (%lu triangles)\n",
+                callnr++,
+                bounds.low.x, bounds.high.x,
+                bounds.low.y, bounds.high.y,
+                bounds.low.z, bounds.high.z,
+                "xyz"[axis],indicies.size());
+
+        // slice parent bounding box into slices along the longest axis
+        // and count the triangle centroids in it
+        constexpr int MAX_SLICES = 8;
+        Slice slices[MAX_SLICES];
+        for(int i=0; i<MAX_SLICES; i++){
+            slices[i].count = 0;
+            slices[i].aabb ={{INFINITY,INFINITY,INFINITY},{-INFINITY,-INFINITY,-INFINITY}};
+        }
+        for(int const idx:indicies){
+            glm::vec3 const c = triangles[idx].getCentroid();
+            int s = MAX_SLICES*((c[axis] - bounds.low[axis])/(bounds.high[axis]-bounds.low[axis]));
+            if(s>=MAX_SLICES) s=MAX_SLICES-1;
+            AABB triangle = {c,c};
+            for(int i=0;i<3;i++) triangle = unionPoint(triangle,triangles[idx].v[i]);
+            slices[s].aabb = unionAABB(slices[s].aabb, triangle);
+            slices[s].count++;
+        }
+
+        // print out our slices
+        for(int i=0; i<MAX_SLICES; i++){
+            float const sliceWidth = fabs(bounds.high[axis]-bounds.low[axis])/(float)MAX_SLICES;
+            float const sliceMin = bounds.low[axis]+i*sliceWidth;
+            float const sliceMax = bounds.low[axis]+(i+1)*sliceWidth;
+            printf("    slice %d: t:%d, x:%f<%f, y:%f<%f, z:%f<%f, w:%f s:%f<%f\n",
+                i, slices[i].count,
+                slices[i].aabb.low.x, slices[i].aabb.high.x,
+                slices[i].aabb.low.y, slices[i].aabb.high.y,
+                slices[i].aabb.low.z, slices[i].aabb.high.z,
+                sliceWidth, sliceMin, sliceMax);
+        }
+
+        // calculate cost after each slice
+        float boundingArea = surfaceAreaAABB(bounds);
+        float cost[MAX_SLICES-1];
+        for(int i=0; i<MAX_SLICES-1; i++){
+            printf("    ");
+            // glue slices together into a left slice and a right slice
+            Slice left; left.count=0; left.aabb={{INFINITY,INFINITY,INFINITY},{-INFINITY,-INFINITY,-INFINITY}};
+            for(int j=0; j<=i; j++){
+                printf("L");
+                left.aabb = unionAABB(left.aabb, slices[j].aabb);
+                left.count += slices[j].count;
+            }
+            Slice right; right.count=0; right.aabb ={{INFINITY,INFINITY,INFINITY},{-INFINITY,-INFINITY,-INFINITY}};
+            for(int j=i+1; j<MAX_SLICES; j++){
+                printf("R");
+                right.aabb = unionAABB(right.aabb, slices[j].aabb);
+                right.count += slices[j].count;
+            }
+            if(left.count==0 || right.count==0) cost[i] = INFINITY;
+            cost[i] = 1 + (left.count  * surfaceAreaAABB(left.aabb) 
+                          +right.count * surfaceAreaAABB(right.aabb)) 
+                          / boundingArea;
+            printf(" %d|%d: cost:%f, count:%d, x:%f<%f, y:%f<%f, z:%f<%f\n",
+                    i, i+1, cost[i], left.count,
+                    left.aabb.low.x, left.aabb.high.x,
+                    left.aabb.low.y, left.aabb.high.y,
+                    left.aabb.low.z, left.aabb.high.z);
+        }
+
+        // find minimal permutation
+        int minIdx = 0;
+        for(int i=1; i<MAX_SLICES-1; i++){
+            if(cost[i]<cost[minIdx]) minIdx = i;
+        }
+
+        leftMax  = slices[minIdx].aabb.high[axis];
+        rightMin = slices[minIdx+1].aabb.low[axis];
+        bool split_good_enough = cost[minIdx] < indicies.size();
+        printf("    %s: %d|%d, cost:%f, lmax:%f, rmin:%f\n", split_good_enough?"winner":"NOT SPLITTING",minIdx, minIdx+1, cost[minIdx], leftMax, rightMin);
+
+        if(callnr>10) exit(0);
+        return split_good_enough;
+    }
+};
+
+inline BVH* buildCentroidSAHBVH(Scene& s) {
+    std::cout << "building centroid SAH BVH" << std::endl;
+    BVH* bvh = buildBVH<CentroidSAHSplitter>(s);
 
     // as we have a single node, it should be a leaf
     assert(bvh->nodeCount() == 1);
@@ -314,6 +432,7 @@ inline BVH* buildBVH(Scene& s, BVHMethod method) {
 
     switch(method) {
         case BVHMethod_STUPID: bvh = buildStupidBVH(s); break;
+        case BVHMethod_CENTROID_SAH: bvh=buildCentroidSAHBVH(s); break;
         case BVHMethod_SAH:    bvh = buildSAHBVH(s);    break;
         case __BVHMethod_MAX: assert(false); break; // shouldn't happen
     };
