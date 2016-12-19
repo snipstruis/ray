@@ -27,6 +27,10 @@ struct AABB {
     glm::vec3 low, high;
 };
 
+bool operator==(AABB const& a, AABB const& b){
+    return (a.low==b.low) && (a.high==b.high);
+};
+
 static_assert(sizeof(AABB) == 24, "AABB size");
 
 inline std::ostream& operator<<(std::ostream& os, const AABB& a) {

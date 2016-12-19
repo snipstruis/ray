@@ -26,7 +26,6 @@ void subdivide(
         BVHNode& node, 
         TriangleMapping const& fromIndicies,
         unsigned int lastAxis) {
-    
     assert(fromIndicies.size() > 0);
 
     // the set of triangles in this node is already known, so calculate the bounds now before calling the
@@ -289,7 +288,13 @@ struct CentroidSAHSplitter {
                 split_good_enough?"winner":"NOT SPLITTING",
                 minIdx, second_index, 
                 cost[minIdx], leftMax, rightMin);
-
+        
+        static AABB last_aabb;
+        if(bounds==last_aabb){
+            printf("    >>> SAME BOUNDS AS LAST CALL! <<<\n");
+            exit(1);
+        }
+        last_aabb = bounds;
         //if(callnr>10) exit(0);
         return split_good_enough;
     }
