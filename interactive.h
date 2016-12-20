@@ -1,7 +1,7 @@
 #pragma once
 
 #include "bvh.h"
-#include "bvh_build.h"
+#include "bvh_build_factory.h"
 #include "camera.h"
 #include "loader.h"
 #include "output.h"

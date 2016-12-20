@@ -1,6 +1,6 @@
 #pragma once
 
-#include "bvh_build.h"
+#include "bvh_build_factory.h"
 #include "output.h"
 #include "timer.h"
 #include "trace.h"
