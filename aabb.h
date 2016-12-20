@@ -156,12 +156,12 @@ inline bool containsAABB(AABB const& outer, AABB const& inner) {
     outer.sanityCheck();
 
     return 
-        outer.low[0] <= inner.low[0] && 
-        outer.low[1] <= inner.low[1] && 
-        outer.low[2] <= inner.low[2] && 
-        outer.high[0] >= inner.high[0] && 
-        outer.high[1] >= inner.high[1] && 
-        outer.high[2] >= inner.high[2];
+        outer.low.x <= inner.low.x && 
+        outer.low.y <= inner.low.y && 
+        outer.low.z <= inner.low.z && 
+        outer.high.x >= inner.high.x && 
+        outer.high.y >= inner.high.y && 
+        outer.high.z >= inner.high.z;
 }
 
 inline bool containsTriangle(AABB const& outer, TrianglePosition const& t) {
