@@ -3,6 +3,7 @@
 #include "bvh.h"
 #include "bvh_diag.h"
 #include "scene.h"
+#include "timer.h"
 
 #include <array>
 
@@ -241,7 +242,7 @@ struct CentroidSAHSplitter {
 
         bool split_good_enough = minCost < indicies.size();
         if(!split_good_enough) {
-            std::cout << "NOT SPLITTING" << std::endl;
+            std::cout << " NOT SPLITTING" << std::endl;
             return false;
         }
 
@@ -466,6 +467,7 @@ inline BVH* buildStupidBVH(Scene& s) {
 }
 
 inline BVH* buildBVH(Scene& s, BVHMethod method) {
+    Timer t;
     BVH* bvh = nullptr;
 
     switch(method) {
@@ -478,6 +480,7 @@ inline BVH* buildBVH(Scene& s, BVHMethod method) {
     std::cout << "bvh node count " << bvh->nextFree << std::endl;
     std::cout << "triangle count " << s.primitives.triangles.size() << std::endl;
     std::cout << "root AABB " << bvh->root().bounds << std::endl;
+    std::cout << "BVH build time " << t.sample() << std::endl;
 
     sanityCheckBVH(*bvh, s.primitives.pos);
 

@@ -181,6 +181,7 @@ inline bool containsTriangle(AABB const& outer, TrianglePosition const& t) {
 
 // Does a ray intersect the BVH node? Returns distance to intersect, or INFINITY if no intersection
 // based on http://gamedev.stackexchange.com/questions/18436/most-efficient-aabb-vs-ray-collision-algorithms
+// and Physically Based Rendering (Pharr, Jakob, Humphreys) 3rd ed. pp 129
 // note this doesn't take a ray, as it needs 1/direction. Given that this function gets called repeatedly
 // for the same ray, better to do this at the call site.
 float rayIntersectsAABB(AABB const& a, glm::vec3 const& rayOrigin, glm::vec3 const& invDirection) {
