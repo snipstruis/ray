@@ -68,6 +68,7 @@ void subdivide(
     // are we creating a leaf?
     if(!shouldSplit) {
         // ok, leafy time.
+        // 
 
         // we're going to append the indicies to the central array, and just remember the 
         // start+count in this node. 
@@ -81,7 +82,7 @@ void subdivide(
         assert(node.isLeaf());
         assert(node.leftFirst == node.first());
 
-//        std::cout << "leaf AABB " << node.bounds << " count " << node.count << std::endl;
+        std::cout << "  leaf AABB " << node.bounds << " count " << node.count << std::endl;
     } else {
         // not creating a leaf, we're splitting - create a subdivision
        
@@ -186,7 +187,7 @@ struct CentroidSAHSplitter {
 
         bounds.sanityCheck();
 
-        if(indicies.size() <= 100) 
+        if(indicies.size() <= 3) 
             return false;
 
         // get an AABB around all triangle centroids
@@ -214,9 +215,8 @@ struct CentroidSAHSplitter {
             const TrianglePosition& tri = triangles[idx];
             
             // drop this centroid into a slice
-            float pos = tri.getAverageCoord(axis);
-
-            float ratio = ((pos - low) / sliceWidth);
+            const float pos = tri.getAverageCoord(axis);
+            const float ratio = ((pos - low) / sliceWidth);
             unsigned int sliceNo = ratio * MAX_SLICES;
             //std::cout << (pos - low) << " " << sliceWidth << " " << ratio << " " << sliceNo << std::endl;
 
@@ -263,6 +263,7 @@ struct CentroidSAHSplitter {
             }
         }
 
+        std::cout << " minIdx " << minIdx;
         std::cout << " minCost " << minCost;
 
         bool split_good_enough = minCost < indicies.size();
