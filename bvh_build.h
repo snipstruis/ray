@@ -60,7 +60,7 @@ void subdivide(
     unsigned int splitAxis; 
     float leftMax, rightMin;
 
-    std::cout << "subdiv total count " << fromIndicies.size() << std::endl;
+    std::cout << "subdiv total count " << fromIndicies.size();
 
     bool shouldSplit=Splitter::GetSplit(
             triangles, fromIndicies, node.bounds, lastAxis, splitAxis, leftMax, rightMin);
@@ -200,6 +200,7 @@ struct CentroidSAHSplitter {
         // find longest axis
         axis = centroidBounds.longestAxis();
 
+        std::cout << " axis " << axis << std::endl;
         // slice parent bounding box into slices along the longest axis
         // and count the triangle centroids in it
         constexpr int MAX_SLICES = 8;
@@ -229,11 +230,18 @@ struct CentroidSAHSplitter {
             slices[sliceNo].count++;
         }
 
+#if 0
+        for(auto const& s: slices) {
+            std::cout << s.count << ": ";
+            std::cout << s.aabb << std::endl;
+        }
+#endif
+
         // calculate cost after each slice
         const float boundingArea = surfaceAreaAABB(bounds);
         std::array<float, MAX_SLICES-1> costs;
 
-        for(int i = 0; i < MAX_SLICES-1; i++) {
+        for(unsigned int i = 0; i < costs.size(); i++) {
             // glue slices together into a left slice and a right slice
             Slice left; 
             for(int j = 0; j <= i; j++){
@@ -252,6 +260,11 @@ struct CentroidSAHSplitter {
 
             costs[i] = 1 + (left.count * al + right.count * ar) / boundingArea;
         }
+
+        for (auto c : costs) {
+            std::cout << c << " ";
+        }
+        std::cout << std::endl;
 
         // find minimal permutation
         int minIdx = 0;
