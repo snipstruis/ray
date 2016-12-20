@@ -25,6 +25,19 @@ struct AABB {
         assert(low[1] <= high[1]);
         assert(low[2] <= high[2]);
     }
+    
+    // get the 3x axis lengths
+    glm::vec3 lengths() const {
+        sanityCheck();
+        return high - low;
+    }
+
+    int longestAxis() const {
+        glm::vec3 diff = lengths();
+        return diff[0] > diff[1] ?  
+                  diff[0] > diff[2] ? 0 : 2
+                : diff[1] > diff[2] ? 1 : 2;
+    }
 
     glm::vec3 low, high;
 };
@@ -104,7 +117,9 @@ inline AABB unionAABB(AABB const& a, AABB const& b){
 }
 
 inline AABB unionPoint(AABB const& a, glm::vec3 b){
-    return {glm::min(a.low,b),glm::max(a.high,b)};
+    AABB result = AABB{glm::min(a.low,b), glm::max(a.high,b)};
+    result.sanityCheck();
+    return result;
 }
 
 // does @outer fully contain @inner?
@@ -164,8 +179,15 @@ float rayIntersectsAABB(AABB const& a, glm::vec3 const& rayOrigin, glm::vec3 con
     return tmin;
 }
 
-inline float surfaceAreaAABB(AABB const& aabb){
+inline float surfaceAreaAABB(AABB const& aabb) {
     glm::vec3 d = aabb.high-aabb.low;
     return 2.f*(d.x*d.y + d.x*d.z + d.y*d.z);
 }
 
+inline AABB triangleBounds(TrianglePosition const& t) {
+    AABB result;
+    for(int i = 0 ; i < 3; i++)
+        result = unionPoint(result, t.v[i]);
+    result.sanityCheck();
+    return result;
+}

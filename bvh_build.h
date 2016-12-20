@@ -4,6 +4,8 @@
 #include "bvh_diag.h"
 #include "scene.h"
 
+#include <array>
+
 enum BVHMethod {
     BVHMethod_STUPID,
     BVHMethod_CENTROID_SAH,
@@ -29,20 +31,22 @@ void subdivide(
         unsigned int lastAxis) {
     assert(fromIndicies.size() > 0);
 
-    // the set of triangles in this node is already known, so calculate the bounds now before calling the
+    // the set of triangles in this node is already known, so calculate the bounds now before subdividing
     calcAABBIndirect(node.bounds, triangles, fromIndicies, 0, fromIndicies.size());
 
     // out params for the splitter. Note they are only defined if shouldSplit == true
     unsigned int splitAxis; 
     float leftMax, rightMin;
 
-    bool shouldSplit=Splitter::GetSplit(triangles, fromIndicies, node.bounds, lastAxis, splitAxis, leftMax,rightMin);
+    bool shouldSplit=Splitter::GetSplit(
+            triangles, fromIndicies, node.bounds, lastAxis, splitAxis, leftMax, rightMin);
 
     // are we creating a leaf?
     if(!shouldSplit) {
         // ok, leafy time.
 
-        // we're going to append the indicies to the central array, and just remember the start+count in this node. 
+        // we're going to append the indicies to the central array, and just remember the 
+        // start+count in this node. 
         node.leftFirst = bvh.indicies.size();
         // give this node a count, which by definition makes it a leaf
         node.count = fromIndicies.size();
@@ -90,26 +94,33 @@ void subdivide(
             if(valMax >= rightMin)
                 rightIndicies.push_back(idx);
         }
-#else
+#endif
         // CENTROID BASED
-        for(unsigned int idx:fromIndicies){
-            // triangles are not duplicated
-            if(triangles[idx].getCentroid()[splitAxis] <= leftMax){
+        //assert(feq(leftMax,rightMin));
+
+        float min = INFINITY;
+        float max = -INFINITY;
+
+        for(unsigned int idx : fromIndicies){
+            float val = triangles[idx].getCentroid()[splitAxis];
+            min = std::min(min, val);
+            max = std::max(max, val);
+            
+            if (val <= leftMax) {
                 leftIndicies.push_back(idx);
-                printf("L");
-            } else if(triangles[idx].getCentroid()[splitAxis] >=rightMin){
+            } else { 
                 rightIndicies.push_back(idx);
-                printf("R");
-            } else {
-                printf("index out of bounds!\n");
-                exit(1);
             }
         }
-#endif
 
         std::cout << " leftcount " << leftIndicies.size();
         std::cout << " rightCount " << rightIndicies.size() ;
+        std::cout << " min " << min;
+        std::cout << " max " << max;
         std::cout << std::endl;
+        std::cout << std::endl;
+        assert(min < leftMax);
+        assert(max > leftMax);
 
         // if either of these fire, we've not 'split', we've put all the triangles on one side
         // (in which case, it's either a bad split value, or we should have created a leaf)
@@ -120,8 +131,9 @@ void subdivide(
         // note that this is <, not <=. if either child contains all the triangles,
         // we don't have a stopping condition, and we'll recurse forever. and the
         // universe hates this.
-        assert(leftIndicies.size()  < fromIndicies.size());
+        assert(leftIndicies.size() < fromIndicies.size());
         assert(rightIndicies.size() < fromIndicies.size());
+        assert(leftIndicies.size() + rightIndicies.size() == fromIndicies.size());
 
         // recurse
         subdivide<Splitter>(triangles, bvh, left, leftIndicies, splitAxis);
@@ -149,10 +161,14 @@ inline BVH* buildBVH(Scene& s) {
     return bvh;
 }
 
-// Build a bad, but valid, BVH. This will have a single root node containing all triangles,
-// so traversing it will degrade to a linear search. 
-// Useful for testing worst case scenarios, or feeling bad about yourself.
-struct StupidSplitter {
+struct Slice{
+    Slice() : count (0) {}
+
+    AABB aabb;
+    int count;
+};
+
+struct CentroidSAHSplitter {
     static bool GetSplit(
             TrianglePosSet const& triangles,// in: master triangle array
             TriangleMapping const& indicies,// in: set of triangle indicies to split 
@@ -162,129 +178,137 @@ struct StupidSplitter {
             float& leftMax,                 // out: max point to include in left set 
             float& rightMin) {              // out: min point to include in right set
 
-        return false; // stop splitting
-    }
-};
+        bounds.sanityCheck();
 
-inline BVH* buildStupidBVH(Scene& s) {
-    std::cout << "building stupid BVH" << std::endl;
-    BVH* bvh = buildBVH<StupidSplitter>(s);
+        if(indicies.size() <= 3) 
+            return false;
 
-    // For the stupid splitter, we should have a single node, and it should be a leaf
-    assert(bvh->nodeCount() == 1);
-    assert(bvh->root().isLeaf());
-    return bvh;
-}
-
-struct Slice{
-    Slice(){
-        count = 0;
-    }
-    AABB aabb;
-    int  count;
-};
-
-struct CentroidSAHSplitter {
-    static bool GetSplit(
-            TrianglePosSet const& triangles,// in: master triangle array
-            TriangleMapping const& indicies,// in: set of triangle indicies to split 
-            AABB bounds,                    // in: bounds of this set of triangles
-            unsigned int lastAxis,          // in: the axis on which the parent was split
-            unsigned int& axis,             // out: axis on which to split
-            float& leftMax,                 // out: max point to include in left set 
-            float& rightMin) {              // out: min point to include in right set
-        if(indicies.size()<=3) return false;
-
-        bounds = AABB();
-        for(int const i:indicies){
-            glm::vec3 const c = triangles[i].getCentroid();
-            bounds = unionPoint(bounds,c);
+        AABB centroidBounds;
+        for(const int i : indicies) {
+            const glm::vec3 c = triangles[i].getCentroid();
+            centroidBounds = unionPoint(centroidBounds, c);
         }
 
+        // bounds of centroids must be within total triangle bounds
+        centroidBounds.sanityCheck();
+        assert(containsAABB(bounds, centroidBounds));
+
         // find longest axis
-        glm::vec3 diff = bounds.high - bounds.low;
-        axis = diff[0] > diff[1] ?  
-               diff[0] > diff[2] ? 0 : 2
-             : diff[1] > diff[2] ? 1 : 2;
+        axis = centroidBounds.longestAxis();
         
         static long long callnr=0;
-        printf("%-4lldsplitting bounding box x:%f<%f, y:%f<%f, z:%f<%f across %c axis (%lu triangles)\n",
+#if 0
+        printf("%-4lldsplitting bounds x:%f < %f, y:%f < %f, z:%f < %f across %c axis (%lu triangles)\n\n",
                 callnr++,
                 bounds.low.x, bounds.high.x,
                 bounds.low.y, bounds.high.y,
                 bounds.low.z, bounds.high.z,
                 "xyz"[axis],indicies.size());
+#endif
 
         // slice parent bounding box into slices along the longest axis
         // and count the triangle centroids in it
         constexpr int MAX_SLICES = 8;
-        Slice slices[MAX_SLICES];
-        for(int const idx:indicies){
-            glm::vec3 const c = triangles[idx].getCentroid();
-            int s = MAX_SLICES*((c[axis] - bounds.low[axis])/(bounds.high[axis]-bounds.low[axis]));
-            if(s>=MAX_SLICES) s=MAX_SLICES-1;
-            AABB triangle;
-            for(int i=0;i<3;i++) triangle = unionPoint(triangle,triangles[idx].v[i]);
-            slices[s].aabb = unionAABB(slices[s].aabb, triangle);
-            slices[s].count++;
+        std::array<Slice, MAX_SLICES> slices;
+
+        // for chosen Axis, get high/low coords
+        const float low = centroidBounds.low[axis];
+        const float high = centroidBounds.high[axis];
+        assert(low < high);
+        const float sliceWidth = high - low;
+
+        for(int const idx : indicies){
+            const TrianglePosition& tri = triangles[idx];
+            const glm::vec3 c = tri.getCentroid();
+            
+            // drop this centroid into a slice
+            float pos = c[axis];
+            float ratio = ((pos - low) / sliceWidth);
+            unsigned int sliceNo = ratio * MAX_SLICES;
+            //std::cout << (pos - low) << " " << sliceWidth << " " << ratio << " " << sliceNo << std::endl;
+
+            if(sliceNo == MAX_SLICES)
+                sliceNo--;
+
+            const AABB triBounds = triangleBounds(tri);
+
+            slices[sliceNo].aabb = unionAABB(slices[sliceNo].aabb, triBounds);
+            slices[sliceNo].count++;
         }
 
+#if 0
         // print out our slices
-        for(int i=0; i<MAX_SLICES; i++){
-            float const sliceWidth = fabs(bounds.high[axis]-bounds.low[axis])/(float)MAX_SLICES;
+        for(int i = 0; i < slices.size(); i++) {
+            auto const& slice = slices[i];
             float const sliceMin = bounds.low[axis]+i*sliceWidth;
             float const sliceMax = bounds.low[axis]+(i+1)*sliceWidth;
-            printf("    slice %d: t:%d, x:%f<%f, y:%f<%f, z:%f<%f, w:%f s:%f<%f\n",
-                i, slices[i].count,
+
+            printf("    slice %d: t:%d, x:%f < %f, y:%f < %f, z:%f < %f, w:%f s:%f < %f\n",
+                i, 
+                slices[i].count,
                 slices[i].aabb.low.x, slices[i].aabb.high.x,
                 slices[i].aabb.low.y, slices[i].aabb.high.y,
                 slices[i].aabb.low.z, slices[i].aabb.high.z,
                 sliceWidth, sliceMin, sliceMax);
         }
+#endif
 
         // calculate cost after each slice
-        float boundingArea = surfaceAreaAABB(bounds);
-        float cost[MAX_SLICES-1];
-        for(int i=0; i<MAX_SLICES-1; i++){
-            printf("    ");
+        const float boundingArea = surfaceAreaAABB(bounds);
+        std::array<float, MAX_SLICES-1> costs;
+
+        for(int i = 0; i < MAX_SLICES-1; i++) {
+//            printf("    ");
             // glue slices together into a left slice and a right slice
             Slice left; 
-            for(int j=0; j<=i; j++){
-                printf("L");
+            for(int j = 0; j <= i; j++){
+//                printf("L");
                 left.aabb = unionAABB(left.aabb, slices[j].aabb);
                 left.count += slices[j].count;
             }
+
             Slice right;
-            for(int j=i+1; j<MAX_SLICES; j++){
-                printf("R");
+            for(int j = i+1; j < MAX_SLICES; j++){
+ //               printf("R");
                 right.aabb = unionAABB(right.aabb, slices[j].aabb);
                 right.count += slices[j].count;
             }
+
             float al = surfaceAreaAABB(left.aabb);
             float ar = surfaceAreaAABB(right.aabb);
-            cost[i] = 1 + (left.count  * al + right.count * ar) / boundingArea;
+
+            costs[i] = 1 + (left.count * al + right.count * ar) / boundingArea;
+#if 0
             printf(" %d|%d: cost:%f, count:%d/%d, area:%f/%f\n"
                    "      x:%+f < %+f / %+f < %+f\n"
                    "      y:%+f < %+f / %+f < %+f\n"
                    "      z:%+f < %+f / %+f < %+f\n",
-                    i, i+1, cost[i], left.count, right.count,
+                    i, i+1, costs[i], left.count, right.count,
                     al, ar,
                     left.aabb.low.x, left.aabb.high.x, right.aabb.low.x, right.aabb.high.x,
                     left.aabb.low.y, left.aabb.high.y, right.aabb.low.y, right.aabb.high.y,
                     left.aabb.low.z, left.aabb.high.z, right.aabb.low.z, right.aabb.high.z);
+#endif
         }
 
         // find minimal permutation
-        int   minIdx = 0;
-        float minCost=cost[0];
-        for(int i=1; i<MAX_SLICES-1; i++){
-            if(cost[i]<cost[minIdx]){
+        int minIdx = 0;
+        float minCost = costs[0];
+        for(unsigned int i = 1; i < costs.size(); i++){
+            if(costs[i] < minCost) {
                 minIdx = i;
-                minCost = cost[i];
+                minCost = costs[i];
             }
         }
 
-        leftMax  = slices[minIdx].aabb.high[axis];
+        bool split_good_enough = minCost < indicies.size();
+        if(!split_good_enough) {
+            std::cout << "NOT SPLITTING" << std::endl;
+            return false;
+        }
+
+        leftMax = rightMin = slices[minIdx].aabb.high[axis];
+#if 0
         int second_index=0;
         for(int i=minIdx+1; i<MAX_SLICES-1; i++){
             if(slices[i].count>0){
@@ -293,12 +317,12 @@ struct CentroidSAHSplitter {
                 break;
             }
         }
-
-        bool split_good_enough = cost[minIdx] < indicies.size();
-        printf("    %s: %d|%d, cost:%f, lmax:%f, rmin:%f\n", 
-                split_good_enough?"winner":"NOT SPLITTING",
-                minIdx, second_index, 
-                cost[minIdx], leftMax, rightMin);
+#endif
+        printf("    %d cost:%f, lmax:%f, rmin:%f\n", 
+//                split_good_enough?"winner":"NOT SPLITTING",
+                minIdx, 
+                //second_index, 
+                costs[minIdx], leftMax, rightMin);
         
         static AABB last_aabb;
         if(bounds==last_aabb){
@@ -307,7 +331,7 @@ struct CentroidSAHSplitter {
         }
         last_aabb = bounds;
         //if(callnr>10) exit(0);
-        return split_good_enough;
+        return true;
     }
 };
 
@@ -466,6 +490,33 @@ struct SAHSplitter{
 BVH* buildSAHBVH(Scene& s){
     std::cout << "building SAH BVH" << std::endl;
     BVH* bvh = buildBVH<SAHSplitter>(s);
+    return bvh;
+}
+
+// Build a bad, but valid, BVH. This will have a single root node containing all triangles,
+// so traversing it will degrade to a linear search. 
+// Useful for testing worst case scenarios, or feeling bad about yourself.
+struct StupidSplitter {
+    static bool GetSplit(
+            TrianglePosSet const& triangles,// in: master triangle array
+            TriangleMapping const& indicies,// in: set of triangle indicies to split 
+            AABB const& bounds,             // in: bounds of this set of triangles
+            unsigned int lastAxis,          // in: the axis on which the parent was split
+            unsigned int& axis,             // out: axis on which to split
+            float& leftMax,                 // out: max point to include in left set 
+            float& rightMin) {              // out: min point to include in right set
+
+        return false; // stop splitting
+    }
+};
+
+inline BVH* buildStupidBVH(Scene& s) {
+    std::cout << "building stupid BVH" << std::endl;
+    BVH* bvh = buildBVH<StupidSplitter>(s);
+
+    // For the stupid splitter, we should have a single node, and it should be a leaf
+    assert(bvh->nodeCount() == 1);
+    assert(bvh->root().isLeaf());
     return bvh;
 }
 
