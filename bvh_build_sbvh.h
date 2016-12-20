@@ -20,8 +20,7 @@ class BoundsPartitioner {
                 rightIndicies.push_back(idx);
         }
 }
-#endif
-#if 0
+
 void AAplaneTriangle(TrianglePos const& t, int axis, float plane, glm::vec3* p0, flm::vec3* p1){
     int points = 0;
     glm::vec3 p[2];
@@ -43,9 +42,7 @@ void AAplaneTriangle(TrianglePos const& t, int axis, float plane, glm::vec3* p0,
     *p0=p[0];
     *p1=p[1];
 }
-#endif
 
-#if 0
 // Surface Area Heuristic splitter
 struct SAHSplitter{
     static bool GetSplit(
@@ -166,18 +163,7 @@ struct SAHSplitter{
         printf("  RESULT: %s\n", split_good_enough?"split good enough":"not worth splitting");
         return split_good_enough;
     }
-    static void Partition(
-            TrianglePosSet const& triangles,     // in: master triangle array
-            TriangleMapping const& fromIndicies, // in: set of triangle indicies to split 
-            unsigned int axis,                   // in: axis on which to split
-            float leftMax,                       // in: max point to include in left set 
-            float rightMin,                      // in: min point to include in right set
-            TriangleMapping& leftIndicies,       // out: resultant left set
-            TriangleMapping& rightIndicies) {    // out: resultant right set
-        assert(false);//unimplemented!
-    }
 };
-
 
 BVH* buildSAHBVH(Scene& s){
     std::cout << "building SAH BVH" << std::endl;
