@@ -54,9 +54,10 @@ enum GuiAction {
 
 // process input
 // returns action to be performed
-GuiAction handleEvents(Scene& s, Mode *vis, float *vis_scale, BVHMethod& bvh)
+GuiAction handleEvents(Scene& s, float frameTime, Mode *vis, float *vis_scale, BVHMethod& bvh)
 {
     SDL_Event e;
+    float scale = frameTime;
 
     while(SDL_PollEvent(&e)) {
         switch(e.type)
@@ -64,14 +65,17 @@ GuiAction handleEvents(Scene& s, Mode *vis, float *vis_scale, BVHMethod& bvh)
             case SDL_QUIT:
                 return GA_QUIT;
             case SDL_MOUSEWHEEL:
-                s.camera.moveFov(glm::radians((float)-e.wheel.y));
+                s.camera.moveFov(glm::radians((float)-e.wheel.y * scale));
                 break;
             case SDL_MOUSEMOTION:
-                // yes - it's "airplane" style at the moment - mouse down = view up.
-                // I'm going to get a cmdline working soon, make this an option
-                s.camera.moveYawPitch(
-                    glm::radians(((float)e.motion.xrel)/5), -glm::radians(((float)e.motion.yrel)/5));
-                break;
+                {
+                    // yes - it's "airplane" style at the moment - mouse down = view up.
+                    // I'm going to get a cmdline working soon, make this an option
+                    float yaw = (((float)e.motion.xrel)/5) * scale;
+                    float pitch = -(((float)e.motion.yrel)/5) * scale;
+                    s.camera.moveYawPitch(yaw, pitch);
+                    break;
+                }
             case SDL_KEYDOWN:
                 switch(e.key.keysym.scancode){
                     case SDL_SCANCODE_ESCAPE:  return GA_QUIT;
@@ -88,7 +92,8 @@ GuiAction handleEvents(Scene& s, Mode *vis, float *vis_scale, BVHMethod& bvh)
                     case SDL_SCANCODE_6: *vis = Mode::LeafsChecked; break;
                     case SDL_SCANCODE_7: *vis = Mode::NodeIndex; break;
                     case SDL_SCANCODE_B: bvh = (BVHMethod)((bvh + 1) % __BVHMethod_MAX); break;
-                    case SDL_SCANCODE_T: traversalMode = (TraversalMode)(((int)traversalMode + 1) % (int)TraversalMode::MAX); break;
+                    case SDL_SCANCODE_T: traversalMode = 
+                        (TraversalMode)(((int)traversalMode + 1) % (int)TraversalMode::MAX); break;
                     default:
                         break;
                 }
@@ -99,13 +104,13 @@ GuiAction handleEvents(Scene& s, Mode *vis, float *vis_scale, BVHMethod& bvh)
     Uint8 const * kbd = SDL_GetKeyboardState(NULL);
 
     if(kbd[SDL_SCANCODE_S])
-        s.camera.moveForward(-0.2f);
+        s.camera.moveForward(-0.2f * scale);
     if(kbd[SDL_SCANCODE_W]) 
-        s.camera.moveForward(0.2f);
+        s.camera.moveForward(0.2f * scale);
     if(kbd[SDL_SCANCODE_A])
-        s.camera.moveRight(-0.2f);
+        s.camera.moveRight(-0.2f * scale);
     if(kbd[SDL_SCANCODE_D])
-        s.camera.moveRight(0.2f);
+        s.camera.moveRight(0.2f * scale);
     if(kbd[SDL_SCANCODE_COMMA])
         *vis_scale *= 0.9;
     if(kbd[SDL_SCANCODE_PERIOD])
@@ -145,7 +150,7 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
         SDL_GL_GetDrawableSize(win, &s.camera.width, &s.camera.height);
 
         BVHMethod oldMethod = bvhMethod;
-        GuiAction a = handleEvents(s,&mode,&vis_scale,bvhMethod);
+        GuiAction a = handleEvents(s, frameTimer.timer.lastDiff, &mode, &vis_scale, bvhMethod);
 
         if (a==GA_QUIT)
             break;
