@@ -22,6 +22,28 @@ const char* BVHMethodStr(BVHMethod m) {
     };
 }
 
+#if 0   
+        // MIN/MAX BASED
+class BoundsPartitioner {
+        for(unsigned int i = 0; i < fromIndicies.size(); i++) {
+            unsigned int idx = fromIndicies[i];
+            float valMin = triangles[idx].getMinCoord(splitAxis);
+            float valMax = triangles[idx].getMaxCoord(splitAxis);
+            
+//            std::cout << "idx " << idx;
+//            std::cout << " valMin " << valMin << " valMax " << valMax;
+//            std::cout << " leftMax " << leftMax << " rightMin " << rightMin << std::endl;;
+            // FIXME: beware of >= or <= cases (hairy with floats)
+            // .. we could miss triangles here
+            // We want to include the triangle if at least one part of it is within the range
+            if(valMin <= leftMax)
+                leftIndicies.push_back(idx);
+            if(valMax >= rightMin)
+                rightIndicies.push_back(idx);
+        }
+}
+#endif
+
 template <class Splitter>
 void subdivide(
         TrianglePosSet const& triangles, 
@@ -32,11 +54,13 @@ void subdivide(
     assert(fromIndicies.size() > 0);
 
     // the set of triangles in this node is already known, so calculate the bounds now before subdividing
-    calcAABBIndirect(node.bounds, triangles, fromIndicies, 0, fromIndicies.size());
+    node.bounds = buildAABBExtrema(triangles, fromIndicies, 0, fromIndicies.size());
 
     // out params for the splitter. Note they are only defined if shouldSplit == true
     unsigned int splitAxis; 
     float leftMax, rightMin;
+
+    std::cout << "subdiv total count " << fromIndicies.size() << std::endl;
 
     bool shouldSplit=Splitter::GetSplit(
             triangles, fromIndicies, node.bounds, lastAxis, splitAxis, leftMax, rightMin);
@@ -57,7 +81,7 @@ void subdivide(
         assert(node.isLeaf());
         assert(node.leftFirst == node.first());
 
-        std::cout << "leaf AABB " << node.bounds << " count " << node.count << std::endl;
+//        std::cout << "leaf AABB " << node.bounds << " count " << node.count << std::endl;
     } else {
         // not creating a leaf, we're splitting - create a subdivision
        
@@ -71,46 +95,28 @@ void subdivide(
         BVHNode& left = bvh.allocNextNode();
         BVHNode& right = bvh.allocNextNode();
 
-        std::cout << "subdiv total count "<< fromIndicies.size() << " axis " << splitAxis; 
+        std::cout << " axis " << splitAxis; 
         std::cout<< " leftMax " << leftMax << " rightMin " << rightMin << std::endl;
 
         // walk the index array, build left and right sides.
         TriangleMapping leftIndicies, rightIndicies;
-#if 0   
-        // MIN/MAX BASED
-        for(unsigned int i = 0; i < fromIndicies.size(); i++) {
-            unsigned int idx = fromIndicies[i];
-            float valMin = triangles[idx].getMinCoord(splitAxis);
-            float valMax = triangles[idx].getMaxCoord(splitAxis);
-            
-//            std::cout << "idx " << idx;
-//            std::cout << " valMin " << valMin << " valMax " << valMax;
-//            std::cout << " leftMax " << leftMax << " rightMin " << rightMin << std::endl;;
-            // FIXME: beware of >= or <= cases (hairy with floats)
-            // .. we could miss triangles here
-            // We want to include the triangle if at least one part of it is within the range
-            if(valMin <= leftMax)
-                leftIndicies.push_back(idx);
-            if(valMax >= rightMin)
-                rightIndicies.push_back(idx);
-        }
-#endif
+
         // CENTROID BASED
-        //assert(feq(leftMax,rightMin));
+        assert(feq(leftMax,rightMin));
 
         float min = INFINITY;
         float max = -INFINITY;
 
-        for(unsigned int idx : fromIndicies){
+        for(unsigned int idx : fromIndicies) {
+            // FIXME: don't generate whole centoid here (only need one axis)
             float val = triangles[idx].getCentroid()[splitAxis];
             min = std::min(min, val);
             max = std::max(max, val);
             
-            if (val <= leftMax) {
+            if(val <= leftMax)
                 leftIndicies.push_back(idx);
-            } else { 
+            else
                 rightIndicies.push_back(idx);
-            }
         }
 
         std::cout << " leftcount " << leftIndicies.size();
@@ -180,14 +186,11 @@ struct CentroidSAHSplitter {
 
         bounds.sanityCheck();
 
-        if(indicies.size() <= 3) 
+        if(indicies.size() <= 100) 
             return false;
 
-        AABB centroidBounds;
-        for(const int i : indicies) {
-            const glm::vec3 c = triangles[i].getCentroid();
-            centroidBounds = unionPoint(centroidBounds, c);
-        }
+        // get an AABB around all triangle centroids
+        AABB centroidBounds = buildAABBCentroid(triangles, indicies, 0, indicies.size());
 
         // bounds of centroids must be within total triangle bounds
         centroidBounds.sanityCheck();
@@ -195,16 +198,6 @@ struct CentroidSAHSplitter {
 
         // find longest axis
         axis = centroidBounds.longestAxis();
-        
-        static long long callnr=0;
-#if 0
-        printf("%-4lldsplitting bounds x:%f < %f, y:%f < %f, z:%f < %f across %c axis (%lu triangles)\n\n",
-                callnr++,
-                bounds.low.x, bounds.high.x,
-                bounds.low.y, bounds.high.y,
-                bounds.low.z, bounds.high.z,
-                "xyz"[axis],indicies.size());
-#endif
 
         // slice parent bounding box into slices along the longest axis
         // and count the triangle centroids in it
@@ -219,10 +212,10 @@ struct CentroidSAHSplitter {
 
         for(int const idx : indicies){
             const TrianglePosition& tri = triangles[idx];
-            const glm::vec3 c = tri.getCentroid();
             
             // drop this centroid into a slice
-            float pos = c[axis];
+            float pos = tri.getAverageCoord(axis);
+
             float ratio = ((pos - low) / sliceWidth);
             unsigned int sliceNo = ratio * MAX_SLICES;
             //std::cout << (pos - low) << " " << sliceWidth << " " << ratio << " " << sliceNo << std::endl;
@@ -236,40 +229,20 @@ struct CentroidSAHSplitter {
             slices[sliceNo].count++;
         }
 
-#if 0
-        // print out our slices
-        for(int i = 0; i < slices.size(); i++) {
-            auto const& slice = slices[i];
-            float const sliceMin = bounds.low[axis]+i*sliceWidth;
-            float const sliceMax = bounds.low[axis]+(i+1)*sliceWidth;
-
-            printf("    slice %d: t:%d, x:%f < %f, y:%f < %f, z:%f < %f, w:%f s:%f < %f\n",
-                i, 
-                slices[i].count,
-                slices[i].aabb.low.x, slices[i].aabb.high.x,
-                slices[i].aabb.low.y, slices[i].aabb.high.y,
-                slices[i].aabb.low.z, slices[i].aabb.high.z,
-                sliceWidth, sliceMin, sliceMax);
-        }
-#endif
-
         // calculate cost after each slice
         const float boundingArea = surfaceAreaAABB(bounds);
         std::array<float, MAX_SLICES-1> costs;
 
         for(int i = 0; i < MAX_SLICES-1; i++) {
-//            printf("    ");
             // glue slices together into a left slice and a right slice
             Slice left; 
             for(int j = 0; j <= i; j++){
-//                printf("L");
                 left.aabb = unionAABB(left.aabb, slices[j].aabb);
                 left.count += slices[j].count;
             }
 
             Slice right;
             for(int j = i+1; j < MAX_SLICES; j++){
- //               printf("R");
                 right.aabb = unionAABB(right.aabb, slices[j].aabb);
                 right.count += slices[j].count;
             }
@@ -278,17 +251,6 @@ struct CentroidSAHSplitter {
             float ar = surfaceAreaAABB(right.aabb);
 
             costs[i] = 1 + (left.count * al + right.count * ar) / boundingArea;
-#if 0
-            printf(" %d|%d: cost:%f, count:%d/%d, area:%f/%f\n"
-                   "      x:%+f < %+f / %+f < %+f\n"
-                   "      y:%+f < %+f / %+f < %+f\n"
-                   "      z:%+f < %+f / %+f < %+f\n",
-                    i, i+1, costs[i], left.count, right.count,
-                    al, ar,
-                    left.aabb.low.x, left.aabb.high.x, right.aabb.low.x, right.aabb.high.x,
-                    left.aabb.low.y, left.aabb.high.y, right.aabb.low.y, right.aabb.high.y,
-                    left.aabb.low.z, left.aabb.high.z, right.aabb.low.z, right.aabb.high.z);
-#endif
         }
 
         // find minimal permutation
@@ -300,6 +262,7 @@ struct CentroidSAHSplitter {
                 minCost = costs[i];
             }
         }
+        std::cout << " minCost " << minCost;
 
         bool split_good_enough = minCost < indicies.size();
         if(!split_good_enough) {
@@ -308,29 +271,6 @@ struct CentroidSAHSplitter {
         }
 
         leftMax = rightMin = slices[minIdx].aabb.high[axis];
-#if 0
-        int second_index=0;
-        for(int i=minIdx+1; i<MAX_SLICES-1; i++){
-            if(slices[i].count>0){
-                rightMin = slices[i].aabb.low[axis];
-                second_index=i;
-                break;
-            }
-        }
-#endif
-        printf("    %d cost:%f, lmax:%f, rmin:%f\n", 
-//                split_good_enough?"winner":"NOT SPLITTING",
-                minIdx, 
-                //second_index, 
-                costs[minIdx], leftMax, rightMin);
-        
-        static AABB last_aabb;
-        if(bounds==last_aabb){
-            printf("    >>> SAME BOUNDS AS LAST CALL! <<<\n");
-            exit(1);
-        }
-        last_aabb = bounds;
-        //if(callnr>10) exit(0);
         return true;
     }
 };

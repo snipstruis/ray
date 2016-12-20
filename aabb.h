@@ -17,8 +17,13 @@ struct AABB {
         high{-INFINITY,-INFINITY,-INFINITY}
         {}
 
-    AABB& operator=(AABB const& bb){low=bb.low;high=bb.high;return *this;}
-    AABB(glm::vec3 const& l, glm::vec3 const& h):low(l),high(h){}
+    AABB(glm::vec3 const& l, glm::vec3 const& h) : low(l), high(h) {}
+
+    AABB& operator=(AABB const& bb){
+        low=bb.low; 
+        high=bb.high; 
+        return *this;
+    }
 
     void sanityCheck() const {
         assert(low[0] <= high[0]);
@@ -49,12 +54,18 @@ bool operator==(AABB const& a, AABB const& b){
 
 static_assert(sizeof(AABB) == 24, "AABB size");
 
-inline float volumeAABB(AABB const& a) {
-    return (a.high[0] - a.low[0]) * (a.high[1] - a.low[1]) * (a.high[2] - a.low[2]);
+inline AABB unionAABB(AABB const& a, AABB const& b){
+    return {glm::min(a.low,b.low),glm::max(a.high,b.high)};
 }
 
-inline glm::vec3 centroidAABB(AABB const& a){
-    return 0.5f*(a.high+a.low);
+inline AABB unionPoint(AABB const& a, glm::vec3 b){
+    AABB result = AABB{glm::min(a.low,b), glm::max(a.high,b)};
+    result.sanityCheck();
+    return result;
+}
+
+inline float volumeAABB(AABB const& a) {
+    return (a.high[0] - a.low[0]) * (a.high[1] - a.low[1]) * (a.high[2] - a.low[2]);
 }
 
 inline std::ostream& operator<<(std::ostream& os, const AABB& a) {
@@ -62,22 +73,24 @@ inline std::ostream& operator<<(std::ostream& os, const AABB& a) {
     return os;
 }
 
+inline glm::vec3 centroidAABB(AABB const& a){
+    return 0.5f * (a.high + a.low);
+}
+
 // find the AABB for @count triangles, starting at @start
+// creates an aabb entirely containing the triangles 
 // uses BVH-style indirect mapping in indicies
-inline void calcAABBIndirect(AABB& result, 
+inline AABB buildAABBExtrema(
         TrianglePosSet const& triangles,
         TriangleMapping const& indicies, 
         unsigned int start, 
         unsigned int count) {
 
+    AABB result;
+    // note: assumes AABB is default constructed to -INFINITY/INFINITY
+
     assert(count >= 1);
     assert(start + count <= triangles.size());
-
-    // need a starting min/max value. could set this to +/- INF. for now we'll use the zeroth vertex..
-    // this is not ideal, but we'll be rewriting this in some kind of SIMD way later anyway.
-    result.low[0] = result.high[0] = triangles[start].v[0][0];
-    result.low[1] = result.high[1] = triangles[start].v[0][1];
-    result.low[2] = result.high[2] = triangles[start].v[0][2];
 
     for(unsigned int i = start; i < (start + count); i++) {
         TrianglePosition const& t = triangles[indicies[i]];
@@ -94,6 +107,32 @@ inline void calcAABBIndirect(AABB& result,
     }
 
     result.sanityCheck();
+    return result;
+}
+
+// find the AABB for @count triangles, starting at @start
+// creates an aabb that surrounds the triangles' centroids
+// uses BVH-style indirect mapping in indicies
+inline AABB buildAABBCentroid(
+        TrianglePosSet const& triangles,
+        TriangleMapping const& indicies, 
+        unsigned int start, 
+        unsigned int count) {
+
+    AABB result;
+    // note: assumes AABB is default constructed to -INFINITY/INFINITY
+
+    assert(count >= 1);
+    assert(start + count <= triangles.size());
+
+    for(unsigned int i = start; i < (start + count); i++) {
+        TrianglePosition const& t = triangles[indicies[i]];
+        const glm::vec3 centroid = t.getCentroid();
+        result = unionPoint(result, centroid);
+    }
+
+    result.sanityCheck();
+    return result;
 }
 
 // find an AABB that surrounds 2x existing ones
@@ -111,17 +150,6 @@ inline void combineAABB(AABB& result, AABB const& a, AABB const& b) {
 
     result.sanityCheck();
 }
-
-inline AABB unionAABB(AABB const& a, AABB const& b){
-    return {glm::min(a.low,b.low),glm::max(a.high,b.high)};
-}
-
-inline AABB unionPoint(AABB const& a, glm::vec3 b){
-    AABB result = AABB{glm::min(a.low,b), glm::max(a.high,b)};
-    result.sanityCheck();
-    return result;
-}
-
 // does @outer fully contain @inner?
 inline bool containsAABB(AABB const& outer, AABB const& inner) {
     inner.sanityCheck();

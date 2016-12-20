@@ -16,9 +16,14 @@ struct TrianglePosition{
     // FIXME: consider caching or pre-calcuating centoid (but we'll likely redo this structure anyway)
     glm::vec3 getCentroid() const {
         return glm::vec3(
-            (v[0][0] + v[1][0] + v[2][0]) / 3.0f,  // x
-            (v[0][1] + v[1][1] + v[2][1]) / 3.0f,  // y
-            (v[0][2] + v[1][2] + v[2][2]) / 3.0f); // z
+            (v[0].x + v[1].x + v[2].x) / 3.0f,  // x
+            (v[0].y + v[1].y + v[2].y) / 3.0f,  // y
+            (v[0].z + v[1].z + v[2].z) / 3.0f); // z
+    }
+
+    float getAverageCoord(unsigned int axis) const {
+        assert(axis < 3);
+        return (v[0][axis] + v[1][axis] + v[2][axis]) / 3.0f;
     }
 
     // for a given axis, return the minimum vertex coordinate
