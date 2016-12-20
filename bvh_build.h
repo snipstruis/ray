@@ -262,6 +262,7 @@ struct CentroidSAHSplitter {
                 minCost = costs[i];
             }
         }
+
         std::cout << " minCost " << minCost;
 
         bool split_good_enough = minCost < indicies.size();

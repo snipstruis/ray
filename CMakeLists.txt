@@ -3,7 +3,13 @@ cmake_minimum_required(VERSION 3.5)
 
 project(ray)
 
-message(STATUS "build type ${CMAKE_BUILD_TYPE}")
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    message(STATUS "No build type specified - setting to debug")
+    set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build Type" FORCE)
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+else()
+    message(STATUS "build type ${CMAKE_BUILD_TYPE}")
+endif()
 
 find_package(OpenGL)
 #find_package(OpenCL)
