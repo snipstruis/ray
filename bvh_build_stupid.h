@@ -4,7 +4,8 @@
 #include "bvh_build_common.h"
 
 // Build a bad, but valid, BVH. This will have a single root node containing all triangles,
-// so traversing it will degrade to a linear search. 
+// so traversing it will (almost) degrade to a linear search. It still does have an AABB, 
+// so rays that miss it completely will still be accelerated.
 // Useful for testing worst case scenarios, or feeling bad about yourself.
 struct StupidSplitter {
     static bool GetSplit(

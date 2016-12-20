@@ -2,7 +2,7 @@
 
 #include "bvh.h"
 #include "bvh_build_stupid.h"
-#include "bvh_build_centroid_bvh.h"
+#include "bvh_build_centroid_sah.h"
 #include "bvh_diag.h"
 
 #include "timer.h"
