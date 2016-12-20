@@ -66,7 +66,7 @@ MiniIntersection traverseBVH(
         if constexpr(MODE==IntersectMode::DIAG) diag->splitsTraversed++; 
         // we are not at a leaf yet - consider both children
 
-        // ordered traveral FIXME
+        // ordered traveral
         if constexpr(TRAV==TraversalMode::CENTROID){
             glm::vec3 leftCentroid  = centroidAABB(bvh.getNode(node.leftIndex()).bounds);
             glm::vec3 rightCentroid = centroidAABB(bvh.getNode(node.rightIndex()).bounds);
@@ -83,7 +83,7 @@ MiniIntersection traverseBVH(
             float max_distance = rayIntersectsAABB(bvh.getNode(second_index).bounds, ray.origin, rayInvDir);
             auto first = traverseBVH<MODE,TRAV>(bvh, first_index, prims, ray, rayInvDir, maxDist, diag);
             if(max_distance == INFINITY) return first;
-            if(first.distance > max_distance){
+            if(first.distance < max_distance){
                 auto second = traverseBVH<MODE,TRAV>(bvh, second_index,  prims, ray, rayInvDir, maxDist, diag);
                 return second;
             }else return first;

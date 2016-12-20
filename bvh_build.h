@@ -93,10 +93,17 @@ void subdivide(
 #else
         // CENTROID BASED
         for(unsigned int idx:fromIndicies){
-            if(triangles[idx].getCentroid()[splitAxis] <= leftMax)
+            // triangles are not duplicated
+            if(triangles[idx].getCentroid()[splitAxis] <= leftMax){
                 leftIndicies.push_back(idx);
-            else
+                printf("L");
+            } else if(triangles[idx].getCentroid()[splitAxis] >=rightMin){
                 rightIndicies.push_back(idx);
+                printf("R");
+            } else {
+                printf("index out of bounds!\n");
+                exit(1);
+            }
         }
 #endif
 
@@ -256,12 +263,15 @@ struct CentroidSAHSplitter {
             float al = surfaceAreaAABB(left.aabb);
             float ar = surfaceAreaAABB(right.aabb);
             cost[i] = 1 + (left.count  * al + right.count * ar) / boundingArea;
-            printf(" %d|%d: cost:%f, count:%d/%d, area:%f/%f x:%f<%f, y:%f<%f, z:%f<%f\n",
+            printf(" %d|%d: cost:%f, count:%d/%d, area:%f/%f\n"
+                   "      x:%+f < %+f / %+f < %+f\n"
+                   "      y:%+f < %+f / %+f < %+f\n"
+                   "      z:%+f < %+f / %+f < %+f\n",
                     i, i+1, cost[i], left.count, right.count,
                     al, ar,
-                    left.aabb.low.x, left.aabb.high.x,
-                    left.aabb.low.y, left.aabb.high.y,
-                    left.aabb.low.z, left.aabb.high.z);
+                    left.aabb.low.x, left.aabb.high.x, right.aabb.low.x, right.aabb.high.x,
+                    left.aabb.low.y, left.aabb.high.y, right.aabb.low.y, right.aabb.high.y,
+                    left.aabb.low.z, left.aabb.high.z, right.aabb.low.z, right.aabb.high.z);
         }
 
         // find minimal permutation
@@ -276,7 +286,7 @@ struct CentroidSAHSplitter {
 
         leftMax  = slices[minIdx].aabb.high[axis];
         int second_index=0;
-        for(int i=minIdx+1; i<MAX_SLICES; i++){
+        for(int i=minIdx+1; i<MAX_SLICES-1; i++){
             if(slices[i].count>0){
                 rightMin = slices[i].aabb.low[axis];
                 second_index=i;
