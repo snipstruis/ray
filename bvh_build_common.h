@@ -35,7 +35,7 @@ void subdivide(
         TriangleMapping const& fromIndicies) {
     assert(fromIndicies.size() > 0);
 
-    std::cout << "subdiv total count " << fromIndicies.size();
+//    std::cout << "subdiv total count " << fromIndicies.size();
 
     // the set of triangles in this node is already known, so calculate the bounds now before subdividing
     node.bounds = buildAABBExtrema(triangles, fromIndicies, 0, fromIndicies.size());
@@ -62,7 +62,7 @@ void subdivide(
         assert(node.isLeaf());
         assert(node.leftFirst == node.first());
 
-        std::cout << "  leaf AABB " << node.bounds << " count " << node.count << std::endl;
+        //std::cout << "  leaf AABB " << node.bounds << " count " << node.count << std::endl;
     } else {
         // not creating a leaf, we've split
         // leftIndicies and rightIndicies should now be populated - we'll recurse and go again.
@@ -70,11 +70,13 @@ void subdivide(
         // we can't have split a single triangle - shouldn't gotten this far.
         assert(fromIndicies.size() > 1);
 
+#if 0
         // walk the index array, build left and right sides.
         std::cout << " leftcount " << leftIndicies.size();
         std::cout << " rightCount " << rightIndicies.size();
         std::cout << std::endl;
         std::cout << std::endl;
+#endif
 
         // if either of these fire, we've not 'split', we've put all the triangles on one side
         // (in which case, it's either a bad split value, or we should have created a leaf)

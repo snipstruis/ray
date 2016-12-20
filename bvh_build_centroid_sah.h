@@ -9,6 +9,7 @@ struct Slice{
     int count;
 };
 
+// this splitter will create a 'standard' BVH using the Surface Area Heuristic to split on centroids
 struct CentroidSAHSplitter {
     // max number of slices (buckets) to test when splitting
     static constexpr int SAH_MAX_SLICES = 8;
@@ -36,7 +37,6 @@ struct CentroidSAHSplitter {
         // find longest axis
         unsigned int axis = centroidBounds.longestAxis();
 
-        std::cout << " axis " << axis << std::endl;
         // slice parent bounding box into slices along the longest axis
         // and count the triangle centroids in it
         std::array<Slice, SAH_MAX_SLICES> slices;
@@ -98,17 +98,11 @@ struct CentroidSAHSplitter {
             }
         }
 
-        std::cout << " minCost " << minCost;
-
-        bool split_good_enough = minCost < indicies.size();
-        if(!split_good_enough) {
-            std::cout << " NOT SPLITTING" << std::endl;
+        if(minCost > indicies.size()) {
             return false; // no splitting here, chopper
         }
 
         // ok, we're going to split. parition the indicies based on bucket
-        std::cout << " splitSliceNo " << splitSliceNo;
-
         for(unsigned int idx : indicies) {
             // determine slice in which this one belongs
             float val = triangles[idx].getAverageCoord(axis);
