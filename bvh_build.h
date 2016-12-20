@@ -101,33 +101,12 @@ void subdivide(
 
         // walk the index array, build left and right sides.
         TriangleMapping leftIndicies, rightIndicies;
-
-        // CENTROID BASED
-        assert(feq(leftMax,rightMin));
-
-        float min = INFINITY;
-        float max = -INFINITY;
-
-        for(unsigned int idx : fromIndicies) {
-            // FIXME: don't generate whole centoid here (only need one axis)
-            float val = triangles[idx].getCentroid()[splitAxis];
-            min = std::min(min, val);
-            max = std::max(max, val);
-            
-            if(val <= leftMax)
-                leftIndicies.push_back(idx);
-            else
-                rightIndicies.push_back(idx);
-        }
+        Splitter::Partition(triangles, fromIndicies, splitAxis, leftMax, rightMin, leftIndicies, rightIndicies);
 
         std::cout << " leftcount " << leftIndicies.size();
         std::cout << " rightCount " << rightIndicies.size() ;
-        std::cout << " min " << min;
-        std::cout << " max " << max;
         std::cout << std::endl;
         std::cout << std::endl;
-        assert(min < leftMax);
-        assert(max > leftMax);
 
         // if either of these fire, we've not 'split', we've put all the triangles on one side
         // (in which case, it's either a bad split value, or we should have created a leaf)
@@ -140,7 +119,6 @@ void subdivide(
         // universe hates this.
         assert(leftIndicies.size() < fromIndicies.size());
         assert(rightIndicies.size() < fromIndicies.size());
-        assert(leftIndicies.size() + rightIndicies.size() == fromIndicies.size());
 
         // recurse
         subdivide<Splitter>(triangles, bvh, left, leftIndicies, splitAxis);
@@ -287,6 +265,48 @@ struct CentroidSAHSplitter {
 
         leftMax = rightMin = slices[minIdx].aabb.high[axis];
         return true;
+    }
+
+    static void Partition(
+            TrianglePosSet const& triangles,     // in: master triangle array
+            TriangleMapping const& fromIndicies, // in: set of triangle indicies to split 
+            unsigned int axis,                   // in: axis on which to split
+            float leftMax,                       // in: max point to include in left set 
+            float rightMin,                      // in: min point to include in right set
+            TriangleMapping& leftIndicies,       // out: resultant left set
+            TriangleMapping& rightIndicies) {    // out: resultant right set
+        
+        // right now, we should get equal split points
+        assert(feq(leftMax,rightMin));
+
+        float min = INFINITY;
+        float max = -INFINITY;
+
+        for(unsigned int idx : fromIndicies) {
+            // FIXME: don't generate whole centoid here (only need one axis)
+            float val = triangles[idx].getCentroid()[axis];
+            min = std::min(min, val);
+            max = std::max(max, val);
+            
+            if(val <= leftMax)
+                leftIndicies.push_back(idx);
+            else
+                rightIndicies.push_back(idx);
+        }
+        std::cout << " min " << min;
+        std::cout << " max " << max;
+
+        // make sure split point was within the range of points
+        assert(min < leftMax);
+        assert(max > leftMax);
+        // kinda equivalent - make sure we did actually split
+        assert(leftIndicies.size() > 0);
+        assert(rightIndicies.size() > 0);
+        // make sure not all triangles landed on one side (earlier assert will probably fire before this)
+        assert(leftIndicies.size() < fromIndicies.size());
+        assert(rightIndicies.size() < fromIndicies.size());
+        // make sure all triangles are accounted for. we don't make duplicate triangles, so all tris are on one side only
+        assert(leftIndicies.size() + rightIndicies.size() == fromIndicies.size());
     }
 };
 
@@ -440,6 +460,16 @@ struct SAHSplitter{
         printf("  RESULT: %s\n", split_good_enough?"split good enough":"not worth splitting");
         return split_good_enough;
     }
+    static void Partition(
+            TrianglePosSet const& triangles,     // in: master triangle array
+            TriangleMapping const& fromIndicies, // in: set of triangle indicies to split 
+            unsigned int axis,                   // in: axis on which to split
+            float leftMax,                       // in: max point to include in left set 
+            float rightMin,                      // in: min point to include in right set
+            TriangleMapping& leftIndicies,       // out: resultant left set
+            TriangleMapping& rightIndicies) {    // out: resultant right set
+        assert(false);//unimplemented!
+    }
 };
 
 BVH* buildSAHBVH(Scene& s){
@@ -462,6 +492,18 @@ struct StupidSplitter {
             float& rightMin) {              // out: min point to include in right set
 
         return false; // stop splitting
+    }
+
+    static void Partition(
+            TrianglePosSet const& triangles,     // in: master triangle array
+            TriangleMapping const& fromIndicies, // in: set of triangle indicies to split 
+            unsigned int axis,                   // in: axis on which to split
+            float leftMax,                       // in: max point to include in left set 
+            float rightMin,                      // in: min point to include in right set
+            TriangleMapping& leftIndicies,       // out: resultant left set
+            TriangleMapping& rightIndicies) {    // out: resultant right set
+
+        assert(false); // should never be called
     }
 };
 
