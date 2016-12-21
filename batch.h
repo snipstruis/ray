@@ -2,6 +2,7 @@
 
 #include "bvh_build_factory.h"
 #include "output.h"
+#include "render.h"
 #include "timer.h"
 #include "trace.h"
 #include "utils.h"
