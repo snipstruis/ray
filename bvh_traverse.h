@@ -79,7 +79,7 @@ MiniIntersection traverseTriangles(
     BVHNode const& node = bvh.getNode(nodeIndex);
     assert(node.isLeaf());
 
-    MiniIntersection hit;
+    MiniIntersection hit; 
 
     for(unsigned int i = node.first(); i < (node.first() + node.count); i++) {
         diag.incTrianglesChecked();
@@ -125,7 +125,7 @@ MiniIntersection traverseBVH(
         diag.incSplitsTraversed();
         // we are not at a leaf yet - consider both children
 
-        // ordered traveral
+        // ordered traversal
         if constexpr(TRAV==TraversalMode::CENTROID){
             glm::vec3 leftCentroid  = centroidAABB(bvh.getNode(node.leftIndex()).bounds);
             glm::vec3 rightCentroid = centroidAABB(bvh.getNode(node.rightIndex()).bounds);
