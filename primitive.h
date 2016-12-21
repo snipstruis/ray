@@ -13,7 +13,6 @@ struct TrianglePosition{
     TrianglePosition(glm::vec3 const& v1, glm::vec3 const& v2, glm::vec3 const& v3)
         : v{v1, v2, v3} { } 
 
-    // FIXME: consider caching or pre-calcuating centoid (but we'll likely redo this structure anyway)
     glm::vec3 getCentroid() const {
         return glm::vec3(
             (v[0].x + v[1].x + v[2].x) / 3.0f,  // x
