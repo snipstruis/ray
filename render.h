@@ -5,6 +5,8 @@
 #include "scene.h"
 #include "trace.h"
 
+// This file contains the render main loop, and all the pixel colouring code (ie the diagnostic visualisations)
+
 enum class Mode {
     Default,
     Microseconds,
@@ -37,7 +39,7 @@ Color value_to_color(float x){
 
 // Do a recursive ray trace (ie the default output)
 struct StandardRenderer {
-    static Color renderPixel(Ray const& r, Scene& s, BVH& bvh, float vis_scale) {
+    static Color renderPixel(Ray const& r, Scene& s, BVH& bvh, float vis_scale, Mode mode) {
         Color col = trace(r, bvh, s.primitives, s.lights, Color(0,0,0));
         return ColorClamp(col, 0.0f, 1.0f);
     }
@@ -45,7 +47,7 @@ struct StandardRenderer {
 
 // render surface normals
 struct NormalRenderer {
-    static Color renderPixel(Ray const& r, Scene& s, BVH& bvh, float vis_scale) {
+    static Color renderPixel(Ray const& r, Scene& s, BVH& bvh, float vis_scale, Mode mode) {
         auto hit = findClosestIntersectionBVH(bvh, s.primitives, r);
 
         if(hit.distance < INFINITY) {
@@ -59,68 +61,69 @@ struct NormalRenderer {
             return BLACK;
         }
     }
-}
+};
 
+// do a recursive ray trace (ala StandardRenderer), but render the time taken as a color
+struct PerformanceRenderer {
+    static Color renderPixel(Ray const& r, Scene& s, BVH& bvh, float visScale, Mode mode) {
+        auto start = std::chrono::high_resolution_clock::now();
+        // do the ray trace. we don't care about the result - just how long it took.
+        trace(r, bvh, s.primitives, s.lights, Color(0,0,0));
+        auto end = std::chrono::high_resolution_clock::now();
+        auto frametime = std::chrono::duration_cast<std::chrono::duration<float,std::micro>>(end-start).count();
+
+        return value_to_color(0.01 * visScale * frametime);
+    }
+};
+
+struct BVHDiagRenderer {
+    static Color renderPixel(Ray const& r, Scene& s, BVH& bvh, float visScale, Mode mode) {
+        auto diag = BVHIntersectDiag();
+        auto hit = findClosestIntersectionBVH_DIAG(bvh, s.primitives, r, &diag);
+        float intensity = 
+              mode==Mode::TrianglesChecked? visScale*0.001f * diag.trianglesChecked
+            : mode==Mode::SplitsTraversed?  visScale*0.001f * diag.splitsTraversed
+            : mode==Mode::LeafsChecked?     visScale*0.001f * diag.leafsChecked
+            : mode==Mode::NodeIndex&&hit.distance!=INFINITY?visScale*0.001f*hit.nodeIndex 
+            : mode==Mode::LeafNode?         visScale*0.001f * hit.leafDepth : 0;
+            
+        return value_to_color(intensity);
+    }
+};
+
+// main render loop
+// assumes screenbuffer is big enough to handle the width*height pixels (per the camera)
 template<class PixelRenderer>
-inline void renderLoop(Scene& s, BVH& bvh, ScreenBuffer& screenBuffer, float visScale){
-    int const width  = s.camera.width;
-    int const height = s.camera.height;
+inline void renderLoop(Scene& s, BVH& bvh, ScreenBuffer& screenBuffer, float visScale, Mode mode) {
+    unsigned int const width  = s.camera.width;
+    unsigned int const height = s.camera.height;
+
+    assert(screenBuffer.size() == width * height);
 
     #pragma omp parallel for schedule(auto) collapse(2)
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
+    for (unsigned int y = 0; y < height; y++) {
+        for (unsigned int x = 0; x < width; x++) {
             Ray r = s.camera.makeRay(x, y);
-            int idx = (height-y-1) * width+ x;
-            screenBuffer[idx] = PixelRenderer::renderPixel(r, s, bvh, visScale);
+            unsigned int idx = (height-y-1) * width+ x;
+            screenBuffer[idx] = PixelRenderer::renderPixel(r, s, bvh, visScale, mode);
         }
     }
 }
 
-// main render starting loop
-// assumes screenbuffer is big enough to handle the width*height pixels (per the camera)
+// select the appropriate pixel renderer and launch the main loop
 inline void renderFrame(Scene& s, BVH& bvh, ScreenBuffer& screenBuffer, Mode mode, float vis_scale){
-    int const width  = s.camera.width;
-    int const height = s.camera.height;
-
     switch(mode) {
     case Mode::Default:
-        renderLoop<StandardRenderer>(s, bvh, screenBuffer, vis_scale);
+        renderLoop<StandardRenderer>(s, bvh, screenBuffer, vis_scale, mode);
         break;
     case Mode::Normal:
-        renderLoop<NormalRenderer>(s, bvh, screenBuffer, vis_scale);
+        renderLoop<NormalRenderer>(s, bvh, screenBuffer, vis_scale, mode);
         break;
     case Mode::Microseconds:
-        #pragma omp parallel for schedule(auto) collapse(2)
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                auto start = std::chrono::high_resolution_clock::now();
-                Ray r = s.camera.makeRay(x, y);
-                int idx = (height-y-1) * width+ x;
-                screenBuffer[idx] = trace(r, bvh, s.primitives, s.lights, Color(0,0,0));
-                auto end = std::chrono::high_resolution_clock::now();
-                auto frametime = 
-                    std::chrono::duration_cast<std::chrono::duration<float,std::micro>>(end-start).count();
-                screenBuffer[idx] = value_to_color(0.01*vis_scale*frametime);
-            }
-        }
+        renderLoop<PerformanceRenderer>(s, bvh, screenBuffer, vis_scale, mode);
         break;
     default:
-        #pragma omp parallel for schedule(auto) collapse(2)
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                Ray r = s.camera.makeRay(x, y);
-                int idx = (height-y-1) * width+ x;
-                auto diag = BVHIntersectDiag();
-                auto hit  = findClosestIntersectionBVH_DIAG(bvh, s.primitives, r, &diag);
-                float intensity = 
-                    mode==Mode::TrianglesChecked? vis_scale*0.001f*diag.trianglesChecked
-                  : mode==Mode::SplitsTraversed?  vis_scale*0.001f*diag.splitsTraversed
-                  : mode==Mode::LeafsChecked?     vis_scale*0.001f*diag.leafsChecked
-                  : mode==Mode::NodeIndex&&hit.distance!=INFINITY?vis_scale*0.001f*hit.nodeIndex 
-                  : mode==Mode::LeafNode?         vis_scale*0.001f*hit.leafDepth: 0;
-                screenBuffer[idx] = value_to_color(intensity);
-            }
-        }
+        renderLoop<BVHDiagRenderer>(s, bvh, screenBuffer, vis_scale, mode);
         break;
     }
 }
