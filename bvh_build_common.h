@@ -12,7 +12,7 @@
 enum BVHMethod {
     BVHMethod_STUPID,
     BVHMethod_CENTROID_SAH,
-//    BVHMethod_SAH,
+    BVHMethod_SBVH,
     __BVHMethod_MAX
 };
 
@@ -20,7 +20,7 @@ const char* BVHMethodStr(BVHMethod m) {
     switch(m) {
         case BVHMethod_STUPID: return "STUPID";
         case BVHMethod_CENTROID_SAH: return "Centroid SAH";
-//        case BVHMethod_SAH:    return "SAH";
+        case BVHMethod_SBVH: return "SBVH";
         case __BVHMethod_MAX: return "shouldnt happen";
     };
 }
