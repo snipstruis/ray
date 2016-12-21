@@ -10,6 +10,7 @@ struct Slice{
 };
 
 // this splitter will create a 'standard' BVH using the Surface Area Heuristic to split on centroids
+// each triangle will be placed in a single leaf - ie it will not duplicate triangles in the BVH
 struct CentroidSAHSplitter {
     // max number of slices (buckets) to test when splitting
     static constexpr int SAH_MAX_SLICES = 8;
@@ -27,7 +28,7 @@ struct CentroidSAHSplitter {
             return false;
 
         // get an AABB around all triangle centroids
-        AABB centroidBounds = buildAABBCentroid(triangles, indicies, 0, indicies.size());
+        const AABB centroidBounds = buildAABBCentroid(triangles, indicies, 0, indicies.size());
 
         // bounds of centroids must be within total triangle bounds
         centroidBounds.sanityCheck();
@@ -77,7 +78,7 @@ struct CentroidSAHSplitter {
             }
 
             Slice right;
-            for(unsigned int j = i+1; j < SAH_MAX_SLICES; j++){
+            for(unsigned int j = i+1; j < slices.size(); j++){
                 right.aabb = unionAABB(right.aabb, slices[j].aabb);
                 right.count += slices[j].count;
             }
@@ -98,6 +99,7 @@ struct CentroidSAHSplitter {
             }
         }
 
+        // check termination heurisic...
         if(minCost > indicies.size()) {
             return false; // no splitting here, chopper
         }
