@@ -39,7 +39,7 @@ struct DiagnosticCollector {
     int leafsChecked;
 };
 
-// used when we don't care for stats
+// used when we don't care for stats - all code should magically compile away
 struct NullCollector {
     static void incSplitsTraversed() {}
     static void incTrianglesChecked() {}
@@ -65,10 +65,50 @@ char const * const traversalstr[] = {
     "SHOULD NOT HAPPEN"
 };
 
+// for a given BVH leaf node, traverse the triangles and find a hit per IntersectMode
+template<IntersectMode MODE, class DiagnosticCollectorType>
+MiniIntersection traverseTriangles(
+        BVH const& bvh, 
+        unsigned int nodeIndex, 
+        Primitives const& prims, 
+        Ray const& ray,
+        glm::vec3 const& rayInvDir,
+        float const maxDist,
+        DiagnosticCollectorType& diag) {
+
+    BVHNode const& node = bvh.getNode(nodeIndex);
+    assert(node.isLeaf());
+
+    MiniIntersection hit;
+
+    for(unsigned int i = node.first(); i < (node.first() + node.count); i++) {
+        diag.incTrianglesChecked();
+
+        assert(i < bvh.indicies.size());
+        unsigned int triangleIndex = bvh.indicies[i];
+        TrianglePosition const& t = prims.pos[triangleIndex];
+        float distance = moller_trumbore(t, ray);
+
+        if constexpr(MODE==IntersectMode::ANY){ // if checking for any intersection whatsoever
+            if(distance > 0 && distance < maxDist){
+                hit.distance = 0;
+                return hit;
+            }
+        }else{ // if we want to find the closest intersection
+            if(distance > 0 && distance < hit.distance) {
+                if constexpr(MODE==IntersectMode::DIAG) hit.nodeIndex = nodeIndex;
+                hit.distance = distance;
+                hit.triangle = triangleIndex;
+            }
+        }
+    }
+    return hit;
+}
+
 template<IntersectMode MODE, TraversalMode TRAV, class DiagnosticCollectorType>
 MiniIntersection traverseBVH(
         BVH const& bvh, 
-        int nodeIndex, 
+        unsigned int nodeIndex, 
         Primitives const& prims, 
         Ray const& ray,
         glm::vec3 const& rayInvDir,
@@ -82,7 +122,7 @@ MiniIntersection traverseBVH(
     }
 
     if(!node.isLeaf()) {
-        if constexpr(MODE==IntersectMode::DIAG) diag.incSplitsTraversed();
+        diag.incSplitsTraversed();
         // we are not at a leaf yet - consider both children
 
         // ordered traveral
@@ -109,7 +149,7 @@ MiniIntersection traverseBVH(
                 return second;
             }else return first;
         }else{ // unordered traversal
-            auto hitLeft = traverseBVH<MODE,TRAV>(bvh, node.leftIndex(),  prims, ray, rayInvDir, maxDist, diag);
+            auto hitLeft = traverseBVH<MODE,TRAV>(bvh, node.leftIndex(), prims, ray, rayInvDir, maxDist, diag);
             auto hitRight = traverseBVH<MODE,TRAV>(bvh, node.rightIndex(), prims, ray, rayInvDir, maxDist, diag);
 
             if(hitLeft.distance == INFINITY && hitRight.distance == INFINITY){
@@ -127,29 +167,8 @@ MiniIntersection traverseBVH(
         }
     } else {    
         // at a leaf - walk triangles and test for a hit.
-        if constexpr(MODE==IntersectMode::DIAG) diag.incLeafsChecked();
-        MiniIntersection hit;
-        for(unsigned int i = node.first(); i < (node.first() + node.count); i++) {
-            if constexpr(MODE==IntersectMode::DIAG) diag.incTrianglesChecked();
-            assert(i < bvh.indicies.size());
-            unsigned int triangleIndex = bvh.indicies[i];
-            TrianglePosition const& t = prims.pos[triangleIndex];
-            float distance = moller_trumbore(t, ray);
-
-            if constexpr(MODE==IntersectMode::ANY){ // if checking for any intersection whatsoever
-                if(distance > 0 && distance < maxDist){
-                    hit.distance = 0;
-                    return hit;
-                }
-            }else{ // if we want to find the closest intersection
-                if(distance > 0 && distance < hit.distance) {
-                    if constexpr(MODE==IntersectMode::DIAG) hit.nodeIndex = nodeIndex;
-                    hit.distance = distance;
-                    hit.triangle = triangleIndex;
-                }
-            }
-        }
-        return hit;
+        diag.incLeafsChecked();
+        return traverseTriangles<MODE>(bvh, nodeIndex, prims, ray, rayInvDir, maxDist, diag);
     }
 }
 
