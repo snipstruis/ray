@@ -126,7 +126,8 @@ GuiAction handleEvents(Scene& s, float frameTime, Mode *vis, float *vis_scale, B
 int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) {
     // first thing's first, create the BVH
     // do this before opening the window to ease debugging
-    BVHMethod bvhMethod = BVHMethod_CENTROID_SAH;
+//    BVHMethod bvhMethod = BVHMethod_CENTROID_SAH;
+    BVHMethod bvhMethod = BVHMethod_SBVH;
     BVH* bvh = buildBVH(s, bvhMethod);
 
     SDL_Window *win = SDL_CreateWindow("Roaytroayzah (initialising)", 10, 10, width, height, 
