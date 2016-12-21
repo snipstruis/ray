@@ -78,8 +78,10 @@ struct PerformanceRenderer {
 
 struct BVHDiagRenderer {
     static Color renderPixel(Ray const& r, Scene& s, BVH& bvh, float visScale, Mode mode) {
-        auto diag = BVHIntersectDiag();
-        auto hit = findClosestIntersectionBVH_DIAG(bvh, s.primitives, r, &diag);
+        DiagnosticCollector diag;
+
+        auto hit = findClosestIntersectionBVH(bvh, s.primitives, r, diag);
+
         float intensity = 
               mode==Mode::TrianglesChecked? visScale*0.001f * diag.trianglesChecked
             : mode==Mode::SplitsTraversed?  visScale*0.001f * diag.splitsTraversed
