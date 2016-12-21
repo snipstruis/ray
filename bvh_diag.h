@@ -21,14 +21,13 @@ struct BVHStatsTotal {
 };
 
 void dumpBVHStatsRecurse(BVH const& bvh, BVHNode const& node, int depth, BVHStatsTotal& stats) {
-    auto const& left = bvh.getNode(node.leftIndex());
-    auto const& right = bvh.getNode(node.rightIndex());
-
     stats.totalNodes++;
 
     if(node.isLeaf()) {
         stats.perLeaf.emplace_back(depth, node.count);
     } else {
+        auto const& left = bvh.getNode(node.leftIndex());
+        auto const& right = bvh.getNode(node.rightIndex());
         dumpBVHStatsRecurse(bvh, left, depth + 1, stats);
         dumpBVHStatsRecurse(bvh, right, depth + 1, stats);
     }
