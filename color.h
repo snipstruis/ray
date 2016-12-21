@@ -29,6 +29,14 @@ struct Color{
         return !(r > 0.f && g > 0.f && b > 0.f);
     }
 
+    // Check col is legal for final output (ie [0.0-1.0])
+    bool isLegal() const {
+        return
+            r >= 0.0f && r <= 1.0f &&
+            g >= 0.0f && g <= 1.0f &&
+            b >= 0.0f && b <= 1.0f;
+    }
+
     float r,g,b;
 };
 

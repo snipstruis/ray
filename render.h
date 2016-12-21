@@ -69,6 +69,7 @@ struct PerformanceRenderer {
         auto start = std::chrono::high_resolution_clock::now();
         // do the ray trace. we don't care about the result - just how long it took.
         trace(r, bvh, s.primitives, s.lights, Color(0,0,0));
+
         auto end = std::chrono::high_resolution_clock::now();
         auto frametime = std::chrono::duration_cast<std::chrono::duration<float,std::micro>>(end-start).count();
 
@@ -107,7 +108,12 @@ inline void renderLoop(Scene& s, BVH& bvh, ScreenBuffer& screenBuffer, float vis
         for (unsigned int x = 0; x < width; x++) {
             Ray r = s.camera.makeRay(x, y);
             unsigned int idx = (height-y-1) * width+ x;
-            screenBuffer[idx] = PixelRenderer::renderPixel(r, s, bvh, visScale, mode);
+            Color pixel = PixelRenderer::renderPixel(r, s, bvh, visScale, mode);
+
+            // it's the render's responsibility to check the pixel is in the legal range [0-1]
+            assert(pixel.isLegal());
+
+            screenBuffer[idx] = pixel;
         }
     }
 }
