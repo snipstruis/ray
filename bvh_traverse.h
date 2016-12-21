@@ -57,7 +57,7 @@ enum class TraversalMode{
     UNORDERED,
     CENTROID,
     MAX
-} traversalMode = TraversalMode::UNORDERED;
+} traversalMode = TraversalMode::CENTROID;
 
 char const * const traversalstr[] = {
     "unordered",
@@ -129,25 +129,48 @@ MiniIntersection traverseBVH(
         if constexpr(TRAV==TraversalMode::CENTROID){
             glm::vec3 leftCentroid  = centroidAABB(bvh.getNode(node.leftIndex()).bounds);
             glm::vec3 rightCentroid = centroidAABB(bvh.getNode(node.rightIndex()).bounds);
-            // find the biggest axis
-            float x = fabs(leftCentroid.x-rightCentroid.x);
-            float y = fabs(leftCentroid.y-rightCentroid.y);
-            float z = fabs(leftCentroid.z-rightCentroid.z);
-            int axis = x>y?  x>z?0:2 : y>z?1:2;
 
-            bool left_closer = ray.direction[axis]>0.f;
+            // find the biggest axis
+            glm::vec3 lengths = glm::abs(leftCentroid - rightCentroid);
+            int axis = largestElem(lengths);
+
+            bool left_closer = ray.direction[axis] > 0.f;
             int first_index  = left_closer?node.leftIndex():node.rightIndex();
             int second_index = left_closer?node.rightIndex():node.leftIndex();
 
-            float max_distance = rayIntersectsAABB(bvh.getNode(second_index).bounds, ray.origin, rayInvDir);
-            auto first = traverseBVH<MODE,TRAV>(bvh, first_index, prims, ray, rayInvDir, maxDist, diag);
-            if(max_distance == INFINITY) 
-                return first;
+            // ok we'll now call the 2 AABBs close and far - which doesn't nescessarily mean which one contains
+            // our nearest intersection
 
-            if(first.distance < max_distance){
-                auto second = traverseBVH<MODE,TRAV>(bvh, second_index,  prims, ray, rayInvDir, maxDist, diag);
-                return second;
-            }else return first;
+            // get distance to far AABB
+            float distFarAABB = rayIntersectsAABB(bvh.getNode(second_index).bounds, ray.origin, rayInvDir);
+
+            // find intersection in close node. note the first thing the recursive call does is check the AABB
+            // so we don't have to bother doing that here. 
+            MiniIntersection closeHit = 
+                traverseBVH<MODE,TRAV>(bvh, first_index, prims, ray, rayInvDir, maxDist, diag);
+
+            // if we missed the far AABB all together, closest hit is all that's left (may also be INFINITY)
+            if(distFarAABB == INFINITY) {
+                return closeHit;
+            }
+
+            // if closest intersection is closer than the far aabb, we win
+            // I think i'm too tired to be sure, but this makes the previous if statement redundant right?
+            if(closeHit.distance < distFarAABB){
+                return closeHit;
+            }
+
+            // Ok, we just don't know. travese farther node, and do it the old fashoned way
+            // FIXME: we could make a slight optimisation here - we've already calculated the distance
+            // to the far AABB a few lines up, but this call will do it again. shuffle things around to avoid that
+            MiniIntersection farHit = 
+                traverseBVH<MODE,TRAV>(bvh, second_index,  prims, ray, rayInvDir, maxDist, diag);
+
+            if(closeHit.distance < farHit.distance)
+                return closeHit;
+            else
+                return farHit;
+
         }else{ // unordered traversal
             auto hitLeft = traverseBVH<MODE,TRAV>(bvh, node.leftIndex(), prims, ray, rayInvDir, maxDist, diag);
             auto hitRight = traverseBVH<MODE,TRAV>(bvh, node.rightIndex(), prims, ray, rayInvDir, maxDist, diag);
