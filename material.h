@@ -71,6 +71,6 @@ inline void buildFixedMaterials(std::vector<Material>& v){
                    1.5f,  // refractive index
                    -1,   // no checkerboard
                    Color(0.8f, 0.8f, 0.8f),  // specular highlight
-                   45.f);  // shinyness
+                   20.f);  // shinyness
 }
 
