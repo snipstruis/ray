@@ -142,6 +142,7 @@ add_scene("buddha" "buddha.scene")
 add_scene("sportscar" "sportscar.scene")
 add_scene("forest" "forest.scene")
 add_scene("teddy" "teddy.scene")
+add_scene("tyra" "tyra.scene")
 add_scene("pumpkin" "pumpkin.scene")
 add_scene("falling-trees" "falling-trees.scene")
 
