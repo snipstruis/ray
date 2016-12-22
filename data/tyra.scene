@@ -9,7 +9,7 @@
                 "mesh_name" : "tyra",
                 "transform" : {
                     "translate" : { "x" : -1, "y" : 2, "z" : -1},
-                    "rotate" : { "x" : 0, "y" : 220.00, "z" : 0.00},
+                    "rotate" : { "x" : 0, "y" : 60.00, "z" : 0.00},
                     "scale" : { "x" : 10, "y" : 10.00, "z" : 10.00}
                 }
             }
