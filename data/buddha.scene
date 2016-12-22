@@ -9,7 +9,8 @@
                 "mesh_name" : "buddha",
                 "transform" : {
                     "translate" : { "x" : -1, "y" : 2, "z" : -1},
-                    "rotate" : { "x" : 0, "y" : 130.00, "z" : 0.00}
+                    "rotate" : { "x" : 0, "y" : 130.00, "z" : 0.00},
+                    "scale" : { "x" : 100, "y" : 100.00, "z" : 100.00}
                 }
             }
         ],
@@ -17,12 +18,12 @@
         [
             {
                 "kind" : "point",
-                "color" : {"red" : 10, "green" : 10, "blue" : 10},
-                "position" : { "x" : -1, "y" : 8, "z" : 3}
+                "color" : {"red" : 100, "green" : 100, "blue" : 100},
+                "position" : { "x" : -1, "y" : 75, "z" : 30}
             }
         ]
         
     },
-    "camera" : {"fov":20,"look_angle":{"pitch":35,"yaw":-133.669906616211},"origin":{"x":1,"y":4,"z":1}}
+    "camera" : {"fov":20,"look_angle":{"pitch":34.2227935791016,"yaw":-136.075897216797},"origin":{"x":175,"y":175,"z":175}}
 }
 
