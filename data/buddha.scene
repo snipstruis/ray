@@ -18,12 +18,22 @@
         [
             {
                 "kind" : "point",
-                "color" : {"red" : 100, "green" : 100, "blue" : 100},
+                "color" : {"red" : 100, "green" : 60, "blue" : 60},
                 "position" : { "x" : -1, "y" : 75, "z" : 30}
+            },
+            {
+                "kind" : "point",
+                "color" : {"red" : 80, "green" : 100, "blue" : 50},
+                "position" : { "x" : 30, "y" : 0, "z" : -30}
+            },
+            {
+                "kind" : "point",
+                "color" : {"red" : 50, "green" : 50, "blue" : 100},
+                "position" : { "x" : 50, "y" : 0, "z" : 50}
             }
         ]
         
     },
-    "camera" : {"fov":20,"look_angle":{"pitch":34.2227935791016,"yaw":-136.075897216797},"origin":{"x":175,"y":175,"z":175}}
+    "camera" : {"fov":19.1236743927002,"look_angle":{"pitch":33,"yaw":-136.075897216797},"origin":{"x":175,"y":175,"z":175}}
 }
 
