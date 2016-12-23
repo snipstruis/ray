@@ -61,7 +61,7 @@ enum class TraversalMode{
 
 char const * const traversalstr[] = {
     "unordered",
-    "ordered(centroid)",
+    "ordered",
     "SHOULD NOT HAPPEN"
 };
 

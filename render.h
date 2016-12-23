@@ -19,7 +19,7 @@ enum class Mode {
 };
 
 char const * const modestr[] = {
-    "GOTTA GO FAST",
+    "wooosh",
     "frametime",
     "normal",
     "node index",
