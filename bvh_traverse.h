@@ -12,9 +12,9 @@
 struct MiniIntersection {
     MiniIntersection(float _distance, int _triangle) : distance(_distance), triangle(_triangle) {}
     MiniIntersection() : distance(INFINITY) {} 
+
     float distance;         // dist to intersection 
     unsigned int triangle;  // triangle number
-    int leafDepth=0;
 };
 
 // used to visualise which node/bounds we intersected with
@@ -44,16 +44,20 @@ struct DiagnosticCollector {
     }
 
     // accumulate stats from a child node
+    // these stats refer to every node visited
     void combineStats(DiagnosticCollector const& other) {
         splitsTraversed += other.splitsTraversed;
         trianglesChecked += other.trianglesChecked;
         leafsChecked += other.leafsChecked;
     }
 
-    // combine selected node stats from child node  
+    // combine node selection from child node - these are stats that just refer to the single 
+    // chain from ultimate leaf selected -> root
     void combineSelection(DiagnosticCollector const& other) {
+        // node index is an absolute selection
         nodeIndex = other.nodeIndex;
-        leafDepth = other.leafDepth;
+        // leafdepth is, well, depth.. so grow this
+        leafDepth = other.leafDepth + 1;
     }
 
     unsigned int splitsTraversed;
@@ -68,16 +72,15 @@ struct NullCollector {
     static void incSplitsTraversed() {}
     static void incTrianglesChecked() {}
     static void incLeafsChecked() {}
+    static void incLeafDepth() {}
     static void setNodeIndex(unsigned int nodeIndex) {}
     static void combineStats(NullCollector const& other) {}
     static void combineSelection(NullCollector const& other) {}
 };
 
-// Find the closest intersection with any primitive
 enum class IntersectMode{
     CLOSEST,
-    ANY,
-    DIAG
+    ANY
 };
 
 enum class TraversalMode{
@@ -159,8 +162,9 @@ MiniIntersection traverseBVH(
 
     diag.incSplitsTraversed();
 
-    // ordered traversal
+    // ordered / non-ordered traversal?
     if constexpr(TRAV==TraversalMode::CENTROID){
+        // ordered traversal
         glm::vec3 leftCentroid  = centroidAABB(bvh.getNode(node.leftIndex()).bounds);
         glm::vec3 rightCentroid = centroidAABB(bvh.getNode(node.rightIndex()).bounds);
 
@@ -199,7 +203,6 @@ MiniIntersection traverseBVH(
         DiagType diagFar;
         MiniIntersection farHit = 
             traverseBVH<MODE,TRAV>(bvh, second_index,  prims, ray, rayInvDir, maxDist, diagFar);
-
         diag.combineStats(diagFar);
 
         if(closeHit.distance < farHit.distance) {
@@ -209,8 +212,8 @@ MiniIntersection traverseBVH(
             diag.combineSelection(diagFar);
             return farHit;
         }
-
-    }else{ // unordered traversal
+    }else{ 
+        // unordered traversal
         DiagType diagLeft, diagRight;
         auto hitLeft = traverseBVH<MODE,TRAV>(bvh, node.leftIndex(), prims, ray, rayInvDir, maxDist, diagLeft);
         auto hitRight = traverseBVH<MODE,TRAV>(bvh, node.rightIndex(), prims, ray, rayInvDir, maxDist, diagRight);
@@ -225,11 +228,9 @@ MiniIntersection traverseBVH(
 
         if(hitLeft.distance < hitRight.distance){
             diag.combineSelection(diagLeft);
-//            if(MODE==IntersectMode::DIAG) hitLeft.leafDepth++;
             return hitLeft;
         } else {
             diag.combineSelection(diagRight);
-//            if(MODE==IntersectMode::DIAG) hitRight.leafDepth++;
             return hitRight;
         }
     }
@@ -258,8 +259,8 @@ MiniIntersection findClosestIntersectionBVH(
         DiagnosticCollectorType& diag) {
 
     return (traversalMode==TraversalMode::UNORDERED) ?
-        traverseBVH<IntersectMode::DIAG,TraversalMode::UNORDERED>(bvh, primitives, ray, 0.f, diag) :
-        traverseBVH<IntersectMode::DIAG,TraversalMode::CENTROID>(bvh, primitives, ray, 0.f, diag);
+        traverseBVH<IntersectMode::CLOSEST, TraversalMode::UNORDERED>(bvh, primitives, ray, 0.f, diag) :
+        traverseBVH<IntersectMode::CLOSEST, TraversalMode::CENTROID>(bvh, primitives, ray, 0.f, diag);
 }
 
 MiniIntersection findClosestIntersectionBVH(
@@ -280,8 +281,8 @@ bool findAnyIntersectionBVH(
         DiagnosticCollectorType& diag) {
     
     MiniIntersection hit = (traversalMode==TraversalMode::UNORDERED) ?
-        traverseBVH<IntersectMode::ANY,TraversalMode::UNORDERED>(bvh, primitives, ray, max_length, diag) :
-        traverseBVH<IntersectMode::ANY,TraversalMode::CENTROID>(bvh, primitives, ray,  max_length, diag);
+        traverseBVH<IntersectMode::ANY, TraversalMode::UNORDERED>(bvh, primitives, ray, max_length, diag) :
+        traverseBVH<IntersectMode::ANY, TraversalMode::CENTROID>(bvh, primitives, ray, max_length, diag);
 
     return hit.distance != INFINITY;
 }

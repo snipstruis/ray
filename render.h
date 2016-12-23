@@ -88,7 +88,7 @@ struct BVHDiagRenderer {
             : mode==Mode::SplitsTraversed?  visScale*0.001f * diag.splitsTraversed
             : mode==Mode::LeafsChecked?     visScale*0.001f * diag.leafsChecked
             : mode==Mode::NodeIndex&&hit.distance!=INFINITY ? visScale * 0.001f * diag.nodeIndex 
-            : mode==Mode::LeafNode?         visScale*0.001f * hit.leafDepth : 0.0f;
+            : mode==Mode::LeafNode?         visScale*0.001f * diag.leafDepth : 0.0f;
             
         return value_to_color(intensity);
     }
