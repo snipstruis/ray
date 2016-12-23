@@ -67,7 +67,6 @@ add_executable(ray
     main.cc
     loader.cc
     tiny_obj_loader.cc
-    scene.h
 )
 
 # linking
