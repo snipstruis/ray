@@ -20,7 +20,7 @@ int batchRender(Scene& s, std::string const& imgDir, int width, int height) {
 
     std::cout << "starting batch render" << std::endl;
 
-    renderFrame(s, *bvh, screenBuffer, Mode::Default, 1.0f);
+    renderFrame(s, *bvh, screenBuffer, VisMode::Default, 1.0f);
 
     delete bvh;
 

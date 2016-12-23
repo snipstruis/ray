@@ -21,7 +21,7 @@
 // this file contains all machinery to operate interactive mode - ie whenever there is a visible window 
 // note frametime is in seconds
 
-void setWindowTitle(Scene const& s, SDL_Window *win, float frametime, Mode mode, BVHMethod bvh)
+void setWindowTitle(Scene const& s, SDL_Window *win, float frametime, VisMode mode, BVHMethod bvh)
 {
     char title[1024];
 
@@ -56,7 +56,7 @@ enum GuiAction {
 
 // process input
 // returns action to be performed
-GuiAction handleEvents(Scene& s, float frameTime, Mode *vis, float *vis_scale, BVHMethod& bvh)
+GuiAction handleEvents(Scene& s, float frameTime, VisMode& vis, float& vis_scale, BVHMethod& bvh)
 {
     SDL_Event e;
     float scale = frameTime;
@@ -85,14 +85,14 @@ GuiAction handleEvents(Scene& s, float frameTime, Mode *vis, float *vis_scale, B
                     case SDL_SCANCODE_R:  s.camera.resetView(); break;
                     case SDL_SCANCODE_C:  printCamera(s.camera); break;
                     case SDL_SCANCODE_M: SMOOTHING = !SMOOTHING; break;
-                    case SDL_SCANCODE_0: *vis = Mode::Default; break;
-                    case SDL_SCANCODE_1: *vis = Mode::Microseconds; break;
-                    case SDL_SCANCODE_2: *vis = Mode::Normal; break;
-                    case SDL_SCANCODE_3: *vis = Mode::LeafNode; break;
-                    case SDL_SCANCODE_4: *vis = Mode::TrianglesChecked; break;
-                    case SDL_SCANCODE_5: *vis = Mode::SplitsTraversed; break;
-                    case SDL_SCANCODE_6: *vis = Mode::LeafsChecked; break;
-                    case SDL_SCANCODE_7: *vis = Mode::NodeIndex; break;
+                    case SDL_SCANCODE_0: vis = VisMode::Default; break;
+                    case SDL_SCANCODE_1: vis = VisMode::Microseconds; break;
+                    case SDL_SCANCODE_2: vis = VisMode::Normal; break;
+                    case SDL_SCANCODE_3: vis = VisMode::LeafNode; break;
+                    case SDL_SCANCODE_4: vis = VisMode::TrianglesChecked; break;
+                    case SDL_SCANCODE_5: vis = VisMode::SplitsTraversed; break;
+                    case SDL_SCANCODE_6: vis = VisMode::LeafsChecked; break;
+                    case SDL_SCANCODE_7: vis = VisMode::NodeIndex; break;
                     case SDL_SCANCODE_B: bvh = (BVHMethod)((bvh + 1) % __BVHMethod_MAX); break;
                     case SDL_SCANCODE_T: traversalMode = 
                         (TraversalMode)(((int)traversalMode + 1) % (int)TraversalMode::MAX); break;
@@ -114,9 +114,9 @@ GuiAction handleEvents(Scene& s, float frameTime, Mode *vis, float *vis_scale, B
     if(kbd[SDL_SCANCODE_D])
         s.camera.moveRight(0.2f * scale);
     if(kbd[SDL_SCANCODE_COMMA])
-        *vis_scale *= 0.9;
+        vis_scale *= 0.9;
     if(kbd[SDL_SCANCODE_PERIOD])
-        *vis_scale *= 1.1;
+        vis_scale *= 1.1;
     
     return GA_NONE;
 }
@@ -145,7 +145,7 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
 
     ScreenBuffer screenBuffer; // will be sized on first loop
 
-    Mode mode=Mode::Default;
+    VisMode mode = VisMode::Default;
     float vis_scale = 1.f;
 
     AvgTimer frameTimer;
@@ -153,7 +153,7 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
         SDL_GL_GetDrawableSize(win, &s.camera.width, &s.camera.height);
 
         BVHMethod oldMethod = bvhMethod;
-        GuiAction a = handleEvents(s, frameTimer.timer.lastDiff, &mode, &vis_scale, bvhMethod);
+        GuiAction a = handleEvents(s, frameTimer.timer.lastDiff, mode, vis_scale, bvhMethod);
 
         if (a==GA_QUIT)
             break;
