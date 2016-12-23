@@ -14,7 +14,6 @@ struct MiniIntersection {
     MiniIntersection() : distance(INFINITY) {} 
     float distance;         // dist to intersection 
     unsigned int triangle;  // triangle number
-//    int nodeIndex;
     int leafDepth=0;
 };
 
@@ -44,21 +43,24 @@ struct DiagnosticCollector {
         nodeIndex = n;
     }
 
-    void combine(DiagnosticCollector const& other) {
+    // accumulate stats from a child node
+    void combineStats(DiagnosticCollector const& other) {
         splitsTraversed += other.splitsTraversed;
         trianglesChecked += other.trianglesChecked;
         leafsChecked += other.leafsChecked;
+    }
 
-        // note: these two don't accumulate
-        nodeIndex = nodeIndex;
-        leafDepth = leafDepth;
+    // combine selected node stats from child node  
+    void combineSelection(DiagnosticCollector const& other) {
+        nodeIndex = other.nodeIndex;
+        leafDepth = other.leafDepth;
     }
 
     unsigned int splitsTraversed;
     unsigned int trianglesChecked;   // number of triangles checked for intersection
     unsigned int leafsChecked;       // number of leaf nodes checked
     unsigned int nodeIndex;          // nodeIndex with which we ultimately intersected
-    unsigned int leafDepth;
+    unsigned int leafDepth;          // depth of the leaf node with which we ultimately intersected
 };
 
 // used when we don't care for stats - all code should magically compile away
@@ -67,6 +69,8 @@ struct NullCollector {
     static void incTrianglesChecked() {}
     static void incLeafsChecked() {}
     static void setNodeIndex(unsigned int nodeIndex) {}
+    static void combineStats(NullCollector const& other) {}
+    static void combineSelection(NullCollector const& other) {}
 };
 
 // Find the closest intersection with any primitive
@@ -99,6 +103,8 @@ MiniIntersection traverseTriangles(
         float const maxDist,
         DiagnosticCollectorType& diag) {
 
+    diag.incLeafsChecked();
+
     BVHNode const& node = bvh.getNode(nodeIndex);
     assert(node.isLeaf());
 
@@ -117,7 +123,7 @@ MiniIntersection traverseTriangles(
                 diag.setNodeIndex(nodeIndex);
                 hit.distance = distance;
                 hit.triangle = triangleIndex;
-                return hit;
+                return hit; // early out!
             }
         }else{ // if we want to find the closest intersection
             if(distance > 0 && distance < hit.distance) {
@@ -130,7 +136,7 @@ MiniIntersection traverseTriangles(
     return hit;
 }
 
-template<IntersectMode MODE, TraversalMode TRAV, class DiagnosticCollectorType>
+template<IntersectMode MODE, TraversalMode TRAV, class DiagType>
 MiniIntersection traverseBVH(
         BVH const& bvh, 
         unsigned int nodeIndex, 
@@ -138,7 +144,7 @@ MiniIntersection traverseBVH(
         Ray const& ray,
         glm::vec3 const& rayInvDir,
         float const maxDist,
-        DiagnosticCollectorType& diag) {
+        DiagType& diag) {
     auto const& node = bvh.getNode(nodeIndex);
 
     // does this ray miss us all together?
@@ -146,77 +152,86 @@ MiniIntersection traverseBVH(
         return MiniIntersection();
     }
 
-    if(!node.isLeaf()) {
-        diag.incSplitsTraversed();
-        // we are not at a leaf yet - consider both children
-
-        // ordered traversal
-        if constexpr(TRAV==TraversalMode::CENTROID){
-            glm::vec3 leftCentroid  = centroidAABB(bvh.getNode(node.leftIndex()).bounds);
-            glm::vec3 rightCentroid = centroidAABB(bvh.getNode(node.rightIndex()).bounds);
-
-            // find the biggest axis
-            glm::vec3 lengths = glm::abs(leftCentroid - rightCentroid);
-            int axis = largestElem(lengths);
-
-            bool left_closer = ray.direction[axis] > 0.f;
-            int first_index  = left_closer?node.leftIndex():node.rightIndex();
-            int second_index = left_closer?node.rightIndex():node.leftIndex();
-
-            // ok we'll now call the 2 AABBs close and far - which doesn't nescessarily mean which one contains
-            // our nearest intersection
-
-            // get distance to far AABB
-            float distFarAABB = rayIntersectsAABB(bvh.getNode(second_index).bounds, ray.origin, rayInvDir);
-
-            // find intersection in close node. note the first thing the recursive call does is check the AABB
-            // so we don't have to bother doing that here. 
-            MiniIntersection closeHit = 
-                traverseBVH<MODE,TRAV>(bvh, first_index, prims, ray, rayInvDir, maxDist, diag);
-
-            // if we missed the far AABB all together, closest hit is all that's left (may also be INFINITY)
-            if(distFarAABB == INFINITY) {
-                return closeHit;
-            }
-
-            // if closest intersection is closer than the far aabb, we win
-            // I think i'm too tired to be sure, but this makes the previous if statement redundant right?
-            if(closeHit.distance < distFarAABB){
-                return closeHit;
-            }
-
-            // Ok, we just don't know. travese farther node, and do it the old fashoned way
-            // FIXME: we could make a slight optimisation here - we've already calculated the distance
-            // to the far AABB a few lines up, but this call will do it again. shuffle things around to avoid that
-            MiniIntersection farHit = 
-                traverseBVH<MODE,TRAV>(bvh, second_index,  prims, ray, rayInvDir, maxDist, diag);
-
-            if(closeHit.distance < farHit.distance)
-                return closeHit;
-            else
-                return farHit;
-
-        }else{ // unordered traversal
-            auto hitLeft = traverseBVH<MODE,TRAV>(bvh, node.leftIndex(), prims, ray, rayInvDir, maxDist, diag);
-            auto hitRight = traverseBVH<MODE,TRAV>(bvh, node.rightIndex(), prims, ray, rayInvDir, maxDist, diag);
-
-            if(hitLeft.distance == INFINITY && hitRight.distance == INFINITY){
-                if(MODE==IntersectMode::DIAG) hitLeft.leafDepth++;
-                return MiniIntersection();
-            }
-
-            if(hitLeft.distance < hitRight.distance){
-                if(MODE==IntersectMode::DIAG) hitLeft.leafDepth++;
-                return hitLeft;
-            } else {
-                if(MODE==IntersectMode::DIAG) hitRight.leafDepth++;
-                return hitRight;
-            }
-        }
-    } else {    
+    if(node.isLeaf()) {
         // at a leaf - walk triangles and test for a hit.
-        diag.incLeafsChecked();
         return traverseTriangles<MODE>(bvh, nodeIndex, prims, ray, rayInvDir, maxDist, diag);
+    }
+
+    diag.incSplitsTraversed();
+
+    // ordered traversal
+    if constexpr(TRAV==TraversalMode::CENTROID){
+        glm::vec3 leftCentroid  = centroidAABB(bvh.getNode(node.leftIndex()).bounds);
+        glm::vec3 rightCentroid = centroidAABB(bvh.getNode(node.rightIndex()).bounds);
+
+        // find the biggest axis
+        glm::vec3 lengths = glm::abs(leftCentroid - rightCentroid);
+        int axis = largestElem(lengths);
+
+        bool left_closer = ray.direction[axis] > 0.f;
+        int first_index  = left_closer?node.leftIndex():node.rightIndex();
+        int second_index = left_closer?node.rightIndex():node.leftIndex();
+
+        // ok we'll now call the 2 AABBs close and far - which doesn't nescessarily mean which one contains
+        // our nearest intersection
+
+        // get distance to far AABB
+        float distFarAABB = rayIntersectsAABB(bvh.getNode(second_index).bounds, ray.origin, rayInvDir);
+
+        // find intersection in close node. note the first thing the recursive call does is check the AABB
+        // so we don't have to bother doing that here. 
+        DiagType diagClose;
+        MiniIntersection closeHit = 
+            traverseBVH<MODE,TRAV>(bvh, first_index, prims, ray, rayInvDir, maxDist, diagClose);
+
+        diag.combineStats(diagClose);
+
+        // if closest intersection is closer than the far aabb, we win
+        // Note that this also covers the case that distFarAABB == INFINITY
+        if(closeHit.distance < distFarAABB){
+            diag.combineSelection(diagClose);
+            return closeHit;
+        }
+
+        // Ok, we just don't know. travese farther node, and do it the old fashoned way
+        // FIXME: we could make a slight optimisation here - we've already calculated the distance
+        // to the far AABB a few lines up, but this call will do it again. shuffle things around to avoid that
+        DiagType diagFar;
+        MiniIntersection farHit = 
+            traverseBVH<MODE,TRAV>(bvh, second_index,  prims, ray, rayInvDir, maxDist, diagFar);
+
+        diag.combineStats(diagFar);
+
+        if(closeHit.distance < farHit.distance) {
+            diag.combineSelection(diagClose);
+            return closeHit;
+        } else {
+            diag.combineSelection(diagFar);
+            return farHit;
+        }
+
+    }else{ // unordered traversal
+        DiagType diagLeft, diagRight;
+        auto hitLeft = traverseBVH<MODE,TRAV>(bvh, node.leftIndex(), prims, ray, rayInvDir, maxDist, diagLeft);
+        auto hitRight = traverseBVH<MODE,TRAV>(bvh, node.rightIndex(), prims, ray, rayInvDir, maxDist, diagRight);
+
+        diag.combineStats(diagLeft);
+        diag.combineStats(diagRight);
+
+        // complete miss?
+        if(hitLeft.distance == INFINITY && hitRight.distance == INFINITY){
+            return MiniIntersection();
+        }
+
+        if(hitLeft.distance < hitRight.distance){
+            diag.combineSelection(diagLeft);
+//            if(MODE==IntersectMode::DIAG) hitLeft.leafDepth++;
+            return hitLeft;
+        } else {
+            diag.combineSelection(diagRight);
+//            if(MODE==IntersectMode::DIAG) hitRight.leafDepth++;
+            return hitRight;
+        }
     }
 }
 
