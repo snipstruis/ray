@@ -15,12 +15,18 @@ struct MiniIntersection {
     float distance;         // dist to intersection 
     unsigned int triangle;  // triangle number
     int nodeIndex;
-    int leafDepth=0;
+//    int leafDepth=0;
 };
 
 // used to visualise which node/bounds we intersected with
 struct DiagnosticCollector {
-    DiagnosticCollector() : splitsTraversed(0), trianglesChecked(0), leafsChecked(0) {}
+    DiagnosticCollector() : 
+        splitsTraversed(0),
+        trianglesChecked(0),
+        leafsChecked(0),
+        nodeIndex(0),
+        leafDepth(0) 
+    {}
 
     void incSplitsTraversed() {
         splitsTraversed++;
@@ -34,9 +40,29 @@ struct DiagnosticCollector {
         leafsChecked++;
     }
 
+    void setNodeIndex(int i) {
+        nodeIndex = i;
+    }
+
+    void incLeafDepth() {
+        leafDepth++;
+    }
+
+    void combine(DiagnosticCollector const& other) {
+        splitsTraversed += other.splitsTraversed;
+        trianglesChecked += other.trianglesChecked;
+        leafsChecked += other.leafsChecked;
+
+        // these overwrite
+        nodeIndex = other.nodeIndex;
+        leafDepth = other.leafDepth;
+    }
+
     int splitsTraversed;
     int trianglesChecked;
     int leafsChecked;
+    int nodeIndex;
+    int leafDepth;
 };
 
 // used when we don't care for stats - all code should magically compile away
@@ -44,6 +70,9 @@ struct NullCollector {
     static void incSplitsTraversed() {}
     static void incTrianglesChecked() {}
     static void incLeafsChecked() {}
+    static void setNodeIndex(int i) {}
+    static void incLeafDepth() {}
+    static void combine(NullCollector const& other) {}
 };
 
 // Find the closest intersection with any primitive
@@ -72,7 +101,6 @@ MiniIntersection traverseTriangles(
         unsigned int nodeIndex, 
         Primitives const& prims, 
         Ray const& ray,
-        glm::vec3 const& rayInvDir,
         float const maxDist,
         DiagnosticCollectorType& diag) {
 
@@ -82,7 +110,7 @@ MiniIntersection traverseTriangles(
     MiniIntersection hit;
 
     for(unsigned int i = node.first(); i < (node.first() + node.count); i++) {
-        diag.incTrianglesChecked();
+        diag.incTrianglesChecked(); //FIXME: could just add count, at least for MODE=CLOSEST
 
         assert(i < bvh.indicies.size());
         unsigned int triangleIndex = bvh.indicies[i];
@@ -96,7 +124,7 @@ MiniIntersection traverseTriangles(
             }
         }else{ // if we want to find the closest intersection
             if(distance > 0 && distance < hit.distance) {
-                if constexpr(MODE==IntersectMode::DIAG) hit.nodeIndex = nodeIndex;
+                diag.setNodeIndex(nodeIndex);
                 hit.distance = distance;
                 hit.triangle = triangleIndex;
             }
@@ -121,54 +149,57 @@ MiniIntersection traverseBVH(
         return MiniIntersection();
     }
 
-    if(!node.isLeaf()) {
-        diag.incSplitsTraversed();
-        // we are not at a leaf yet - consider both children
-
-        // ordered traveral
-        if constexpr(TRAV==TraversalMode::CENTROID){
-            glm::vec3 leftCentroid  = centroidAABB(bvh.getNode(node.leftIndex()).bounds);
-            glm::vec3 rightCentroid = centroidAABB(bvh.getNode(node.rightIndex()).bounds);
-            // find the biggest axis
-            float x = fabs(leftCentroid.x-rightCentroid.x);
-            float y = fabs(leftCentroid.y-rightCentroid.y);
-            float z = fabs(leftCentroid.z-rightCentroid.z);
-            int axis = x>y?  x>z?0:2 : y>z?1:2;
-
-            bool left_closer = ray.direction[axis]>0.f;
-            int first_index  = left_closer?node.leftIndex():node.rightIndex();
-            int second_index = left_closer?node.rightIndex():node.leftIndex();
-
-            float max_distance = rayIntersectsAABB(bvh.getNode(second_index).bounds, ray.origin, rayInvDir);
-            auto first = traverseBVH<MODE,TRAV>(bvh, first_index, prims, ray, rayInvDir, maxDist, diag);
-            if(max_distance == INFINITY) 
-                return first;
-
-            if(first.distance < max_distance){
-                auto second = traverseBVH<MODE,TRAV>(bvh, second_index,  prims, ray, rayInvDir, maxDist, diag);
-                return second;
-            }else return first;
-        }else{ // unordered traversal
-            auto hitLeft = traverseBVH<MODE,TRAV>(bvh, node.leftIndex(), prims, ray, rayInvDir, maxDist, diag);
-            auto hitRight = traverseBVH<MODE,TRAV>(bvh, node.rightIndex(), prims, ray, rayInvDir, maxDist, diag);
-
-            if(hitLeft.distance == INFINITY && hitRight.distance == INFINITY){
-                if(MODE==IntersectMode::DIAG) hitLeft.leafDepth++;
-                return MiniIntersection();
-            }
-
-            if(hitLeft.distance < hitRight.distance){
-                if(MODE==IntersectMode::DIAG) hitLeft.leafDepth++;
-                return hitLeft;
-            } else {
-                if(MODE==IntersectMode::DIAG) hitRight.leafDepth++;
-                return hitRight;
-            }
-        }
-    } else {    
+    if(node.isLeaf()) {
         // at a leaf - walk triangles and test for a hit.
         diag.incLeafsChecked();
-        return traverseTriangles<MODE>(bvh, nodeIndex, prims, ray, rayInvDir, maxDist, diag);
+        return traverseTriangles<MODE>(bvh, nodeIndex, prims, ray, maxDist, diag);
+    }
+    // we are not at a leaf yet - consider both children
+    diag.incSplitsTraversed();
+
+    // ordered traveral
+    if constexpr(TRAV==TraversalMode::CENTROID){
+        glm::vec3 leftCentroid  = centroidAABB(bvh.getNode(node.leftIndex()).bounds);
+        glm::vec3 rightCentroid = centroidAABB(bvh.getNode(node.rightIndex()).bounds);
+        // find the biggest axis
+        float x = fabs(leftCentroid.x-rightCentroid.x);
+        float y = fabs(leftCentroid.y-rightCentroid.y);
+        float z = fabs(leftCentroid.z-rightCentroid.z);
+        int axis = x>y?  x>z?0:2 : y>z?1:2;
+
+        bool left_closer = ray.direction[axis]>0.f;
+        int first_index  = left_closer?node.leftIndex():node.rightIndex();
+        int second_index = left_closer?node.rightIndex():node.leftIndex();
+
+        float max_distance = rayIntersectsAABB(bvh.getNode(second_index).bounds, ray.origin, rayInvDir);
+        auto first = traverseBVH<MODE,TRAV>(bvh, first_index, prims, ray, rayInvDir, maxDist, diag);
+        if(max_distance == INFINITY) 
+            return first;
+
+        if(first.distance < max_distance){
+            auto second = traverseBVH<MODE,TRAV>(bvh, second_index,  prims, ray, rayInvDir, maxDist, diag);
+            return second;
+        }else return first;
+    }else{ // unordered traversal
+        DiagnosticCollectorType diagLeft, diagRight;
+
+        auto hitLeft = traverseBVH<MODE,TRAV>(bvh, node.leftIndex(), prims, ray, rayInvDir, maxDist, diagLeft);
+        auto hitRight = traverseBVH<MODE,TRAV>(bvh, node.rightIndex(), prims, ray, rayInvDir, maxDist, diagRight);
+
+        if(hitLeft.distance == INFINITY && hitRight.distance == INFINITY){
+                diag.incLeafDepth();
+                return MiniIntersection();
+        }
+
+        if(hitLeft.distance < hitRight.distance){
+                diag.combine(diagLeft);
+                diag.incLeafDepth();
+                return hitLeft;
+        } else {
+                diag.combine(diagRight);
+                diag.incLeafDepth();
+                return hitRight;
+        }
     }
 }
 
@@ -186,18 +217,6 @@ MiniIntersection traverseBVH(
 
     return traverseBVH<MODE,TRAV>(bvh, 0, primitives, ray, invDirection, maxDist, diag);
 }
-
-#if 0 
-MiniIntersection findClosestIntersectionBVH(
-        BVH const& bvh, 
-        Primitives const& primitives, 
-        Ray const& ray){
-    if(traversalMode==TraversalMode::UNORDERED)
-        return traverseBVH<IntersectMode::CLOSEST,TraversalMode::UNORDERED>(bvh, primitives, ray, 0.f, nullptr);
-    else 
-        return traverseBVH<IntersectMode::CLOSEST,TraversalMode::CENTROID>(bvh, primitives, ray, 0.f, nullptr);
-}
-#endif
 
 template<class DiagnosticCollectorType>
 MiniIntersection findClosestIntersectionBVH(
