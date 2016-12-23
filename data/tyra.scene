@@ -9,7 +9,7 @@
                 "mesh_name" : "tyra",
                 "transform" : {
                     "translate" : { "x" : -1, "y" : 2, "z" : -1},
-                    "rotate" : { "x" : 0, "y" : 60.00, "z" : 0.00},
+                    "rotate" : { "x" : 0, "y" : 90.00, "z" : 0.00},
                     "scale" : { "x" : 10, "y" : 10.00, "z" : 10.00}
                 }
             }
@@ -18,8 +18,13 @@
         [
             {
                 "kind" : "point",
-                "color" : {"red" : 10, "green" : 10, "blue" : 10},
-                "position" : { "x" : -1, "y" : 20, "z" : 3}
+                "color" : {"red" : 30, "green" : 30, "blue" : 10},
+                "position" : { "x" : 30, "y" : 20, "z" : 3}
+            },
+            {
+                "kind" : "point",
+                "color" : {"red" : 30, "green" : 10, "blue" : 10},
+                "position" : { "x" : -30, "y" : 20, "z" : 3}
             }
         ]
         
