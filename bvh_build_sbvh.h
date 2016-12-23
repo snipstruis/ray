@@ -98,7 +98,7 @@ struct SAHSplitter{
             int triangles_in_left = 0;
             int triangles_in_right = 0;
             for(int t:indicies){ // for each triangle
-                TrianglePosition const& triangle = triangles[t];
+                TrianglePos const& triangle = triangles[t];
                 // find out if the triangle belongs to left, right or both
                 int vertices_in_left = 0;
                 int vertices_in_right= 0;

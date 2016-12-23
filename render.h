@@ -52,9 +52,9 @@ struct NormalRenderer {
 
         if(hit.distance < INFINITY) {
             // we intersected. calc normal and convert to a col
-            Triangle const& tri = s.primitives.triangles[hit.triangle];
-            TrianglePosition const& pos = s.primitives.pos[hit.triangle];
-            auto fancy = FancyIntersect(hit.distance, pos, tri, r);
+            TrianglePos const& pos = s.primitives.pos[hit.triangle];
+            TriangleExtra const& extra = s.primitives.extra[hit.triangle];
+            auto fancy = FancyIntersect(hit.distance, pos, extra, r);
             return Color((1.f+fancy.normal.x)/2.f, (1.f+fancy.normal.y)/2.f,  (1.f+fancy.normal.z)/2.f);
         } else {
             // no intersection

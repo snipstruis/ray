@@ -9,17 +9,10 @@
 
 inline bool SMOOTHING=true;
 
-struct TrianglePosition{
-    TrianglePosition(glm::vec3 const& v1, glm::vec3 const& v2, glm::vec3 const& v3)
+// Holds 3 verticies of a triangle.
+struct TrianglePos{
+    TrianglePos(glm::vec3 const& v1, glm::vec3 const& v2, glm::vec3 const& v3)
         : v{v1, v2, v3} { } 
-
-    // FIXME: consider caching or pre-calcuating centoid (but we'll likely redo this structure anyway)
-    glm::vec3 getCentroid() const {
-        return glm::vec3(
-            (v[0].x + v[1].x + v[2].x) / 3.0f,  // x
-            (v[0].y + v[1].y + v[2].y) / 3.0f,  // y
-            (v[0].z + v[1].z + v[2].z) / 3.0f); // z
-    }
 
     float getAverageCoord(unsigned int axis) const {
         assert(axis < 3);
@@ -38,12 +31,18 @@ struct TrianglePosition{
         return std::max(v[0][axis], std::max(v[1][axis], v[2][axis]));
     }
 
+    glm::vec3 getCentroid() const {
+        return glm::vec3(getAverageCoord(0), getAverageCoord(1), getAverageCoord(2));
+    }
+
     glm::vec3 v[3];
 };
 
-struct Triangle{
-    Triangle( glm::vec3 const& n1, glm::vec3 const& n2, glm::vec3 const& n3, int material)
-        : n{n1,n2,n3}, mat(material) {}
+// 3x per-vertex normals, and ref to a material. Separated from TrianglePos to improve cache performance
+struct TriangleExtra{
+    TriangleExtra(glm::vec3 const& n1, glm::vec3 const& n2, glm::vec3 const& n3, int _mat)
+        : n{n1,n2,n3}, mat(_mat) {}
+
     // per-vertex normal
     glm::vec3 n[3];
     // material
@@ -52,13 +51,15 @@ struct Triangle{
 
 // we pass these around a lot, so typedef them out
 typedef std::vector<Material> MaterialSet;
-typedef std::vector<Triangle> TriangleSet;
-typedef std::vector<TrianglePosition> TrianglePosSet;
+typedef std::vector<TriangleExtra> TriangleExtraSet;
+typedef std::vector<TrianglePos> TrianglePosSet;
 
 struct Primitives{
     MaterialSet materials;
-    TriangleSet triangles;
+    // these next two combined define the world triangles. 
+    // They are seperate to improve cache performance. Indicies must line up.
     TrianglePosSet pos;
+    TriangleExtraSet extra;
 };
 
 // result of an intersection calculation
@@ -66,8 +67,8 @@ struct Primitives{
 // generally one of these will be built after deciding a specific triangle is the closest
 struct FancyIntersection{
     FancyIntersection() = default;
-    FancyIntersection(glm::vec3 i, int m, glm::vec3 n, bool intr)
-        : impact(i), mat(m), normal(n), internal(intr){};
+    FancyIntersection(glm::vec3 _impact, int _mat, glm::vec3 _normal, bool _internal)
+        : impact(_impact), mat(_mat), normal(_normal), internal(_internal){};
 
     glm::vec3 impact;   // point of impact
     int mat;            // material at impact
@@ -92,7 +93,7 @@ inline glm::vec3 barycentric(glm::vec3 p, glm::vec3 a, glm::vec3 b, glm::vec3 c)
 
 // adapted from:
 // https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
-inline float moller_trumbore(TrianglePosition const& tri, Ray const& ray) {
+inline float moller_trumbore(TrianglePos const& tri, Ray const& ray) {
     // Find vectors for two edges sharing V1
     glm::vec3 e1 = tri.v[1] - tri.v[0];
     glm::vec3 e2 = tri.v[2] - tri.v[0];
@@ -141,7 +142,7 @@ inline float moller_trumbore(TrianglePosition const& tri, Ray const& ray) {
 
 // compute triangle/ray intersection
 // assumes there is an intersection between t & ray already calculated
-inline FancyIntersection FancyIntersect(float dist, TrianglePosition const& p, Triangle const& t, Ray const& ray){
+inline FancyIntersection FancyIntersect(float dist, TrianglePos const& p, TriangleExtra const& t, Ray const& ray){
     assert(dist < INFINITY);
     glm::vec3 hit = ray.origin + ray.direction * dist;
 
@@ -149,7 +150,7 @@ inline FancyIntersection FancyIntersect(float dist, TrianglePosition const& p, T
     // smoothing
     if(SMOOTHING){
         glm::vec3 bary = barycentric(hit, p.v[0], p.v[1], p.v[2]);
-        normal = glm::normalize( bary.x*t.n[0] + bary.y*t.n[1] + bary.z*t.n[2] );
+        normal = glm::normalize(bary.x*t.n[0] + bary.y*t.n[1] + bary.z*t.n[2]);
     }else{
         normal = (t.n[0]/3.f) + (t.n[1]/3.f) + (t.n[2]/3.f);
     }

@@ -75,7 +75,7 @@ void sanityCheckAABBRecurse(BVH const& bvh, BVHNode const& node, TrianglePosSet 
     if(node.isLeaf()) {
         // ensure all triangles are inside aabb
         for(unsigned int i = node.first(); i < (node.first() + node.count); i++) {
-            TrianglePosition const& t = triangles[bvh.indicies[i]];
+            TrianglePos const& t = triangles[bvh.indicies[i]];
             assert(containsTriangle(node.bounds, t));
         }
     }

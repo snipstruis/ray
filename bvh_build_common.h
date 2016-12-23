@@ -114,11 +114,11 @@ void subdivide(
 
 template<class Splitter>
 inline BVH* buildBVH(Scene& s) {
-    BVH* bvh = new BVH(s.primitives.triangles.size());
+    BVH* bvh = new BVH(s.primitives.pos.size());
 
     // setup "from" index map
-    TriangleMapping indicies(s.primitives.triangles.size());
-    for (unsigned int i = 0; i < s.primitives.triangles.size(); i++)
+    TriangleMapping indicies(s.primitives.extra.size());
+    for (unsigned int i = 0; i < s.primitives.extra.size(); i++)
         indicies[i] = i;
 
     // recurse and subdivide

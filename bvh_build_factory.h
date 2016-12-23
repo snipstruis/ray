@@ -21,7 +21,9 @@ inline BVH* buildBVH(Scene& s, BVHMethod method) {
         case __BVHMethod_MAX: assert(false); break; // shouldn't happen
     };
 
-    std::cout << "world triangle count " << s.primitives.triangles.size() << std::endl;
+    assert(s.primitives.pos.size() == s.primitives.extra.size());
+
+    std::cout << "world triangle count " << s.primitives.pos.size() << std::endl;
     std::cout << "BVH build time " << t.sample() << std::endl;
 
     sanityCheckBVH(*bvh, s.primitives.pos);

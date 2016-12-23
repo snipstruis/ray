@@ -49,7 +49,7 @@ struct CentroidSAHSplitter {
         const float sliceWidth = high - low;
 
         for(int const idx : indicies){
-            const TrianglePosition& tri = triangles[idx];
+            const TrianglePos& tri = triangles[idx];
             
             // drop this centroid into a slice
             const float pos = tri.getAverageCoord(axis);
