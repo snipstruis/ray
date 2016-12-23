@@ -96,7 +96,7 @@ char const * const traversalstr[] = {
 };
 
 // for a given BVH leaf node, traverse the triangles and find a hit per IntersectMode
-template<IntersectMode MODE, class DiagnosticCollectorType>
+template<IntersectMode MODE, class DiagType>
 MiniIntersection traverseTriangles(
         BVH const& bvh, 
         unsigned int nodeIndex, 
@@ -104,7 +104,7 @@ MiniIntersection traverseTriangles(
         Ray const& ray,
         glm::vec3 const& rayInvDir,
         float const maxDist,
-        DiagnosticCollectorType& diag) {
+        DiagType& diag) {
 
     diag.incLeafsChecked();
 
@@ -202,7 +202,7 @@ MiniIntersection traverseBVH(
         // to the far AABB a few lines up, but this call will do it again. shuffle things around to avoid that
         DiagType diagFar;
         MiniIntersection farHit = 
-            traverseBVH<MODE,TRAV>(bvh, second_index,  prims, ray, rayInvDir, maxDist, diagFar);
+            traverseBVH<MODE,TRAV>(bvh, second_index, prims, ray, rayInvDir, maxDist, diagFar);
         diag.combineStats(diagFar);
 
         if(closeHit.distance < farHit.distance) {
