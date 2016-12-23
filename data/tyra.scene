@@ -1,0 +1,34 @@
+{
+    "load_meshes" : {
+        "tyra" : "tyra.obj"
+    },
+    "world" : {
+        "objects" : [
+            {
+                "kind" : "mesh",
+                "mesh_name" : "tyra",
+                "transform" : {
+                    "translate" : { "x" : -1, "y" : 2, "z" : -1},
+                    "rotate" : { "x" : 0, "y" : 90.00, "z" : 0.00},
+                    "scale" : { "x" : 10, "y" : 10.00, "z" : 10.00}
+                }
+            }
+        ],
+        "lights" : 
+        [
+            {
+                "kind" : "point",
+                "color" : {"red" : 30, "green" : 30, "blue" : 10},
+                "position" : { "x" : 30, "y" : 20, "z" : 3}
+            },
+            {
+                "kind" : "point",
+                "color" : {"red" : 30, "green" : 10, "blue" : 10},
+                "position" : { "x" : -30, "y" : 20, "z" : 3}
+            }
+        ]
+        
+    },
+    "camera" : {"fov":20,"look_angle":{"pitch":34.5892372131348,"yaw":48.7338256835938},"origin":{"x":-63.952320098877,"y":57.1429405212402,"z":-50.0714149475098}}
+}
+

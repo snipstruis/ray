@@ -1,5 +1,29 @@
 #pragma once
 
+// build an SBVH - that is a Split Bounding Volume Hierachy
+struct SBVHSplitter {
+    static bool GetSplit(
+            TrianglePosSet const& triangles,    // in: master triangle array
+            TriangleMapping const& indicies,    // in: set of triangle indicies to split 
+            AABB const& bounds,                 // in: bounds of this set of triangles
+            TriangleMapping& leftIndicies,      // out: resultant left set
+            TriangleMapping& rightIndicies) {   // out: resultant right set
+
+        assert(indicies.size() > 1);
+        return false; // stop splitting
+    }
+};
+
+BVH* buildSBVH(Scene& s){
+    std::cout << "building SBVH" << std::endl;
+    BVH* bvh = buildBVH<SBVHSplitter>(s);
+    return bvh;
+}
+
+
+
+
+
 #if 0   
         // MIN/MAX BASED
 class BoundsPartitioner {
@@ -53,6 +77,7 @@ struct SAHSplitter{
             unsigned int& splitAxis,             
             float& leftMax, 
             float& rightMin) {
+
         assert(indicies.size()>0);
         // size of the aabb
         glm::vec3 diff = bounds.high - bounds.low;
@@ -73,7 +98,7 @@ struct SAHSplitter{
             int triangles_in_left = 0;
             int triangles_in_right = 0;
             for(int t:indicies){ // for each triangle
-                TrianglePosition const& triangle = triangles[t];
+                TrianglePos const& triangle = triangles[t];
                 // find out if the triangle belongs to left, right or both
                 int vertices_in_left = 0;
                 int vertices_in_right= 0;
@@ -165,9 +190,4 @@ struct SAHSplitter{
     }
 };
 
-BVH* buildSAHBVH(Scene& s){
-    std::cout << "building SAH BVH" << std::endl;
-    BVH* bvh = buildBVH<SAHSplitter>(s);
-    return bvh;
-}
 #endif

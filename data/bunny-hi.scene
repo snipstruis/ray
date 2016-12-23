@@ -1,0 +1,33 @@
+{
+    "load_meshes" : {
+        "bunny" : "bunny-hi.obj"
+    },
+    "world" : {
+        "objects" : [
+            {
+                "kind" : "mesh",
+                "mesh_name" : "bunny",
+                "transform" : {
+                    "translate" : { "x" : -1, "y" : 2, "z" : -1},
+                    "rotate" : { "x" : 0, "y" : 0, "z" : 0}
+                }
+            },
+            {
+                "kind" : "plane",
+                "normal" : { "x" : 0, "y" : 1, "z" : 0},
+                "center" : { "x" : 0, "y" : -1, "z" : 0}
+            }
+        ],
+        "lights" : 
+        [
+            {
+                "kind" : "point",
+                "color" : {"red" : 20, "green" : 20, "blue" : 20},
+                "position" : { "x" : 4, "y" : 8, "z" : 4}
+            }
+        ]
+        
+    },
+    "camera" : {"fov":20.000057220459,"look_angle":{"pitch":22.7550010681152,"yaw":-185.906539916992},"origin":{"x":-2.51792168617249,"y":7.70843601226807,"z":9.62378215789795}}
+}
+

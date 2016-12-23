@@ -26,21 +26,23 @@ void setWindowTitle(Scene const& s, SDL_Window *win, float frametime, Mode mode,
     char title[1024];
 
     snprintf(title, sizeof(title),
-            "%s %s"
-            "%dx%d "
+            "%s "
             "@ %2.3fms(%0.0f) "
+            "%s "
             "bvh=%s "
             "o=(%0.3f, %0.3f, %0.3f) " 
             "y=%0.0f "
             "p=%0.0f "
-            "f=%0.0f ",
-            modestr[(int)mode], traversalstr[(int)traversalMode],
-            s.camera.width, s.camera.height,
+            "f=%0.0f "
+            "res %dx%d ",
+            modestr[(int)mode], 
             frametime*1000.0f, 1.0f/frametime,
+            traversalstr[(int)traversalMode],
             BVHMethodStr(bvh),
             s.camera.origin[0], s.camera.origin[1], s.camera.origin[2],
             glm::degrees(s.camera.yaw), glm::degrees(s.camera.pitch), 
-            glm::degrees(s.camera.fov)
+            glm::degrees(s.camera.fov),
+            s.camera.width, s.camera.height
             );
 
     SDL_SetWindowTitle(win, title);
@@ -127,6 +129,7 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
     // first thing's first, create the BVH
     // do this before opening the window to ease debugging
     BVHMethod bvhMethod = BVHMethod_CENTROID_SAH;
+//   BVHMethod bvhMethod = BVHMethod_SBVH;
     BVH* bvh = buildBVH(s, bvhMethod);
 
     SDL_Window *win = SDL_CreateWindow("Roaytroayzah (initialising)", 10, 10, width, height, 

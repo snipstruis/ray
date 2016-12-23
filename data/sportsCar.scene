@@ -1,0 +1,32 @@
+{
+    "load_meshes" : {
+        "sportscar" : "sportsCar.obj"
+    },
+    "world" : {
+        "objects" : [
+            {
+                "kind" : "mesh",
+                "mesh_name" : "sportscar",
+                "transform" : {
+                    "translate" : { "x" : -1, "y" : 2, "z" : -1}
+                }
+            },
+            {
+                "kind" : "plane",
+                "normal" : { "x" : 0, "y" : 1, "z" : 0},
+                "center" : { "x" : 0, "y" : -1, "z" : 0}
+            }
+        ],
+        "lights" : 
+        [
+            {
+                "kind" : "point",
+                "color" : {"red" : 100, "green" : 100, "blue" : 100},
+                "position" : { "x" : 1, "y" : 4, "z" : 1}
+            }
+        ]
+        
+    },
+    "camera" : {"fov":73.0965042114258,"look_angle":{"pitch":27.4243106842041,"yaw":-128.141555786133},"origin":{"x":1,"y":4,"z":1}}
+}
+

@@ -21,14 +21,13 @@ struct BVHStatsTotal {
 };
 
 void dumpBVHStatsRecurse(BVH const& bvh, BVHNode const& node, int depth, BVHStatsTotal& stats) {
-    auto const& left = bvh.getNode(node.leftIndex());
-    auto const& right = bvh.getNode(node.rightIndex());
-
     stats.totalNodes++;
 
     if(node.isLeaf()) {
         stats.perLeaf.emplace_back(depth, node.count);
     } else {
+        auto const& left = bvh.getNode(node.leftIndex());
+        auto const& right = bvh.getNode(node.rightIndex());
         dumpBVHStatsRecurse(bvh, left, depth + 1, stats);
         dumpBVHStatsRecurse(bvh, right, depth + 1, stats);
     }
@@ -76,7 +75,7 @@ void sanityCheckAABBRecurse(BVH const& bvh, BVHNode const& node, TrianglePosSet 
     if(node.isLeaf()) {
         // ensure all triangles are inside aabb
         for(unsigned int i = node.first(); i < (node.first() + node.count); i++) {
-            TrianglePosition const& t = triangles[bvh.indicies[i]];
+            TrianglePos const& t = triangles[bvh.indicies[i]];
             assert(containsTriangle(node.bounds, t));
         }
     }
@@ -98,6 +97,8 @@ void sanityCheckAABBRecurse(BVH const& bvh, BVHNode const& node, TrianglePosSet 
 // this is debug only code, it's certainly not especially efficient
 // see also sanityCheck() below for a version that automatically compiles out 
 void doSanityCheckBVH(BVH& bvh, TrianglePosSet const& triangles) {
+    std::cout << "sanity check starting" <<std::endl;
+
     // check triangle refs are sane
     for(unsigned int i : bvh.indicies) {
         assert(i < triangles.size());

@@ -12,15 +12,15 @@
 enum BVHMethod {
     BVHMethod_STUPID,
     BVHMethod_CENTROID_SAH,
-//    BVHMethod_SAH,
+    BVHMethod_SBVH,
     __BVHMethod_MAX
 };
 
 const char* BVHMethodStr(BVHMethod m) {
     switch(m) {
         case BVHMethod_STUPID: return "STUPID";
-        case BVHMethod_CENTROID_SAH: return "Centroid SAH";
-//        case BVHMethod_SAH:    return "SAH";
+        case BVHMethod_CENTROID_SAH: return "SAH";
+        case BVHMethod_SBVH: return "SBVH";
         case __BVHMethod_MAX: return "shouldnt happen";
     };
 }
@@ -114,11 +114,11 @@ void subdivide(
 
 template<class Splitter>
 inline BVH* buildBVH(Scene& s) {
-    BVH* bvh = new BVH(s.primitives.triangles.size());
+    BVH* bvh = new BVH(s.primitives.pos.size());
 
     // setup "from" index map
-    TriangleMapping indicies(s.primitives.triangles.size());
-    for (unsigned int i = 0; i < s.primitives.triangles.size(); i++)
+    TriangleMapping indicies(s.primitives.extra.size());
+    for (unsigned int i = 0; i < s.primitives.extra.size(); i++)
         indicies[i] = i;
 
     // recurse and subdivide

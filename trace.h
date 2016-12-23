@@ -105,8 +105,8 @@ Color trace(Ray const& ray,
     if(hit.distance==INFINITY) 
         return alpha;
 
-    Triangle const& tri = primitives.triangles[hit.triangle];
-    TrianglePosition const& pos = primitives.pos[hit.triangle];
+    TrianglePos const& pos = primitives.pos[hit.triangle];
+    TriangleExtra const& tri = primitives.extra[hit.triangle];
     FancyIntersection fancy = FancyIntersect(hit.distance, pos, tri, ray);
     Material mat = primitives.materials[fancy.mat];
     Material raymat = primitives.materials[ray.mat];

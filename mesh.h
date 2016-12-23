@@ -9,8 +9,8 @@
 #include <vector>
 
 struct Mesh {
-    TriangleSet triangles;
     TrianglePosSet pos;
+    TriangleExtraSet extra;
 };
 
 typedef std::map<std::string, Mesh> MeshMap;

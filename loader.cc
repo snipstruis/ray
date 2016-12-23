@@ -89,8 +89,8 @@ glm::vec3 makeVec3FromNormals(tinyobj::attrib_t const& attrib, int index) {
     return glm::vec3(attrib.normals[i], attrib.normals[i + 1], attrib.normals[i + 2]);
 }
 
-TrianglePosition BuildTrianglePos(tinyobj::attrib_t const& attrib, tinyobj::shape_t const& shape, int base) {
-    return TrianglePosition(
+TrianglePos BuildTrianglePos(tinyobj::attrib_t const& attrib, tinyobj::shape_t const& shape, int base) {
+    return TrianglePos(
         makeVec3FromVerticies(attrib, shape.mesh.indices[base].vertex_index),
         makeVec3FromVerticies(attrib, shape.mesh.indices[base + 1].vertex_index),
         makeVec3FromVerticies(attrib, shape.mesh.indices[base + 2].vertex_index));
@@ -98,8 +98,8 @@ TrianglePosition BuildTrianglePos(tinyobj::attrib_t const& attrib, tinyobj::shap
 
 // build the non-vertex parts of a triangle. requires a TrianglePos in case it needs 
 // to calculate its own normals
-Triangle BuildTriangle(
-        TrianglePosition const& pos,
+TriangleExtra BuildTriangleExtra(
+        TrianglePos const& pos,
         tinyobj::attrib_t const& attrib, 
         tinyobj::shape_t const& shape, 
         int base, 
@@ -113,10 +113,10 @@ Triangle BuildTriangle(
         // we'll generate our own normals then.. With blackjack.. in fact, forget the normals.
         std::cout << "WARNING: missing normal" << std::endl;
         glm::vec3 n = glm::normalize(glm::cross(pos.v[1] - pos.v[0], pos.v[2] - pos.v[0]));
-        return Triangle(n, n, n, globalMatID);
+        return TriangleExtra(n, n, n, globalMatID);
     } else {
         // normals ARE in the src file - just look them up
-        return Triangle(
+        return TriangleExtra(
             makeVec3FromNormals(attrib, i1),
             makeVec3FromNormals(attrib, i2),
             makeVec3FromNormals(attrib, i3),
@@ -198,14 +198,16 @@ Mesh loadMesh(Scene& s, std::string const& filename){
                 }
             }
             // the array indicies of mesh.pos & mesh.triangles must line up - be careful here.
-            assert(mesh.pos.size() == mesh.triangles.size());
+            assert(mesh.pos.size() == mesh.extra.size());
 
             mesh.pos.push_back(BuildTrianglePos(attrib, shape, base));
-            mesh.triangles.push_back(BuildTriangle(mesh.pos.back(), attrib, shape, base, globalMatID));
+            mesh.extra.push_back(BuildTriangleExtra(mesh.pos.back(), attrib, shape, base, globalMatID));
         }
     }
 
-    std::cout << "load done, triangles = " << mesh.triangles.size() << std::endl;
+    // triangles are split in two - must have exactly the same count in both arrays
+    assert(mesh.pos.size() == mesh.extra.size());
+    std::cout << "load done, triangles = " << mesh.pos.size() << std::endl;
     return mesh;
 }
 
@@ -217,27 +219,29 @@ Mesh loadMesh(Scene& s, std::string const& filename){
 glm::vec3 transformV3(glm::vec3 const& v, glm::mat4x4 const& transform, float w) {
     glm::vec4 a(v, w);
     glm::vec4 b = transform * a;
-    return glm::vec3(b); // slice off the first 3 coords of b
+    return glm::vec3(b); // grab (only) the first 3 coords of b
 }
 
 // walk the whole mesh, copy-n-transform it into the world. 
 // ie stamp it down, based on inputs from the scene.
 void transformMeshIntoScene(Scene& s, Mesh const& mesh, glm::mat4x4 const& transform) {
-
-    for(auto const& mt : mesh.triangles) {
-        s.primitives.triangles.emplace_back(
-            // normals
-            glm::normalize(transformV3(mt.n[0], transform, 0.0f)), 
-            glm::normalize(transformV3(mt.n[1], transform, 0.0f)), 
-            glm::normalize(transformV3(mt.n[2], transform, 0.0f)), 
-            mt.mat);
-    }
+    assert(mesh.extra.size() == mesh.pos.size());
+    s.primitives.pos.reserve(mesh.pos.size());
+    s.primitives.extra.reserve(mesh.extra.size());
 
     for(auto const& mt : mesh.pos){
         s.primitives.pos.emplace_back(
             transformV3(mt.v[0], transform, 1.0f), 
             transformV3(mt.v[1], transform, 1.0f), 
             transformV3(mt.v[2], transform, 1.0f));
+    }
+
+    for(auto const& mt : mesh.extra) {
+        s.primitives.extra.emplace_back(
+            glm::normalize(transformV3(mt.n[0], transform, 0.0f)), 
+            glm::normalize(transformV3(mt.n[1], transform, 0.0f)), 
+            glm::normalize(transformV3(mt.n[2], transform, 0.0f)), 
+            mt.mat);
     }
 }
 

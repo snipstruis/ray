@@ -1,5 +1,6 @@
 #pragma once
 
+#include "glm/vec3.hpp"
 #include "glm/gtc/constants.hpp"
 
 #include <algorithm>
@@ -25,5 +26,11 @@ inline bool isAngleInOneRev(float angle){
 
 inline bool isAngleInHalfRev(float angle){
     return angle >= 0 && angle < PI;
+}
+
+inline unsigned int largestElem(glm::vec3 const& v) {
+    return v.x > v.y ?
+               (v.x > v.z ? 0 : 2) : 
+               (v.y > v.z ? 1 : 2);
 }
 

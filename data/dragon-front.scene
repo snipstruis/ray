@@ -1,0 +1,29 @@
+{
+    "load_meshes" : {
+        "dragon" : "dragon.obj"
+    },
+    "world" : {
+        "objects" : [
+            {
+                "kind" : "mesh",
+                "mesh_name" : "dragon",
+                "transform" : {
+                    "translate" : { "x" : -1, "y" : 2, "z" : -1},
+                    "rotate" : { "x" : 0, "y" : 40.00, "z" : 0.00},
+                    "scale" : { "x" : 10, "y" : 10.00, "z" : 10.00}
+                }
+            }
+        ],
+        "lights" : 
+        [
+            {
+                "kind" : "point",
+                "color" : {"red" : 10, "green" : 10, "blue" : 10},
+                "position" : { "x" : -1, "y" : 8, "z" : 3}
+            }
+        ]
+        
+    },
+    "camera" : {"fov":13.9069786071777,"look_angle":{"pitch":36.7731857299805,"yaw":-188.215698242188},"origin":{"x":-5.34573841094971,"y":25.3717346191406,"z":29.4958152770996}}
+}
+

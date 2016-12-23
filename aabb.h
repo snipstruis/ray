@@ -93,7 +93,7 @@ inline AABB buildAABBExtrema(
     assert(start + count <= triangles.size());
 
     for(unsigned int i = start; i < (start + count); i++) {
-        TrianglePosition const& t = triangles[indicies[i]];
+        TrianglePos const& t = triangles[indicies[i]];
 
         for(unsigned int j = 0; j < 3; j++) {
             result.low[0] = std::min(result.low[0], t.v[j][0]);
@@ -126,7 +126,7 @@ inline AABB buildAABBCentroid(
     assert(start + count <= triangles.size());
 
     for(unsigned int i = start; i < (start + count); i++) {
-        TrianglePosition const& t = triangles[indicies[i]];
+        TrianglePos const& t = triangles[indicies[i]];
         const glm::vec3 centroid = t.getCentroid();
         result = unionPoint(result, centroid);
     }
@@ -164,7 +164,7 @@ inline bool containsAABB(AABB const& outer, AABB const& inner) {
         outer.high.z >= inner.high.z;
 }
 
-inline bool containsTriangle(AABB const& outer, TrianglePosition const& t) {
+inline bool containsTriangle(AABB const& outer, TrianglePos const& t) {
     outer.sanityCheck();
     bool result = true;
 
@@ -213,7 +213,7 @@ inline float surfaceAreaAABB(AABB const& aabb) {
     return 2.f*(d.x*d.y + d.x*d.z + d.y*d.z);
 }
 
-inline AABB triangleBounds(TrianglePosition const& t) {
+inline AABB triangleBounds(TrianglePos const& t) {
     AABB result;
     for(int i = 0 ; i < 3; i++)
         result = unionPoint(result, t.v[i]);
