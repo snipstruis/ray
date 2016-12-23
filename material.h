@@ -57,7 +57,7 @@ inline void buildFixedMaterials(std::vector<Material>& v){
 
     // REFLECTIVE BLUE
     v.emplace_back(Color(0.2f, 0.6f, 0.9f), // diffuse col
-                   Color(0.8f, 0.8f, 0.8f), // reflective
+                   Color(0.4f, 0.4f, 0.4f), // reflective
                    0.0f, // transparency
                    1.f,  // refractive index
                    -1,   // no checkerboard
