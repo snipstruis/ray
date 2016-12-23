@@ -97,6 +97,8 @@ void sanityCheckAABBRecurse(BVH const& bvh, BVHNode const& node, TrianglePosSet 
 // this is debug only code, it's certainly not especially efficient
 // see also sanityCheck() below for a version that automatically compiles out 
 void doSanityCheckBVH(BVH& bvh, TrianglePosSet const& triangles) {
+    std::cout << "sanity check starting" <<std::endl;
+
     // check triangle refs are sane
     for(unsigned int i : bvh.indicies) {
         assert(i < triangles.size());
