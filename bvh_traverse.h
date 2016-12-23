@@ -14,7 +14,7 @@ struct MiniIntersection {
     MiniIntersection() : distance(INFINITY) {} 
     float distance;         // dist to intersection 
     unsigned int triangle;  // triangle number
-    int nodeIndex;
+//    int nodeIndex;
     int leafDepth=0;
 };
 
@@ -40,11 +40,25 @@ struct DiagnosticCollector {
         leafsChecked++;
     }
 
-    int splitsTraversed;
-    int trianglesChecked;
-    int leafsChecked;
-    int nodeIndex;
-    int leafDepth;
+    void setNodeIndex(unsigned int n){
+        nodeIndex = n;
+    }
+
+    void combine(DiagnosticCollector const& other) {
+        splitsTraversed += other.splitsTraversed;
+        trianglesChecked += other.trianglesChecked;
+        leafsChecked += other.leafsChecked;
+
+        // note: these two don't accumulate
+        nodeIndex = nodeIndex;
+        leafDepth = leafDepth;
+    }
+
+    unsigned int splitsTraversed;
+    unsigned int trianglesChecked;   // number of triangles checked for intersection
+    unsigned int leafsChecked;       // number of leaf nodes checked
+    unsigned int nodeIndex;          // nodeIndex with which we ultimately intersected
+    unsigned int leafDepth;
 };
 
 // used when we don't care for stats - all code should magically compile away
@@ -52,6 +66,7 @@ struct NullCollector {
     static void incSplitsTraversed() {}
     static void incTrianglesChecked() {}
     static void incLeafsChecked() {}
+    static void setNodeIndex(unsigned int nodeIndex) {}
 };
 
 // Find the closest intersection with any primitive
@@ -99,12 +114,14 @@ MiniIntersection traverseTriangles(
 
         if constexpr(MODE==IntersectMode::ANY){ // if checking for any intersection whatsoever
             if(distance > 0 && distance < maxDist){
-                hit.distance = 0;
+                diag.setNodeIndex(nodeIndex);
+                hit.distance = distance;
+                hit.triangle = triangleIndex;
                 return hit;
             }
         }else{ // if we want to find the closest intersection
             if(distance > 0 && distance < hit.distance) {
-                if constexpr(MODE==IntersectMode::DIAG) hit.nodeIndex = nodeIndex;
+                diag.setNodeIndex(nodeIndex);
                 hit.distance = distance;
                 hit.triangle = triangleIndex;
             }
@@ -217,18 +234,6 @@ MiniIntersection traverseBVH(
 
     return traverseBVH<MODE,TRAV>(bvh, 0, primitives, ray, invDirection, maxDist, diag);
 }
-
-#if 0 
-MiniIntersection findClosestIntersectionBVH(
-        BVH const& bvh, 
-        Primitives const& primitives, 
-        Ray const& ray){
-    if(traversalMode==TraversalMode::UNORDERED)
-        return traverseBVH<IntersectMode::CLOSEST,TraversalMode::UNORDERED>(bvh, primitives, ray, 0.f, nullptr);
-    else 
-        return traverseBVH<IntersectMode::CLOSEST,TraversalMode::CENTROID>(bvh, primitives, ray, 0.f, nullptr);
-}
-#endif
 
 template<class DiagnosticCollectorType>
 MiniIntersection findClosestIntersectionBVH(
