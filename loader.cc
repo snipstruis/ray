@@ -86,7 +86,9 @@ glm::vec3 makeVec3FromVerticies(tinyobj::attrib_t const& attrib, int index) {
 glm::vec3 makeVec3FromNormals(tinyobj::attrib_t const& attrib, int index) {
     assert(index >= 0);
     int i = index * 3;
-    return glm::vec3(attrib.normals[i], attrib.normals[i + 1], attrib.normals[i + 2]);
+
+    // danger.. normals from file are not nescessarily normalised!
+    return glm::normalize(glm::vec3(attrib.normals[i], attrib.normals[i + 1], attrib.normals[i + 2]));
 }
 
 TrianglePos BuildTrianglePos(tinyobj::attrib_t const& attrib, tinyobj::shape_t const& shape, int base) {
@@ -108,11 +110,13 @@ TriangleExtra BuildTriangleExtra(
     int i1 = shape.mesh.indices[base].normal_index;
     int i2 = shape.mesh.indices[base + 1].normal_index;
     int i3 = shape.mesh.indices[base + 2].normal_index;
+
     // if normals are missing in the input file, we'll get a -1 here 
     if(i1 < 0 || i2 < 0 || i3 < 0) {
         // we'll generate our own normals then.. With blackjack.. in fact, forget the normals.
-        std::cout << "WARNING: missing normal" << std::endl;
+        std::cout << "WARNING: mesh missing normal" << std::endl;
         glm::vec3 n = glm::normalize(glm::cross(pos.v[1] - pos.v[0], pos.v[2] - pos.v[0]));
+
         return TriangleExtra(n, n, n, globalMatID);
     } else {
         // normals ARE in the src file - just look them up
