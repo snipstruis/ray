@@ -4,6 +4,7 @@
 #include "basics.h"
 #include "material.h"
 
+#include "glm/gtx/io.hpp"
 #include "glm/gtx/vector_query.hpp"
 
 #include <vector>
@@ -40,6 +41,14 @@ struct TrianglePos{
 
     glm::vec3 v[3];
 };
+
+inline std::ostream& operator<<(std::ostream& os, const TrianglePos& t) {
+    os << "v=(0: " << t.v[0];
+    os << " 1: " << t.v[1];
+    os << " 2: " << t.v[2];
+    os << ")";
+    return os;
+}
 
 // 3x per-vertex normals, and ref to a material. Separated from TrianglePos to improve cache performance
 struct TriangleExtra{
@@ -86,6 +95,14 @@ struct FancyIntersection{
     glm::vec3 normal;   // normal at impact
     bool internal;
 };
+
+inline std::ostream& operator<<(std::ostream& os, const FancyIntersection& i) {
+    os << " impact " << i.impact;
+    os << " normal " << i.normal;
+    os << " internal " << i.internal;
+
+    return os;
+}
 
 // adapted from Christer Ericson's Read-Time Collition Detection
 inline glm::vec3 barycentric(glm::vec3 p, TrianglePos const& tri) {
