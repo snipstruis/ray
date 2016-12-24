@@ -11,7 +11,7 @@
 #include <cmath>
 #include <cassert>
 
-inline bool SMOOTHING=false;
+inline bool SMOOTHING=true;
 
 // Holds the 3 verticies of a triangle.
 struct TrianglePos{
@@ -135,14 +135,16 @@ inline FancyIntersection FancyIntersect(float dist, TrianglePos const& p, Triang
         glm::vec3 bary = barycentric(hit, p);
         normal = glm::normalize(bary.x*t.n[0] + bary.y*t.n[1] + bary.z*t.n[2]);
     }else{
-//        normal = (t.n[0]/3.f) + (t.n[1]/3.f) + (t.n[2]/3.f);
-        normal = (t.n[0] + t.n[1] + t.n[2]) / 3.0f;
+        // so we take the simple average normal of the 3 per-vertex normals.
+        // we could precalc this of course. This raises the whole question of how to store
+        // smoothed / non smoothed objects (etc)
+        normal = glm::normalize((t.n[0] + t.n[1] + t.n[2]) / 3.0f);
     }
 
     assert(glm::isNormalized(normal, EPSILON));
 
     // internal check
-    bool internal = glm::dot(ray.direction,normal)>0;
+    bool internal = glm::dot(ray.direction, normal) > 0;
     normal = internal? -normal : normal;
 
     return FancyIntersection(hit, t.mat, normal, internal);
