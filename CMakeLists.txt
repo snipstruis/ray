@@ -43,7 +43,7 @@ ENDIF()
 # turn this on to enable bounds checking in the stl, but it hurts perf a lot, it seems
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "STL debugging is on")
-    add_definitions("-D_GLIBCXX_DEBUG")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_DEBUG")
 else()
     message(STATUS "STL debugging is off")
 endif()
