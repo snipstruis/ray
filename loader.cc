@@ -66,8 +66,15 @@ glm::mat4 handleTransform(json const& o) {
         result = glm::rotate(result, rotate[2], glm::vec3(0.0f, 0.0f, 0.1f));
     }
 
+    // for now, we don't allow a zero scaling value. this could be legal if you wanted to
+    // flatten something into 2d.. but this produces rubbish normals. needs further thought 
+    // (eg is there any reason to scale normals, or should we go back to having a separate normal transform.
+    // they really only need to be rotated, as we normalize them regardless).
     if(o.find("scale") != o.end()){
         auto const& scale = readXYZ(o["scale"]);
+        if(!(scale.x > 0.0f) || !(scale.y > 0.0f) || !(scale.z > 0.0f))
+            throw std::runtime_error("can't have zero scaling value");
+
         result = glm::scale(result, scale);
     }
 
