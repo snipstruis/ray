@@ -4,12 +4,15 @@
 #include "basics.h"
 #include "material.h"
 
+#include "glm/gtx/vector_query.hpp"
+
 #include <vector>
 #include <cmath>
+#include <cassert>
 
-inline bool SMOOTHING=true;
+inline bool SMOOTHING=false;
 
-// Holds 3 verticies of a triangle.
+// Holds the 3 verticies of a triangle.
 struct TrianglePos{
     TrianglePos(glm::vec3 const& v1, glm::vec3 const& v2, glm::vec3 const& v3)
         : v{v1, v2, v3} { } 
@@ -41,7 +44,15 @@ struct TrianglePos{
 // 3x per-vertex normals, and ref to a material. Separated from TrianglePos to improve cache performance
 struct TriangleExtra{
     TriangleExtra(glm::vec3 const& n1, glm::vec3 const& n2, glm::vec3 const& n3, int _mat)
-        : n{n1,n2,n3}, mat(_mat) {}
+        : n{n1, n2, n3}, mat(_mat) {
+            sanityCheck();
+        }
+
+    void sanityCheck() const {
+        assert(glm::isNormalized(n[0], EPSILON));
+        assert(glm::isNormalized(n[1], EPSILON));
+        assert(glm::isNormalized(n[2], EPSILON));
+    }
 
     // per-vertex normal
     glm::vec3 n[3];
@@ -77,8 +88,11 @@ struct FancyIntersection{
 };
 
 // adapted from Christer Ericson's Read-Time Collition Detection
-inline glm::vec3 barycentric(glm::vec3 p, glm::vec3 a, glm::vec3 b, glm::vec3 c) {
-    glm::vec3 v0 = b - a, v1 = c - a, v2 = p - a;
+inline glm::vec3 barycentric(glm::vec3 p, TrianglePos const& tri) {
+    const glm::vec3 v0 = tri.v[1] - tri.v[0];
+    const glm::vec3 v1 = tri.v[2] - tri.v[0];
+    const glm::vec3 v2 = p - tri.v[0];
+
     float d00 = glm::dot(v0, v0);
     float d01 = glm::dot(v0, v1);
     float d11 = glm::dot(v1, v1);
@@ -89,6 +103,32 @@ inline glm::vec3 barycentric(glm::vec3 p, glm::vec3 a, glm::vec3 b, glm::vec3 c)
     float w = (d00 * d21 - d01 * d20) / denom;
     float u = 1.0f - v - w;
     return glm::vec3(u,v,w);
+}
+
+// compute triangle/ray intersection
+// assumes there is an intersection between t & ray already calculated
+inline FancyIntersection FancyIntersect(float dist, TrianglePos const& p, TriangleExtra const& t, Ray const& ray){
+    assert(dist < INFINITY);
+    t.sanityCheck();
+
+    glm::vec3 hit = ray.origin + ray.direction * dist;
+    glm::vec3 normal;
+    // smoothing
+    if(SMOOTHING){
+        glm::vec3 bary = barycentric(hit, p);
+        normal = glm::normalize(bary.x*t.n[0] + bary.y*t.n[1] + bary.z*t.n[2]);
+    }else{
+//        normal = (t.n[0]/3.f) + (t.n[1]/3.f) + (t.n[2]/3.f);
+        normal = (t.n[0] + t.n[1] + t.n[2]) / 3.0f;
+    }
+
+    assert(glm::isNormalized(normal, EPSILON));
+
+    // internal check
+    bool internal = glm::dot(ray.direction,normal)>0;
+    normal = internal? -normal : normal;
+
+    return FancyIntersection(hit, t.mat, normal, internal);
 }
 
 // adapted from:
@@ -140,24 +180,3 @@ inline float moller_trumbore(TrianglePos const& tri, Ray const& ray) {
     return INFINITY;
 }
 
-// compute triangle/ray intersection
-// assumes there is an intersection between t & ray already calculated
-inline FancyIntersection FancyIntersect(float dist, TrianglePos const& p, TriangleExtra const& t, Ray const& ray){
-    assert(dist < INFINITY);
-    glm::vec3 hit = ray.origin + ray.direction * dist;
-
-    glm::vec3 normal;
-    // smoothing
-    if(SMOOTHING){
-        glm::vec3 bary = barycentric(hit, p.v[0], p.v[1], p.v[2]);
-        normal = glm::normalize(bary.x*t.n[0] + bary.y*t.n[1] + bary.z*t.n[2]);
-    }else{
-        normal = (t.n[0]/3.f) + (t.n[1]/3.f) + (t.n[2]/3.f);
-    }
-
-    // internal check
-    bool internal = glm::dot(ray.direction,normal)>0;
-    normal = internal? -normal : normal;
-
-    return FancyIntersection(hit, t.mat, normal, internal);
-}

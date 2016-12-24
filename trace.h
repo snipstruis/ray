@@ -6,6 +6,8 @@
 #include "scene.h"
 #include "utils.h"
 
+#include "glm/gtx/vector_query.hpp"
+
 #include <cmath>
 #include <chrono>
 #include <vector>
@@ -17,9 +19,20 @@ inline Color calcLightOutput(PointLight const& light,
                      FancyIntersection const& hit, 
                      Material const& mat,
                      glm::vec3 light_dir) {
+
+    assert(mat.diffuseColor.isFinite());
+    assert(mat.specular_highlight.isFinite());
+    assert(light.color.isFinite());
+    assert(glm::isNormalized(hit.normal, EPSILON));
+    assert(glm::isNormalized(light_dir, EPSILON));
+
     float diff = glm::dot(hit.normal, light_dir);
-    float falloff = 1.f/distance;
+    float falloff = 1.0f/distance;
+    assert(std::isfinite(diff));
+    assert(std::isfinite(falloff));
+
     Color ret = mat.diffuseColor * light.color * falloff * diff;
+    assert(ret.isFinite());
 
     if(!mat.specular_highlight.isBlack()){
         glm::vec3 refl = glm::reflect(light_dir,hit.normal);
@@ -28,6 +41,8 @@ inline Color calcLightOutput(PointLight const& light,
             ret += powf(dot, mat.shininess) * mat.specular_highlight * light.color * falloff;
         } 
     }
+
+    assert(ret.isFinite());
     return ret;
 }
 
@@ -77,6 +92,7 @@ inline Color diffuse(Ray const& ray,
             color += calcLightOutput(light, light_distance, ray, hit, mat, light_direction);
         }
     }
+    assert(color.isFinite());
     return color;
 }
 
@@ -91,6 +107,7 @@ inline Color calcTotalDiffuse(Ray const& ray,
     color += diffuse(ray, bvh, primitives, lights.pointLights, hit, mat);
     color += diffuse(ray, bvh, primitives, lights.spotLights, hit, mat);
 
+    assert(color.isFinite());
     return color;
 }
 
@@ -99,15 +116,21 @@ Color trace(Ray const& ray,
             Primitives const& primitives,
             Lights const& lights,
             Color const& alpha){
-    if(ray.ttl<=0) return alpha;
+    assert(alpha.isFinite());
+
+    if(ray.ttl<=0) 
+        return alpha;
     
     MiniIntersection hit = findClosestIntersectionBVH(bvh, primitives, ray);
-    if(hit.distance==INFINITY) 
+    if(!hit.hit()) 
         return alpha;
 
     TrianglePos const& pos = primitives.pos[hit.triangle];
     TriangleExtra const& tri = primitives.extra[hit.triangle];
     FancyIntersection fancy = FancyIntersect(hit.distance, pos, tri, ray);
+
+    assert(glm::isNormalized(fancy.normal, EPSILON));
+
     Material mat = primitives.materials[fancy.mat];
     Material raymat = primitives.materials[ray.mat];
 
@@ -119,12 +142,14 @@ Color trace(Ray const& ray,
             mat = primitives.materials[mat.checkered];
     }
 	
-    Color color = Color(0, 0, 0);
+    Color color = BLACK;
 
     // shadows and lighting
     if(!mat.diffuseColor.isBlack()){
         color += calcTotalDiffuse(ray, bvh, primitives, lights, fancy, mat);
     }
+
+    assert(color.isFinite());
 
     // angle-depenent transparancy (for dielectric materials)
     Color reflectiveness = mat.reflectiveness;

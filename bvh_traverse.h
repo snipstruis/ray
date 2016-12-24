@@ -13,6 +13,11 @@ struct MiniIntersection {
     MiniIntersection(float _distance, int _triangle) : distance(_distance), triangle(_triangle) {}
     MiniIntersection() : distance(INFINITY) {} 
 
+    // did we hit something? if so, triangle should be defined
+    bool hit() const {
+        return (distance < INFINITY);
+    }
+
     float distance;         // dist to intersection 
     unsigned int triangle;  // triangle number
 };
@@ -233,7 +238,7 @@ MiniIntersection traverseBVH(
         }
 
         // complete miss?
-        if(hitLeft.distance == INFINITY && hitRight.distance == INFINITY) {
+        if(!hitLeft.hit() && !hitRight.hit()) {
             return MiniIntersection();
         }
 
@@ -261,10 +266,11 @@ MiniIntersection traverseBVH(
 
     BVHNode const& node = bvh.getNode(0);
 
-    if(rayIntersectsAABB(node.bounds, ray.origin, rayInvDir) == INFINITY)
-        return MiniIntersection();
+    if(rayIntersectsAABB(node.bounds, ray.origin, rayInvDir) < INFINITY)
+        return traverseBVH<MODE,TRAV>(bvh, 0, primitives, ray, rayInvDir, maxDist, diag);
 
-    return traverseBVH<MODE,TRAV>(bvh, 0, primitives, ray, rayInvDir, maxDist, diag);
+    // missed bounds all together
+    return MiniIntersection();
 }
 
 template<class DiagnosticCollectorType>
@@ -300,7 +306,7 @@ bool findAnyIntersectionBVH(
         traverseBVH<IntersectMode::ANY, TraversalMode::UNORDERED>(bvh, primitives, ray, max_length, diag) :
         traverseBVH<IntersectMode::ANY, TraversalMode::CENTROID>(bvh, primitives, ray, max_length, diag);
 
-    return hit.distance != INFINITY;
+    return hit.hit(); 
 }
 
 bool findAnyIntersectionBVH(
@@ -312,3 +318,4 @@ bool findAnyIntersectionBVH(
     NullCollector diag;
     return findAnyIntersectionBVH(bvh, primitives, ray, max_length, diag); 
 }
+

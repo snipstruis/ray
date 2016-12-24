@@ -42,7 +42,7 @@ Color value_to_color(float x){
 // Do a recursive ray trace (ie the default output)
 struct StandardRenderer {
     static Color renderPixel(Ray const& r, Scene& s, BVH& bvh, float vis_scale, VisMode mode) {
-        Color col = trace(r, bvh, s.primitives, s.lights, Color(0,0,0));
+        Color col = trace(r, bvh, s.primitives, s.lights, BLACK);
         return ColorClamp(col, 0.0f, 1.0f);
     }
 };

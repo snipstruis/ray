@@ -2,6 +2,8 @@
 
 #include "utils.h"
 
+#include <cmath>
+
 struct Color{
     Color() = default;
 
@@ -29,12 +31,17 @@ struct Color{
         return !(r > 0.f && g > 0.f && b > 0.f);
     }
 
+    bool isFinite() const {
+        return std::isfinite(r) && std::isfinite(g) && std::isfinite(b);
+    }
+
+    static bool valLegal(float val) {
+        return std::isfinite(val) && val >= 0.0f && val <= 1.0f;
+    }
+
     // Check col is legal for final output (ie [0.0-1.0])
     bool isLegal() const {
-        return
-            r >= 0.0f && r <= 1.0f &&
-            g >= 0.0f && g <= 1.0f &&
-            b >= 0.0f && b <= 1.0f;
+        return valLegal(r) && valLegal(g) && valLegal(b);
     }
 
     float r,g,b;

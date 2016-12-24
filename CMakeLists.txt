@@ -104,11 +104,21 @@ macro(add_scene key scenefile)
         USES_TERMINAL
         )
 
-    # add debug-ray-XYZ target
+    # add debug-run-ray-XYZ target
     # assumes debugger is lldb
     # FIXME: assumes binary name
-    add_custom_target("debug-${SUFFIX}"
+    add_custom_target("debug-run-${SUFFIX}"
         COMMAND lldb ${CMAKE_CURRENT_BINARY_DIR}/ray -- ${scenefile} ${IMG_OUTPUT_DIR}
+        DEPENDS ray 
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/data
+        USES_TERMINAL
+        )
+
+    # add debug-batch-ray-XYZ target
+    # assumes debugger is lldb
+    # FIXME: assumes binary name
+    add_custom_target("debug-batch-${SUFFIX}"
+        COMMAND lldb ${CMAKE_CURRENT_BINARY_DIR}/ray -- -b ${scenefile} ${IMG_OUTPUT_DIR}
         DEPENDS ray 
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/data
         USES_TERMINAL
