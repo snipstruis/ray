@@ -122,7 +122,7 @@ Color trace(Ray const& ray,
         return alpha;
     
     MiniIntersection hit = findClosestIntersectionBVH(bvh, primitives, ray);
-    if(hit.distance==INFINITY) 
+    if(!hit.hit()) 
         return alpha;
 
     TrianglePos const& pos = primitives.pos[hit.triangle];
