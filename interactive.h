@@ -92,7 +92,8 @@ GuiAction handleEvents(Scene& s, float frameTime, VisMode& vis, float& vis_scale
                     case SDL_SCANCODE_4: vis = VisMode::TrianglesChecked; break;
                     case SDL_SCANCODE_5: vis = VisMode::SplitsTraversed; break;
                     case SDL_SCANCODE_6: vis = VisMode::LeafsChecked; break;
-                    case SDL_SCANCODE_7: vis = VisMode::NodeIndex; break;
+                    case SDL_SCANCODE_7: vis = VisMode::LeafBoxes; break;
+                    case SDL_SCANCODE_8: vis = VisMode::NodeIndex; break;
                     case SDL_SCANCODE_B: bvh = (BVHMethod)((bvh + 1) % __BVHMethod_MAX); break;
                     case SDL_SCANCODE_T: traversalMode = 
                         (TraversalMode)(((int)traversalMode + 1) % (int)TraversalMode::MAX); break;

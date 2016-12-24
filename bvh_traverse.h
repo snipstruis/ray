@@ -111,6 +111,9 @@ MiniIntersection traverseTriangles(
     BVHNode const& node = bvh.getNode(nodeIndex);
     assert(node.isLeaf());
 
+    // parent should perform bounds check.
+    assert(rayIntersectsAABB(node.bounds, ray.origin, rayInvDir) < INFINITY);
+
     MiniIntersection hit; 
 
     for(unsigned int i = node.first(); i < (node.first() + node.count); i++) {
@@ -150,10 +153,8 @@ MiniIntersection traverseBVH(
         DiagType& diag) {
     auto const& node = bvh.getNode(nodeIndex);
 
-    // does this ray miss us all together?
-    if(rayIntersectsAABB(node.bounds, ray.origin, rayInvDir) == INFINITY){
-        return MiniIntersection();
-    }
+    // parent should perform bounds check before calling us
+    assert(rayIntersectsAABB(node.bounds, ray.origin, rayInvDir) < INFINITY);
 
     if(node.isLeaf()) {
         // at a leaf - walk triangles and test for a hit.
@@ -173,60 +174,70 @@ MiniIntersection traverseBVH(
         int axis = largestElem(lengths);
 
         bool left_closer = ray.direction[axis] > 0.f;
-        int first_index  = left_closer?node.leftIndex():node.rightIndex();
-        int second_index = left_closer?node.rightIndex():node.leftIndex();
+        int closeIndex  = left_closer?node.leftIndex():node.rightIndex();
+        int farIndex = left_closer?node.rightIndex():node.leftIndex();
 
         // ok we'll now call the 2 AABBs close and far - which doesn't nescessarily mean which one contains
         // our nearest intersection
 
+        DiagType diagClose, diagFar;
+        MiniIntersection closeHit, farHit;
+
         // get distance to far AABB
-        float distFarAABB = rayIntersectsAABB(bvh.getNode(second_index).bounds, ray.origin, rayInvDir);
+        float distCloseAABB = rayIntersectsAABB(bvh.getNode(closeIndex).bounds, ray.origin, rayInvDir);
+        float distFarAABB = rayIntersectsAABB(bvh.getNode(farIndex).bounds, ray.origin, rayInvDir);
 
-        // find intersection in close node. note the first thing the recursive call does is check the AABB
-        // so we don't have to bother doing that here. 
-        DiagType diagClose;
-        MiniIntersection closeHit = 
-            traverseBVH<MODE,TRAV>(bvh, first_index, prims, ray, rayInvDir, maxDist, diagClose);
+        // intersects with close bounds?
+        if(distCloseAABB < INFINITY) {
+            // find intersection in close node.
+            closeHit = traverseBVH<MODE,TRAV>(bvh, closeIndex, prims, ray, rayInvDir, maxDist, diagClose);
+            diag.combineStats(diagClose);
 
-        diag.combineStats(diagClose);
-
-        // if closest intersection is closer than the far aabb, we win
-        // Note that this also covers the case that distFarAABB == INFINITY
-        if(closeHit.distance < distFarAABB){
-            diag.combineSelection(diagClose);
-            return closeHit;
+            // if closest intersection is closer than the far aabb, we win
+            // Note that this also covers the case that distFarAABB == INFINITY
+            if(closeHit.distance < distFarAABB){
+                diag.combineSelection(diagClose);
+                return closeHit;
+            }
         }
 
-        // Ok, we just don't know. travese farther node, and do it the old fashoned way
-        // FIXME: we could make a slight optimisation here - we've already calculated the distance
-        // to the far AABB a few lines up, but this call will do it again. shuffle things around to avoid that
-        DiagType diagFar;
-        MiniIntersection farHit = 
-            traverseBVH<MODE,TRAV>(bvh, second_index, prims, ray, rayInvDir, maxDist, diagFar);
-        diag.combineStats(diagFar);
+        // intersects with far bounds?
+        if(distFarAABB < INFINITY) {
+            farHit = traverseBVH<MODE,TRAV>(bvh, farIndex, prims, ray, rayInvDir, maxDist, diagFar);
+            diag.combineStats(diagFar);
 
-        if(closeHit.distance < farHit.distance) {
-            diag.combineSelection(diagClose);
-            return closeHit;
-        } else {
-            diag.combineSelection(diagFar);
-            return farHit;
+            if(closeHit.distance < farHit.distance) {
+                diag.combineSelection(diagClose);
+                return closeHit;
+            } else {
+                diag.combineSelection(diagFar);
+                return farHit;
+            }
         }
+
+        return MiniIntersection(); // complete miss
     }else{ 
         // unordered traversal
+        //
+        MiniIntersection hitLeft, hitRight;
         DiagType diagLeft, diagRight;
-        auto hitLeft = traverseBVH<MODE,TRAV>(bvh, node.leftIndex(), prims, ray, rayInvDir, maxDist, diagLeft);
-        auto hitRight = traverseBVH<MODE,TRAV>(bvh, node.rightIndex(), prims, ray, rayInvDir, maxDist, diagRight);
 
-        diag.combineStats(diagLeft);
-        diag.combineStats(diagRight);
+        if(rayIntersectsAABB(bvh.getNode(node.leftIndex()).bounds, ray.origin, rayInvDir) < INFINITY) {
+            hitLeft = traverseBVH<MODE,TRAV>(bvh, node.leftIndex(), prims, ray, rayInvDir, maxDist, diagLeft);
+            diag.combineStats(diagLeft);
+        }
+
+        if(rayIntersectsAABB(bvh.getNode(node.rightIndex()).bounds, ray.origin, rayInvDir) < INFINITY) {
+            hitRight = traverseBVH<MODE,TRAV>(bvh, node.rightIndex(), prims, ray, rayInvDir, maxDist, diagRight);
+            diag.combineStats(diagRight);
+        }
 
         // complete miss?
-        if(hitLeft.distance == INFINITY && hitRight.distance == INFINITY){
+        if(hitLeft.distance == INFINITY && hitRight.distance == INFINITY) {
             return MiniIntersection();
         }
 
-        if(hitLeft.distance < hitRight.distance){
+        if(hitLeft.distance < hitRight.distance) {
             diag.combineSelection(diagLeft);
             return hitLeft;
         } else {
@@ -236,7 +247,7 @@ MiniIntersection traverseBVH(
     }
 }
 
-// find closest triangle intersection for ray
+// entry point for the main tree walk
 template<IntersectMode MODE, TraversalMode TRAV, class DiagnosticCollectorType>
 MiniIntersection traverseBVH(
         BVH const& bvh, 
@@ -246,9 +257,14 @@ MiniIntersection traverseBVH(
         DiagnosticCollectorType& diag) {
 
     // calculate 1/direction here once, as it's used repeatedly throughout the recursive chain
-    glm::vec3 invDirection(1.0f/ray.direction[0], 1.0f/ray.direction[1], 1.0f/ray.direction[2]);
+    glm::vec3 rayInvDir(1.0f/ray.direction[0], 1.0f/ray.direction[1], 1.0f/ray.direction[2]);
 
-    return traverseBVH<MODE,TRAV>(bvh, 0, primitives, ray, invDirection, maxDist, diag);
+    BVHNode const& node = bvh.getNode(0);
+
+    if(rayIntersectsAABB(node.bounds, ray.origin, rayInvDir) == INFINITY)
+        return MiniIntersection();
+
+    return traverseBVH<MODE,TRAV>(bvh, 0, primitives, ray, rayInvDir, maxDist, diag);
 }
 
 template<class DiagnosticCollectorType>

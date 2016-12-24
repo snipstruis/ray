@@ -1,0 +1,33 @@
+{
+    "load_meshes" : {
+        "teapot" : "wt_teapot.obj"
+    },
+    "world" : {
+        "objects" : [
+            {
+                "kind" : "mesh",
+                "mesh_name" : "teapot",
+                "transform" : {
+                    "translate" : { "x" : -1, "y" : 2, "z" : -1},
+                    "rotate" : { "x" : 0, "y" : -15.00, "z" : 0.00}
+                }
+            },
+            {
+                "kind" : "plane",
+                "normal" : { "x" : 0, "y" : 1, "z" : 0},
+                "center" : { "x" : 0, "y" : -1, "z" : 0}
+            }
+        ],
+        "lights" : 
+        [
+            {
+                "kind" : "point",
+                "color" : {"red" : 10, "green" : 10, "blue" : 10},
+                "position" : { "x" : -1, "y" : 8, "z" : 3}
+            }
+        ]
+        
+    },
+    "camera" : {"fov":24.9542961120605,"look_angle":{"pitch":19.0050220489502,"yaw":-148.050415039062},"origin":{"x":-1.10777902603149,"y":3.23947858810425,"z":0.61881548166275}}
+}
+

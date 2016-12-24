@@ -15,7 +15,8 @@ enum class VisMode {
     SplitsTraversed,
     TrianglesChecked,
     LeafsChecked,
-    LeafNode
+    LeafNode,
+    LeafBoxes
 };
 
 char const * const modestr[] = {
@@ -26,7 +27,8 @@ char const * const modestr[] = {
     "splits traversed",
     "triangles checked",
     "leafs checked",
-    "leaf depth"
+    "leaf depth",
+    "leaf boxes"
 };
 
 Color value_to_color(float x){
@@ -89,6 +91,10 @@ struct BVHDiagRenderer {
             case VisMode::SplitsTraversed:  intensity = diag.splitsTraversed; break;
             case VisMode::LeafsChecked:     intensity = diag.leafsChecked; break;
             case VisMode::LeafNode:         intensity = diag.leafDepth; break;
+            case VisMode::LeafBoxes:        
+                if(diag.leafDepth > 0)                                
+                    intensity = 1;; 
+                break;
             case VisMode::NodeIndex:
                 if(hit.distance < INFINITY)
                     intensity = diag.nodeIndex; 
