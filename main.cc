@@ -42,7 +42,12 @@ int main(int argc, char* argv[]){
     // for now - maybe should be a dialog box in future).
     Scene s;
     if(!setupScene(s, sceneFile)) {
-        std::cout << "failed to setup scene, bailing" << std::endl;
+        std::cout << "ERROR: failed to setup scene, bailing" << std::endl;
+        return -1;
+    }
+
+    if(s.primitives.pos.size() == 0) {
+        std::cout << "ERROR: no triangles in scene" << std::endl;
         return -1;
     }
 

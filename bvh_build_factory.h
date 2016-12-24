@@ -11,6 +11,10 @@
 #include <iostream>
 
 inline BVH* buildBVH(Scene& s, BVHMethod method) {
+    // empty scenes should already be caught
+    assert(s.primitives.pos.size() > 0);
+    assert(s.primitives.pos.size() == s.primitives.extra.size());
+
     Timer t;
     BVH* bvh = nullptr;
 
@@ -20,8 +24,6 @@ inline BVH* buildBVH(Scene& s, BVHMethod method) {
         case BVHMethod_SBVH:         bvh = buildSBVH(s);           break;
         case __BVHMethod_MAX: assert(false); break; // shouldn't happen
     };
-
-    assert(s.primitives.pos.size() == s.primitives.extra.size());
 
     std::cout << "world triangle count " << s.primitives.pos.size() << std::endl;
     std::cout << "BVH build time " << t.sample() << std::endl;
