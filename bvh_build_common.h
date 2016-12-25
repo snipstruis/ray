@@ -9,6 +9,7 @@
 
 // this is the common library for building BVHes - the specific builders are now in their own file
 
+
 enum BVHMethod {
     BVHMethod_STUPID,
     BVHMethod_CENTROID_SAH,
@@ -35,7 +36,7 @@ void subdivide(
         TriangleMapping const& fromIndicies) {
     assert(fromIndicies.size() > 0);
 
-//    std::cout << "subdiv total count " << fromIndicies.size();
+    std::cout << "subdiv total count " << fromIndicies.size();
 
     // the set of triangles in this node is already known, so calculate the bounds now before subdividing
     node.bounds = buildAABBExtrema(triangles, fromIndicies, 0, fromIndicies.size());
@@ -46,7 +47,7 @@ void subdivide(
     bool didSplit = Splitter::GetSplit(
             triangles, fromIndicies, node.bounds, leftIndicies, rightIndicies);
 
-    // if the splitter didn't split, we creating a leaf.
+    // if the splitter didn't split, we are creating a leaf.
     if(!didSplit) {
         // ok, leafy time.
 
@@ -78,7 +79,7 @@ void subdivide(
         std::cout << std::endl;
 #endif
 
-        // if either of these fire, we've not 'split', we've put all the triangles on one side
+        // if either of these fire, we've not split, we've put all the triangles on one side
         // (in which case, it's either a bad split value, or we should have created a leaf)
         assert(leftIndicies.size() > 0);
         assert(rightIndicies.size() > 0);

@@ -1,19 +1,22 @@
 #pragma once
 
 #include "aabb.h"
-
-struct Slice{
-    Slice() : count (0) {}
-
-    AABB aabb;
-    int count;
-};
+#include "bvh.h"
+#include <array>
 
 // this splitter will create a 'standard' BVH using the Surface Area Heuristic to split on centroids
 // each triangle will be placed in a single leaf - ie it will not duplicate triangles in the BVH
 struct CentroidSAHSplitter {
     // max number of slices (buckets) to test when splitting
     static constexpr int SAH_MAX_SLICES = 8;
+
+    // Slice (or bucket) used when trying a triangle split
+    struct Slice{
+        Slice() : count (0) {}
+
+        AABB aabb;
+        int count;
+    };
 
     static bool GetSplit(
             TrianglePosSet const& triangles,  // in: master triangle array
