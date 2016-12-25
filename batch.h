@@ -16,7 +16,7 @@ int batchRender(Scene& s, std::string const& imgDir, int width, int height) {
     s.camera.width = width;
     s.camera.height = height;
 
-    BVH* bvh = buildBVH(s, BVHMethod_CENTROID_SAH);
+    BVH* bvh = buildBVH(s, BVHMethod_SBVH);
 
     std::cout << "starting batch render" << std::endl;
 
