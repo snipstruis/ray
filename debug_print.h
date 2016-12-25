@@ -35,24 +35,3 @@ inline std::ostream& operator<<(std::ostream& os, const Ray& r) {
     return os;
 }
 
-inline std::ostream& operator<<(std::ostream& os, const FancyIntersection& i) {
-    os << " impact " << i.impact;
-    os << " normal " << i.normal;
-    os << " internal " << i.internal;
-
-    return os;
-}
-
-inline std::ostream& operator<<(std::ostream& os, const TrianglePos& t) {
-    os << "v=(0: " << t.v[0];
-    os << " 1: " << t.v[1];
-    os << " 2: " << t.v[2];
-    os << ")";
-    //os << "\n n=(0:" << t.n[0];
-//    os << " 1: " << t.n[1];
- //   os << " 2: " << t.n[2];
-//    os << ")\n mat=" << t.mat << std::endl;
-
-    return os;
-}
-

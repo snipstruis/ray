@@ -4,13 +4,14 @@
 #include "basics.h"
 #include "material.h"
 
+#include "glm/gtx/io.hpp"
 #include "glm/gtx/vector_query.hpp"
 
 #include <vector>
 #include <cmath>
 #include <cassert>
 
-inline bool SMOOTHING=false;
+inline bool SMOOTHING=true;
 
 // Holds the 3 verticies of a triangle.
 struct TrianglePos{
@@ -40,6 +41,14 @@ struct TrianglePos{
 
     glm::vec3 v[3];
 };
+
+inline std::ostream& operator<<(std::ostream& os, const TrianglePos& t) {
+    os << "v=(0: " << t.v[0];
+    os << " 1: " << t.v[1];
+    os << " 2: " << t.v[2];
+    os << ")";
+    return os;
+}
 
 // 3x per-vertex normals, and ref to a material. Separated from TrianglePos to improve cache performance
 struct TriangleExtra{
@@ -87,6 +96,14 @@ struct FancyIntersection{
     bool internal;
 };
 
+inline std::ostream& operator<<(std::ostream& os, const FancyIntersection& i) {
+    os << " impact " << i.impact;
+    os << " normal " << i.normal;
+    os << " internal " << i.internal;
+
+    return os;
+}
+
 // adapted from Christer Ericson's Read-Time Collition Detection
 inline glm::vec3 barycentric(glm::vec3 p, TrianglePos const& tri) {
     const glm::vec3 v0 = tri.v[1] - tri.v[0];
@@ -118,14 +135,16 @@ inline FancyIntersection FancyIntersect(float dist, TrianglePos const& p, Triang
         glm::vec3 bary = barycentric(hit, p);
         normal = glm::normalize(bary.x*t.n[0] + bary.y*t.n[1] + bary.z*t.n[2]);
     }else{
-//        normal = (t.n[0]/3.f) + (t.n[1]/3.f) + (t.n[2]/3.f);
-        normal = (t.n[0] + t.n[1] + t.n[2]) / 3.0f;
+        // so we take the simple average normal of the 3 per-vertex normals.
+        // we could precalc this of course. This raises the whole question of how to store
+        // smoothed / non smoothed objects (etc)
+        normal = glm::normalize((t.n[0] + t.n[1] + t.n[2]) / 3.0f);
     }
 
     assert(glm::isNormalized(normal, EPSILON));
 
     // internal check
-    bool internal = glm::dot(ray.direction,normal)>0;
+    bool internal = glm::dot(ray.direction, normal) > 0;
     normal = internal? -normal : normal;
 
     return FancyIntersection(hit, t.mat, normal, internal);

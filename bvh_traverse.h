@@ -3,7 +3,6 @@
 #include "aabb.h"
 #include "bvh.h"
 #include "primitive.h"
-#include "debug_print.h"
 
 #include "glm/vec3.hpp"
 
