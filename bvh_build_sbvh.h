@@ -58,7 +58,10 @@ struct SBVHSplitter {
         for (int axis = 0; axis < 3; axis++) {
             const float low = centroidBounds.low[axis];
             const float high = centroidBounds.high[axis];
-            assert(low < high);
+            // it's possible to get a case where low==high. just ignore this axis
+            if(!(low < high))
+                continue;
+
             const float sliceWidth = high - low;
 
             for(int const idx : indicies){
@@ -86,12 +89,15 @@ struct SBVHSplitter {
 
         // calculate cost after each slice
         const float boundingArea = surfaceAreaAABB(bounds);
-        std::array<Cost, (SAH_MAX_SLICES-1) * 3> costs;
+        const int NUM_COSTS = SAH_MAX_SLICES - 1;
+        std::array<Cost, NUM_COSTS * 3> costs;
+
+        auto it = costs.begin();
 
         for(int axis = 0; axis < 3; axis++) {
             unsigned int baseIdx = (axis * SAH_MAX_SLICES);
 
-            for(unsigned int i = baseIdx; i < (baseIdx + SAH_MAX_SLICES) ; i++) {
+            for(unsigned int i = baseIdx; i < (baseIdx + NUM_COSTS) ; i++) {
                 // glue slices together into a left slice and a right slice
 
                 Slice left; 
@@ -108,23 +114,36 @@ struct SBVHSplitter {
                     right.count += slices[j].count;
                 }
 
-                float al = surfaceAreaAABB(left.aabb);
-                float ar = surfaceAreaAABB(right.aabb);
+                assert(it != costs.end());
+                it->axis = axis;
+
+                // it's possble to get zero-counts here if a given axis is flat (ie the low==high 
+                // case in the first loop).
+                if (left.count == 0 || right.count == 0) {
+                    it->cost = INFINITY;
+                } else {
+                    float al = surfaceAreaAABB(left.aabb);
+                    float ar = surfaceAreaAABB(right.aabb);
             
-                float val = (1 + (left.count * al + right.count * ar) / boundingArea);
-                unsigned int idx = baseIdx + i;
-                costs[idx] = Cost(val, axis);
+                    float val = (1 + (left.count * al + right.count * ar) / boundingArea);
+                    it->cost = val;
+                }
+                it++;
             }
         }
 
+//        for (auto c: costs) {
+//            std::cout << c.cost << ":" << c.axis << std::endl; 
+//        }
+
         // find minimal permutation
-        unsigned int splitSliceNo = 0;
+        unsigned int idx = 0;
         unsigned int splitAxis = costs[0].axis;
         float minCost = costs[0].cost;
         
         for(unsigned int i = 1; i < costs.size(); i++){
             if(costs[i].cost < minCost) {
-                splitSliceNo = i;
+                idx = i;
                 minCost = costs[i].cost;
 
                 // check axis initialsed
@@ -132,8 +151,11 @@ struct SBVHSplitter {
                 splitAxis = costs[i].axis;
             }
         }
+        unsigned int splitSliceNo = idx - (splitAxis*NUM_COSTS);
 
         std::cout << " splitAxis " << splitAxis;
+        std::cout << " splitSliceNo " << splitSliceNo;
+
         // check termination heurisic...
         if(minCost > indicies.size()) {
             return false; // no splitting here, chopper
