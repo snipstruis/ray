@@ -63,7 +63,7 @@ void subdivide(
         assert(node.isLeaf());
         assert(node.leftFirst == node.first());
 
-        //std::cout << "  leaf AABB " << node.bounds << " count " << node.count << std::endl;
+        std::cout << "  leaf AABB " << node.bounds << std::endl;
     } else {
         // not creating a leaf, we've split
         // leftIndicies and rightIndicies should now be populated - we'll recurse and go again.
@@ -71,7 +71,7 @@ void subdivide(
         // we can't have split a single triangle - shouldn't gotten this far.
         assert(fromIndicies.size() > 1);
 
-#if 0
+#if 1
         // walk the index array, build left and right sides.
         std::cout << " leftcount " << leftIndicies.size();
         std::cout << " rightCount " << rightIndicies.size();
