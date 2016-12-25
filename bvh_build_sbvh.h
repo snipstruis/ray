@@ -3,7 +3,7 @@
 // build an SBVH - that is a Split Bounding Volume Hierachy
 struct SBVHSplitter {
     // max number of slices (buckets) to test when splitting
-    static constexpr int SAH_MAX_SLICES = 8;
+    static constexpr int SLICES_PER_AXIS = 8;
 
     // Slice (or bucket) used when trying a triangle split
     struct Slice{
@@ -44,12 +44,12 @@ struct SBVHSplitter {
 
         // slice parent bounding box into slices along the longest axis
         // and count the triangle centroids in it
-        std::array<Slice, SAH_MAX_SLICES * 3> slices;
+        std::array<Slice, SLICES_PER_AXIS *  3> slices;
 
         // init axis
         for (int axis = 0; axis < 3; axis++) {
-            for (unsigned int i = 0; i < SAH_MAX_SLICES; i++) {
-                unsigned int idx = (axis * SAH_MAX_SLICES) + i;
+            for (unsigned int i = 0; i < SLICES_PER_AXIS; i++) {
+                unsigned int idx = (axis * SLICES_PER_AXIS) + i;
                 slices[idx].axis = axis;
             }
         }
@@ -70,12 +70,13 @@ struct SBVHSplitter {
                 // drop this centroid into a slice
                 const float pos = tri.getAverageCoord(axis);
                 const float ratio = ((pos - low) / sliceWidth);
-                unsigned int sliceNo = ratio * SAH_MAX_SLICES;
+                unsigned int sliceNo = ratio * SLICES_PER_AXIS;
 
-                if(sliceNo == SAH_MAX_SLICES)
+                if(sliceNo == SLICES_PER_AXIS)
                     sliceNo--;
 
-                sliceNo = sliceNo + (SAH_MAX_SLICES * axis);
+                // offset the slice number into the range for the current axis
+                sliceNo = sliceNo + (SLICES_PER_AXIS * axis);
 
                 const AABB triBounds = triangleBounds(tri);
 
@@ -89,13 +90,13 @@ struct SBVHSplitter {
 
         // calculate cost after each slice
         const float boundingArea = surfaceAreaAABB(bounds);
-        const int NUM_COSTS = SAH_MAX_SLICES - 1;
+        const int NUM_COSTS = SLICES_PER_AXIS - 1;
         std::array<Cost, NUM_COSTS * 3> costs;
 
         auto it = costs.begin();
 
         for(int axis = 0; axis < 3; axis++) {
-            unsigned int baseIdx = (axis * SAH_MAX_SLICES);
+            unsigned int baseIdx = (axis * SLICES_PER_AXIS);
 
             for(unsigned int i = baseIdx; i < (baseIdx + NUM_COSTS) ; i++) {
                 // glue slices together into a left slice and a right slice
@@ -108,7 +109,7 @@ struct SBVHSplitter {
                 }
 
                 Slice right;
-                for(unsigned int j = i+1; j < (baseIdx + SAH_MAX_SLICES); j++){
+                for(unsigned int j = i+1; j < (baseIdx + SLICES_PER_AXIS); j++){
                     assert(axis == slices[j].axis);
                     right.aabb = unionAABB(right.aabb, slices[j].aabb);
                     right.count += slices[j].count;
@@ -171,8 +172,8 @@ struct SBVHSplitter {
             // determine slice in which this one belongs
             float val = triangles[idx].getAverageCoord(splitAxis);
             const float ratio = ((val - low) / sliceWidth);
-            unsigned int sliceNo = ratio * SAH_MAX_SLICES;
-            if(sliceNo == SAH_MAX_SLICES)
+            unsigned int sliceNo = ratio * SLICES_PER_AXIS;
+            if(sliceNo == SLICES_PER_AXIS)
                 sliceNo--;
 
             if(sliceNo <= splitSliceNo)
