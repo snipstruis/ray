@@ -1,0 +1,32 @@
+{
+    "load_meshes" : {
+        "hairball" : "hairball.obj"
+    },
+    "world" : {
+        "objects" : [
+            {
+                "kind" : "mesh",
+                "mesh_name" : "hairball",
+                "transform" : {
+                    "translate" : { "x" : -1, "y" : 2, "z" : -1},
+                    "scale" : { "x" : 10, "y" : 10.00, "z" : 10.00}
+                }
+            }
+        ],
+        "lights" : 
+        [
+            {
+                "kind" : "point",
+                "color" : {"red" : 100, "green" : 100, "blue" : 100},
+                "position" : { "x" : 100, "y" : 50, "z" : 100}
+            }
+        ]
+        
+    },
+    "camera" : {
+        "origin" : { "x" : 100, "y" : 4, "z" : 100},
+        "look_angle" : { "yaw" : -135, "pitch" : 0},
+        "fov" : 40
+    }
+}
+
