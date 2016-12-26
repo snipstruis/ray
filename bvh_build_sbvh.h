@@ -24,19 +24,21 @@ struct SplitDecision {
         // cost=INFINITY should already be eliminated at this point
         assert(cost < INFINITY);
 
+#if 0
     std::cout  << "   cand: cost " << cost;
     std::cout  << " splitNo " << splitNo;
     std::cout  << " axis " << axis;
     std::cout  << " kind " << (kind == OBJECT ? "OBJECT" : "SPATIAL");
+#endif
 
         if(cost < minCost) {
             minCost = cost;
             chosenSplitNo = splitNo;
             chosenAxis = axis;
             splitKind = kind;
-            std::cout << " ***";
+    //        std::cout << " ***";
         }
-        std::cout << std::endl;
+    //    std::cout << std::endl;
     }
 
     // lowest cost we've seen so far
@@ -100,30 +102,44 @@ struct SBVHSplitter {
             SplitKind kind,                // in: kind of split we're performing (for stats purposes)
             SplitDecision& decision) {     // out: resultant decision
 
+        int totalLeft = 0;
+        int totalRight = 0;
         for(auto const& slice : slices) {
+            totalLeft += slice.leftCount();
+            totalRight += slice.rightCount();
+
             if(slice.leftCount() > 0 || slice.rightCount() > 0) {
                 slice.bounds.sanityCheck();
             }
         }
+        //std::cout << " tl " << totalLeft << " tr " << totalRight << std::endl;
+        //assert(totalLeft == totalRight);
 
+        //std::cout << std::endl;
         for(unsigned int i = 0; i < (slices.size() - 1) ; i++) {
             // glue slices together into a left slice and a right slice
             AABB leftBounds;
             int leftCount = 0;
+
             for(unsigned int j = 0; j <= i; j++){
                 leftBounds = unionAABB(leftBounds, slices[j].bounds);
                 leftCount += slices[j].leftCount();
+//                std::cout << "L";
             }
 
             AABB rightBounds;
             int rightCount = 0;
-            for(unsigned int j = i+1; j < (slices.size() - 1); j++){
-                rightBounds= unionAABB(rightBounds, slices[j].bounds);
+
+            for(unsigned int j = i+1; j < slices.size(); j++){
+                rightBounds = unionAABB(rightBounds, slices[j].bounds);
                 rightCount += slices[j].rightCount();
+//                std::cout << "R";
             }
 
             if(leftCount == 0 && rightCount == 0)
                 continue;
+            //assert(leftCount > 0);
+            //assert(rightCount > 0);
 
             float areaLeft = 0.0f;
             float areaRight = 0.0f;
@@ -135,13 +151,14 @@ struct SBVHSplitter {
 
             if(rightCount > 0) {
                 rightBounds.sanityCheck();
-                areaLeft = surfaceAreaAABB(rightBounds);
+                areaRight = surfaceAreaAABB(rightBounds);
             }
             
             float cost = (1 + (leftCount * areaLeft + rightCount * areaRight) / boundingSurfaceArea);
 
             decision.addCandidate(cost, i, axis, kind);
         }
+        //std::cout << std::endl;
     }
 
     // tries an SAH Object split on the given axis.
@@ -257,39 +274,21 @@ struct SBVHSplitter {
 
         const float range = high - low;
         const float sliceWidth = range / (float)SLICES_PER_AXIS;
-#if 0
-        std::cout << std::endl;
-        std::cout << std::setprecision(9);
-        std::cout << " low " << low;
-        std::cout << " high " << high;
-        std::cout << " sliceWidth " << sliceWidth;
-        std::cout << std::endl;
-#endif
+
         // walk all triangles
         for(int const idx : indicies) {
             const TrianglePos& tri = triangles[idx];
 
-        std::cout << std::endl;
             // walk across the slices
             for(int sliceNo = 0; sliceNo < SLICES_PER_AXIS; sliceNo++) {
                 float sliceLow = ((float)sliceNo * sliceWidth) + low;
                 float sliceHigh = sliceLow + sliceWidth;
                 assert(sliceHigh <= (high + EPSILON));
 
-#if 0
-                std::cout << "  " << sliceNo << ":";
-                std::cout << " sliceLow " << sliceLow;
-                std::cout << " sliceHigh " << sliceHigh;
-                std::cout << " minCoord " << tri.getMinCoord(axis);
-                std::cout << " maxCoord " << tri.getMaxCoord(axis);
-                std::cout << std::endl;
-#endif
-                std::cout << "|";
                 // does this tri fall in this slice?
                 // note we consider an == to be a miss, as it means one extreme coord is sitting on 
                 // the boundary rather than clipping it
                 if(tri.getMinCoord(axis) >= sliceHigh || tri.getMaxCoord(axis) <= sliceLow) {
-                    std::cout << "..| ";
                     continue;
                 }
             
@@ -299,14 +298,12 @@ struct SBVHSplitter {
                 bool clippedLow = false;
 
                 if(tri.getMinCoord(axis) < sliceLow) {
-                    std::cout << "\\";
                     VecPair intersect;
                     AAplaneTriangle(tri, axis, sliceLow, intersect);
                     slice.bounds = unionVecPair(slice.bounds, intersect);
                     clippedLow = true;
                 } else {
                     // doesn't clip low side - tri must start in this slice
-                    std::cout << "S";
                     slice.entryCount++;
                 }
 
@@ -314,14 +311,12 @@ struct SBVHSplitter {
                 bool clippedHigh = false;
 
                 if(tri.getMaxCoord(axis) > sliceHigh) {
-                    std::cout << "/";
                     VecPair intersect;
                     AAplaneTriangle(tri, axis, sliceHigh, intersect);
                     slice.bounds = unionVecPair(slice.bounds, intersect);
                     clippedHigh = true;
                 } else {
                     // doesn't clip high side - tri must end in this slice
-                    std::cout << "E";
                     slice.exitCount++;
                 }
 
@@ -341,16 +336,12 @@ struct SBVHSplitter {
                             num++;
                         }
                     }
+                    // we must have seen at least one point here.
                     assert(num > 0);
-                    std::cout << "|-";
-                } else {
-                    std::cout << "| ";
                 }
 
             }
-        std::cout << std::endl;
         }
-        std::cout << std::endl;
             
         FindMinCostSplit(slices, boundingSurfaceArea, axis, SPATIAL, decision);
     }
@@ -371,26 +362,16 @@ struct SBVHSplitter {
         const float boundingArea = surfaceAreaAABB(extremaBounds);
 
         // the bounds that we're given is an extrema brounds. We need one that surrounds the 
-        // triangle centroids
+        // triangle centroids for object splits
         const AABB centroidBounds = buildAABBCentroid(triangles, indicies, 0, indicies.size());
 
         centroidBounds.sanityCheck();
-#if 1
-        // bounds of centroids must be within total triangle bounds
-        if(!containsAABB(extremaBounds, centroidBounds)) {
-            extremaBounds.sanityCheck();
-            centroidBounds.sanityCheck();
-            std::cout << "FAIL " << std::endl;
-            std::cout << extremaBounds << std::endl << centroidBounds << std::endl;
-            std::cout << " triCount " << indicies.size() << std::endl;
-            assert(false);
-        }
-#endif
+
         SplitDecision decision;
 
         // walk the 3 axis, find the lowest cost split
         // ... firstly, try object splits
-        for(int axis = 0; axis < 3; axis++) {
+        for(int axis = 0; axis < 3; axis++) { 
             TryObjectSplit(triangles, indicies, boundingArea, centroidBounds, axis, decision);
         }
 
@@ -448,7 +429,7 @@ struct SBVHSplitter {
             const float range = high - low;
             const float sliceWidth = range / (float)SLICES_PER_AXIS;
 
-            std::cout << std::endl;
+//            std::cout << std::endl;
             std::cout << " low " << low;
             std::cout << " high " << high;
             std::cout << " sliceWidth " << sliceWidth;
@@ -478,15 +459,20 @@ struct SBVHSplitter {
             std::cout << " count " << indicies.size();
             std::cout << " leftCount " << leftIndicies.size();
             std::cout << " rightCount " << rightIndicies.size();
-            std::cout << std::endl;
 
-            // make sure all triangles are accounted for. we don't make duplicate triangles, 
-            // so all tris should be on one side only
             assert(leftIndicies.size() + rightIndicies.size() >= indicies.size());
-            assert(leftIndicies.size() < indicies.size());
-            assert(rightIndicies.size() < indicies.size());
+            assert(leftIndicies.size() <= indicies.size());
+            assert(rightIndicies.size() <= indicies.size());
+
+            // so this sucks. If all the triangles land on one side, then don't split; this 
+            // would mean we'll recurse forever.
+            if(leftIndicies.size() == indicies.size() || rightIndicies.size() == indicies.size()) {
+                std::cout << " -- sigh, nasty term"  << std::endl;
+                return false;
+            }
         }
 
+        std::cout << std::endl;
         return true; // yes, we split!
     }
 };
@@ -497,149 +483,3 @@ BVH* buildSBVH(Scene& s){
     return bvh;
 }
 
-#if 0   
-        // MIN/MAX BASED
-class BoundsPartitioner {
-        for(unsigned int i = 0; i < fromIndicies.size(); i++) {
-            unsigned int idx = fromIndicies[i];
-            float valMin = triangles[idx].getMinCoord(splitAxis);
-            float valMax = triangles[idx].getMaxCoord(splitAxis);
-            
-//            std::cout << "idx " << idx;
-//            std::cout << " valMin " << valMin << " valMax " << valMax;
-//            std::cout << " leftMax " << leftMax << " rightMin " << rightMin << std::endl;;
-            // FIXME: beware of >= or <= cases (hairy with floats)
-            // .. we could miss triangles here
-            // We want to include the triangle if at least one part of it is within the range
-            if(valMin <= leftMax)
-                leftIndicies.push_back(idx);
-            if(valMax >= rightMin)
-                rightIndicies.push_back(idx);
-        }
-}
-
-
-// Surface Area Heuristic splitter
-struct SAHSplitter{
-    static bool GetSplit(
-            TrianglePosSet const& triangles,   
-            TriangleMapping const& indicies,
-            AABB const& bounds,
-            unsigned int lastAxis,
-            unsigned int& splitAxis,             
-            float& leftMax, 
-            float& rightMin) {
-
-        assert(indicies.size()>0);
-        // size of the aabb
-        glm::vec3 diff = bounds.high - bounds.low;
-
-        // try a few places to split and find the one resulting in the smallest area
-        float smallest_area_so_far = INFINITY;
-        bool split_good_enough = false;
-        printf("splitting bounding box x:%f<%f, y:%f<%f, z:%f<%f\n",
-                bounds.low.x, bounds.high.x,
-                bounds.low.y, bounds.high.y,
-                bounds.low.z, bounds.high.z);
-                     
-        for(int axis=0; axis<3; axis++) for(int split=1; split<8; split++){
-            float trySplitPoint = bounds.low[axis] + ((float)split*(diff[axis]/8.f));
-            printf("  trying split %c=%f ","xyz"[axis],trySplitPoint);
-            // we keep a running total of the size of the left and right bounding box
-            AABB left, right;
-            int triangles_in_left = 0;
-            int triangles_in_right = 0;
-            for(int t:indicies){ // for each triangle
-                TrianglePos const& triangle = triangles[t];
-                // find out if the triangle belongs to left, right or both
-                int vertices_in_left = 0;
-                int vertices_in_right= 0;
-                for(int vertex=0; vertex<3; vertex++){
-                    if(triangle.v[vertex][axis] <= trySplitPoint) vertices_in_left++;
-                    if(triangle.v[vertex][axis] >= trySplitPoint) vertices_in_right++;
-                }
-                // if the triangle is completely at the left side of the
-                // splitting plane, grow the left bounding box to include the
-                // triangle
-                if(vertices_in_left==3){
-                    triangles_in_left++;
-                    for(int v=0;v<3;v++){
-                        left.low = glm::min(left.low, triangle.v[v]);
-                        left.high= glm::max(left.high,triangle.v[v]);
-                    }
-                }
-                // same for the right side, not mutually exclusive with the 
-                // statement above because of the edge case where the
-                // triangle lies exactly on the split plane
-                if(vertices_in_right==3){
-                    triangles_in_right++;
-                    for(int v=0;v<3;v++){
-                        right.low = glm::min(right.low, triangle.v[v]);
-                        right.high= glm::max(right.high,triangle.v[v]);
-                    }
-                }
-                // if the triangle intersects the split plane, use the bounding
-                // box of the cut triangle to grow both sides
-                if(vertices_in_left!=3 && vertices_in_right!=3){
-                    triangles_in_right++;
-                    triangles_in_left++;
-                    #if 0
-                    // find intersection points
-                    glm::vec3 t0,t1;
-                    AAplaneTriangle(triangle, axis, trySplitPoint, &t0, &t1);
-                    // grow the bounding boxes including these points
-                    glm::vec3 big[4], small[3]; 
-                    if(vertices_in_left>vertices_in_right){
-                    }else{
-
-                    }
-                    #else
-                    // suboptimal but easy
-                    for(int v=0;v<3;v++){
-                        left.low   = glm::min(left.low, triangle.v[v]);
-                        left.high  = glm::max(left.high,triangle.v[v]);
-                        right.low  = glm::min(right.low, triangle.v[v]);
-                        right.high = glm::max(right.high,triangle.v[v]);
-                    }
-                    left.high[axis] = trySplitPoint;
-                    right.low[axis] = trySplitPoint;
-                    #endif
-                }
-            }
-            // now check if the split is the best so far
-            float al = surfaceAreaAABB(left);
-            float ar = surfaceAreaAABB(right);
-            float area= al+ar;
-            int triangle_count = indicies.size();
-            printf("%d -> %d/%d\n",triangle_count, triangles_in_left, triangles_in_right);
-            if(area<smallest_area_so_far
-            && triangles_in_left != triangle_count
-            && triangles_in_right!= triangle_count){
-                // if it is the best so far, check if we should split at all
-                printf("  testing: al%f*tl%d+ar%f*tr%d < a%f*t%d\n",al,triangles_in_left,ar,triangles_in_right,area,triangle_count);
-                float should_share = al*(float)triangles_in_left + ar*(float)triangles_in_right;
-                float should_stop  = area*(float)triangle_count;
-                if(should_share<should_stop){
-                    printf("    best so far: area:%f triangles_L:%d triangles_R:%d total:%d\n", area, triangles_in_left, triangles_in_right, triangle_count);
-                    printf("      left:%f<%f right:%f<%f\n", left.low[axis], left.high[axis], right.low[axis], right.high[axis]);
-                    // we should split, set all the output variables
-                    assert(triangle_count > 1);
-                    assert(triangles_in_left >= 1);
-                    assert(triangles_in_right >= 1);
-                    assert(triangles_in_left  != triangle_count);
-                    assert(triangles_in_right != triangle_count);
-                    smallest_area_so_far = area;
-                    split_good_enough = true;
-                    rightMin = fmax(right.low[axis], left.low[axis]);
-                    leftMax  = fmin(right.high[axis], left.high[axis]);
-                    splitAxis= axis;
-                }
-            }
-        }
-
-        printf("  RESULT: %s\n", split_good_enough?"split good enough":"not worth splitting");
-        return split_good_enough;
-    }
-};
-
-#endif
