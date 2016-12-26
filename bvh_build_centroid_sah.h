@@ -19,6 +19,7 @@ struct CentroidSAHSplitter {
     };
 
     static bool GetSplit(
+            BVH& bvh,                         // in: bvh root
             TrianglePosSet const& triangles,  // in: master triangle array
             TriangleMapping const& indicies,  // in: set of triangle indicies to split 
             AABB const& bounds,               // in: bounds of this set of triangles

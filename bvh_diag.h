@@ -66,6 +66,8 @@ void dumpBVHStats(BVH const& bvh, TrianglePosSet const& triangles){
     std::cout << "Total nodes " << bvh.nodes.size() << " total leaves " << stats.perLeaf.size();
     std::cout << " Total tri indicies " << bvh.indicies.size();
     std::cout << " triDupPercent " << triDupPercent << "\n";
+    std::cout << "objectSplits " << bvh.objectSplits;
+    std::cout << " spatialSplits " << bvh.spatialSplits << "\n";
     std::cout << "Per leaf: min tri   " << minTri << " max Tri " << maxTri << " avgTri " << avgTri << "\n";
     std::cout << "          min depth " << minDepth << " max Depth " << maxDepth<< " avgDepth " << avgDepth<< "\n";
 

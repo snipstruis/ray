@@ -48,7 +48,7 @@ struct BVH {
         nodes.resize(1); // ensure at least root exists
     } 
 
-    BVH(unsigned int triangleCount) : nextFree(2) {
+    BVH(unsigned int triangleCount) : nextFree(2), objectSplits(0), spatialSplits(0) {
         // FIXME:should we be smarter here?
         nodes.resize(triangleCount* 3); 
         //indicies.resize(triangleCount);

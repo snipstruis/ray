@@ -300,6 +300,7 @@ struct SBVHSplitter {
     }
 
     static bool GetSplit(
+            BVH& bvh,                         // in: bvh root
             TrianglePosSet const& triangles,  // in: master triangle array
             TriangleMapping const& indicies,  // in: set of triangle indicies to split 
             AABB const& extremaBounds,        // in: bounds of this set of triangles
@@ -346,6 +347,7 @@ struct SBVHSplitter {
         }
 
         if(decision.splitKind == OBJECT) {
+            bvh.objectSplits++;
             const float low = centroidBounds.low[decision.chosenAxis];
             const float high = centroidBounds.high[decision.chosenAxis];
         
@@ -373,6 +375,8 @@ struct SBVHSplitter {
             // so all tris should be on one side only
             assert(leftIndicies.size() + rightIndicies.size() == indicies.size());
         } else {
+            bvh.spatialSplits++;
+
             const float low = extremaBounds.low[decision.chosenAxis];
             const float high = extremaBounds.high[decision.chosenAxis];
         
