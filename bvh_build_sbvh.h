@@ -13,8 +13,9 @@ struct SBVHSplitter {
         int count;
     };
 
-    // tries an SAH Object split on the given axis. Returns false if no split could be performed.
-    static bool SplitOnAxis(
+    // tries an SAH Object split on the given axis. Returns false if no split could be done.
+    // note this only returns the split bucket and the cost - it doesn't actually change anything
+    static bool TryObjectSplit(
             TrianglePosSet const& triangles,  // in: master triangle array
             TriangleMapping const& indicies,  // in: set of triangle indicies to split 
             float boundingSurfaceArea,        // in: surface area of extrema bounding box
@@ -22,6 +23,7 @@ struct SBVHSplitter {
             int axis,                         // in: axis to test
             float& minCost,                   // out: min cost split we found
             int& splitNo) {                   // out: split point for this min cost
+        assert(indicies.size() > 1);
 
         // slice parent bounding box into slices along the longest axis
         // and count the triangle centroids in it
@@ -93,6 +95,22 @@ struct SBVHSplitter {
         return true; // success!
     }
 
+    // tries an SAH Spatial split on the given axis. Returns false if no split could be done.
+    // similarly to TryObjectSplit, this is 'read only'
+    static bool TrySpatialSplit(
+            TrianglePosSet const& triangles,  // in: master triangle array
+            TriangleMapping const& indicies,  // in: set of triangle indicies to split 
+            float boundingSurfaceArea,        // in: surface area of extrema bounding box
+            AABB const& centroidBounds,       // in: bounds of this set of triangles
+            int axis,                         // in: axis to test
+            float& minCost,                   // out: min cost split we found
+            int& splitNo) {                   // out: split point for this min cost
+
+        assert(indicies.size() > 1);
+
+        return false;
+    }
+
     static bool GetSplit(
             TrianglePosSet const& triangles,  // in: master triangle array
             TriangleMapping const& indicies,  // in: set of triangle indicies to split 
@@ -121,11 +139,12 @@ struct SBVHSplitter {
         int chosenAxis = -1;
 
         // walk the 3 axis, find the lowest cost split
+        // ... firstly, try object splits
         for(int axis = 0; axis < 3; axis++) {
             float cost;
             int splitNo;
 
-            if(!SplitOnAxis(triangles, indicies, boundingArea, centroidBounds, axis, cost, splitNo))
+            if(!TryObjectSplit(triangles, indicies, boundingArea, centroidBounds, axis, cost, splitNo))
                 continue;
 
             if(cost < minCost) {
@@ -139,8 +158,26 @@ struct SBVHSplitter {
         assert(chosenAxis >= 0);
         assert(chosenAxis < 3);
 
-        std::cout << " chosenAxis " << chosenAxis;
-        std::cout << " chosenSplitNo " << chosenSplitNo;
+        for(int axis = 0; axis < 3; axis++) {
+            float cost;
+            int splitNo;
+
+            if(!TrySpatialSplit(triangles, indicies, boundingArea, centroidBounds, axis, cost, splitNo))
+                continue;
+
+            if(cost < minCost) {
+                minCost = cost;
+                chosenSplitNo = splitNo;
+                chosenAxis = axis;
+            }
+        }
+
+        assert(minCost < INFINITY);
+        assert(chosenAxis >= 0);
+        assert(chosenAxis < 3);
+
+//        std::cout << " chosenAxis " << chosenAxis;
+//        std::cout << " chosenSplitNo " << chosenSplitNo;
 
         // check termination heurisic...
         if(minCost > indicies.size()) {
