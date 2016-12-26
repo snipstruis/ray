@@ -90,14 +90,6 @@ glm::vec3 makeVec3FromVerticies(tinyobj::attrib_t const& attrib, int index) {
     return glm::vec3(attrib.vertices[i], attrib.vertices[i + 1], attrib.vertices[i + 2]);
 }
 
-glm::vec3 makeVec3FromNormals(tinyobj::attrib_t const& attrib, int index) {
-    assert(index >= 0);
-    int i = index * 3;
-
-    // danger.. normals from file are not nescessarily normalised!
-    return glm::normalize(glm::vec3(attrib.normals[i], attrib.normals[i + 1], attrib.normals[i + 2]));
-}
-
 TrianglePos BuildTrianglePos(tinyobj::attrib_t const& attrib, tinyobj::shape_t const& shape, int base) {
     return TrianglePos(
         makeVec3FromVerticies(attrib, shape.mesh.indices[base].vertex_index),
@@ -105,8 +97,31 @@ TrianglePos BuildTrianglePos(tinyobj::attrib_t const& attrib, tinyobj::shape_t c
         makeVec3FromVerticies(attrib, shape.mesh.indices[base + 2].vertex_index));
 }
 
-// build the non-vertex parts of a triangle. requires a TrianglePos in case it needs 
-// to calculate its own normals
+// try to make a normal from the file input. 
+// requires a TrianglePos in case it needs to calculate its own normals
+glm::vec3 makeVec3FromNormals(tinyobj::attrib_t const& attrib, int index, TrianglePos const& pos) {
+    // if the input file doesn't have a defined normal, we'll get a -1 here.
+    if(index >= 0) {
+        int i = index * 3;
+
+        // danger.. normals from file are not nescessarily normalised!
+        const glm::vec3 base(attrib.normals[i], attrib.normals[i+1], attrib.normals[i+2]);
+        const glm::vec3 n = glm::normalize(base);
+
+        // even though we've called normalize(), normals might still be bad (eg zero length)
+        // thus only return the normal here if it's good...
+        if(glm::isNormalized(n, EPSILON))
+            return n;
+    }
+
+    // if we've fallen through to here, 
+    // we'll generate our own normals then.. With blackjack.. in fact, forget the normals.
+    std::cout << "WARNING: calculating our own normal" << std::endl;
+    return glm::normalize(glm::cross(pos.v[1] - pos.v[0], pos.v[2] - pos.v[0]));
+}
+
+// build the non-vertex parts of a triangle. 
+// requires a TrianglePos in case it needs to calculate its own normals
 TriangleExtra BuildTriangleExtra(
         TrianglePos const& pos,
         tinyobj::attrib_t const& attrib, 
@@ -114,26 +129,20 @@ TriangleExtra BuildTriangleExtra(
         int base, 
         int globalMatID) {
 
-    int i1 = shape.mesh.indices[base].normal_index;
-    int i2 = shape.mesh.indices[base + 1].normal_index;
-    int i3 = shape.mesh.indices[base + 2].normal_index;
+    int i0 = shape.mesh.indices[base].normal_index;
+    int i1 = shape.mesh.indices[base + 1].normal_index;
+    int i2 = shape.mesh.indices[base + 2].normal_index;
 
-    // if normals are missing in the input file, we'll get a -1 here 
-    if(i1 < 0 || i2 < 0 || i3 < 0) {
-        // we'll generate our own normals then.. With blackjack.. in fact, forget the normals.
-        std::cout << "WARNING: mesh missing normal" << std::endl;
-        glm::vec3 n = glm::normalize(glm::cross(pos.v[1] - pos.v[0], pos.v[2] - pos.v[0]));
+    auto n0 = makeVec3FromNormals(attrib, i0, pos);
+    auto n1 = makeVec3FromNormals(attrib, i1, pos);
+    auto n2 = makeVec3FromNormals(attrib, i2, pos);
 
-        return TriangleExtra(n, n, n, globalMatID);
-    } else {
-        // normals ARE in the src file - just look them up
-        return TriangleExtra(
-            makeVec3FromNormals(attrib, i1),
-            makeVec3FromNormals(attrib, i2),
-            makeVec3FromNormals(attrib, i3),
-            globalMatID
-            );
-    }
+    // stupidity checking.. sigh
+    assert(glm::isNormalized(n0, EPSILON));
+    assert(glm::isNormalized(n1, EPSILON));
+    assert(glm::isNormalized(n2, EPSILON));
+
+    return TriangleExtra(n0, n1, n2, globalMatID);
 }
 
 int createMaterial(Scene& s, tinyobj::material_t const& m){
