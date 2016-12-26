@@ -247,6 +247,7 @@ void transformMeshIntoScene(Scene& s, Mesh const& mesh, glm::mat4x4 const& trans
     s.primitives.pos.reserve(mesh.pos.size());
     s.primitives.extra.reserve(mesh.extra.size());
 
+    int cullCount = 0;
     for(unsigned int i = 0; i < mesh.pos.size(); i++){
         TrianglePos const& origPos = mesh.pos[i];
 
@@ -256,7 +257,7 @@ void transformMeshIntoScene(Scene& s, Mesh const& mesh, glm::mat4x4 const& trans
             transformV3(origPos.v[2], transform, 1.0f));
 
         if(!pos.hasArea()) {
-            std::cout << "culling triangle @ " << i << std::endl;
+            cullCount++;
             continue;
         }
 
@@ -270,6 +271,7 @@ void transformMeshIntoScene(Scene& s, Mesh const& mesh, glm::mat4x4 const& trans
             glm::normalize(transformV3(origExtra.n[2], transform, 0.0f)), 
             origExtra.mat);
     }
+    std::cout << "Culled " << cullCount << " triangles" << std::endl;
 }
 
 void handleMesh(Scene& s, MeshMap const& meshes, json const& o) {
