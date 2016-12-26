@@ -159,4 +159,6 @@ add_scene("armadillo" "armadillo.scene")
 add_scene("pumpkin" "pumpkin.scene")
 add_scene("falling-trees" "falling-trees.scene")
 add_scene("hairball" "hairball.scene")
+add_scene("ducky" "ducky.scene")
+add_scene("ladybird" "ladybird.scene")
 
