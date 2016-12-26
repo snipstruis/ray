@@ -47,15 +47,15 @@ struct AABB {
     glm::vec3 low, high;
 };
 
+static_assert(sizeof(AABB) == 24, "AABB size");
+
 // DANGER - uses == operator directly on floats, be aware
 bool operator==(AABB const& a, AABB const& b){
     return (a.low==b.low) && (a.high==b.high);
 };
 
-static_assert(sizeof(AABB) == 24, "AABB size");
-
 inline AABB unionAABB(AABB const& a, AABB const& b){
-    return {glm::min(a.low,b.low),glm::max(a.high,b.high)};
+    return {glm::min(a.low, b.low), glm::max(a.high, b.high)};
 }
 
 inline AABB unionPoint(AABB const& a, glm::vec3 b){
@@ -135,21 +135,6 @@ inline AABB buildAABBCentroid(
     return result;
 }
 
-// find an AABB that surrounds 2x existing ones
-inline void combineAABB(AABB& result, AABB const& a, AABB const& b) {
-    a.sanityCheck();
-    b.sanityCheck();
-
-    result.low[0] = std::min(a.low[0], b.low[0]);
-    result.low[1] = std::min(a.low[1], b.low[1]);
-    result.low[2] = std::min(a.low[2], b.low[2]);
-
-    result.high[0] = std::max(a.high[0], b.high[0]);
-    result.high[1] = std::max(a.high[1], b.high[1]);
-    result.high[2] = std::max(a.high[2], b.high[2]);
-
-    result.sanityCheck();
-}
 // does @outer fully contain @inner?
 inline bool containsAABB(AABB const& outer, AABB const& inner) {
     inner.sanityCheck();
@@ -210,7 +195,7 @@ float rayIntersectsAABB(AABB const& a, glm::vec3 const& rayOrigin, glm::vec3 con
 
 inline float surfaceAreaAABB(AABB const& aabb) {
     glm::vec3 d = aabb.high-aabb.low;
-    return 2.f*(d.x*d.y + d.x*d.z + d.y*d.z);
+    return 2.0f * (d.x*d.y + d.x*d.z + d.y*d.z);
 }
 
 inline AABB triangleBounds(TrianglePos const& t) {
