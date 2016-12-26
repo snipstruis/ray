@@ -206,3 +206,41 @@ inline float moller_trumbore(TrianglePos const& tri, Ray const& ray) {
     return INFINITY;
 }
 
+// slice (clip) a triangle by an axis-aligned plane perpendicular to @axis at point @splitPoint
+// the two intersection points are returned in @res
+// splitPoint must be within the range of the triangle on the given axis
+inline void clipTriangle(
+    TrianglePos const& t, 
+    int axis, 
+    float splitPoint, 
+    VecPair& res) {
+        
+    assert(splitPoint > t.getMinCoord(axis));
+    assert(splitPoint < t.getMaxCoord(axis));
+
+    // grab the 'other 2' axis..
+    int a1 = (axis + 1) % 3;
+    int a2 = (axis + 2) % 3;
+    unsigned int current = 0;
+
+    for(int i = 0; i < 3; i++) {
+        const glm::vec3& v0 = t.v[i];
+        const glm::vec3& v1 = t.v[(i + 1) % 3];
+
+        // if at different sides of the splitpoint...
+        if(((v0[axis] <= splitPoint) && (v1[axis] > splitPoint)) ||
+           ((v1[axis] <= splitPoint) && (v0[axis] > splitPoint))){
+            // intersect
+            float dx = (v1[axis] - splitPoint) / (v1[axis] - v0[axis]);
+
+            assert(current < res.size());
+            res[current][axis] = splitPoint;
+            res[current][a1] = ((v1[a1] - v0[a1]) * dx) + v0[a1];
+            res[current][a2] = ((v1[a2] - v0[a2]) * dx) + v0[a2];
+            current++;
+        }
+    }
+    // should have intersected exactly twice
+    assert(current == 2);
+}
+

@@ -210,42 +210,6 @@ struct SBVHSplitter {
         FindMinCostSplit(slices, boundingSurfaceArea, axis, OBJECT, decision);
     }
 
-    // slice (clip) a triangle by an axis-aligned plane perpendicular to @axis at point @splitPoint
-    static void AAplaneTriangle(
-            TrianglePos const& t, 
-            int axis, 
-            float splitPoint, 
-            VecPair& res) {
-        
-        assert(splitPoint > t.getMinCoord(axis));
-        assert(splitPoint < t.getMaxCoord(axis));
-
-        // grab the 'other 2' axis..
-        int a1 = (axis + 1) % 3;
-        int a2 = (axis + 2) % 3;
-        unsigned int current = 0;
-
-        for(int i = 0; i < 3; i++) {
-            const glm::vec3& v0 = t.v[i];
-            const glm::vec3& v1 = t.v[(i + 1) % 3];
-
-            // if at different sides of the splitpoint...
-            if(((v0[axis] <= splitPoint) && (v1[axis] > splitPoint)) ||
-               ((v1[axis] <= splitPoint) && (v0[axis] > splitPoint))){
-                // intersect
-                float dx = (v1[axis] - splitPoint) / (v1[axis] - v0[axis]);
-
-                assert(current < res.size());
-                res[current][axis] = splitPoint;
-                res[current][a1] = ((v1[a1] - v0[a1]) * dx) + v0[a1];
-                res[current][a2] = ((v1[a2] - v0[a2]) * dx) + v0[a2];
-                current++;
-            }
-        }
-        // should have intersected exactly twice
-        assert(current == 2);
-    }
-
     // tries an SAH Spatial split on the given axis. 
     // may be a no-op if the given axis is zero length
     static void TrySpatialSplit(
@@ -294,12 +258,12 @@ struct SBVHSplitter {
             
                 auto& slice = slices[sliceNo];
 
-                // tri clips low side of slice?
                 bool clippedLow = false;
 
+                // tri clips low side of slice?
                 if(tri.getMinCoord(axis) < sliceLow) {
                     VecPair intersect;
-                    AAplaneTriangle(tri, axis, sliceLow, intersect);
+                    clipTriangle(tri, axis, sliceLow, intersect);
                     slice.bounds = unionVecPair(slice.bounds, intersect);
                     clippedLow = true;
                 } else {
@@ -307,12 +271,12 @@ struct SBVHSplitter {
                     slice.entryCount++;
                 }
 
-                // tri clips high side of slice?
                 bool clippedHigh = false;
 
+                // tri clips high side of slice?
                 if(tri.getMaxCoord(axis) > sliceHigh) {
                     VecPair intersect;
-                    AAplaneTriangle(tri, axis, sliceHigh, intersect);
+                    clipTriangle(tri, axis, sliceHigh, intersect);
                     slice.bounds = unionVecPair(slice.bounds, intersect);
                     clippedHigh = true;
                 } else {
