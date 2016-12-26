@@ -76,8 +76,8 @@ void subdivide(
         // walk the index array, build left and right sides.
         std::cout << " leftCount " << leftIndicies.size();
         std::cout << " rightCount " << rightIndicies.size();
-#endif
         std::cout << std::endl;
+#endif
 
         // if either of these fire, we've not split, we've put all the triangles on one side
         // (in which case, it's either a bad split value, or we should have created a leaf)

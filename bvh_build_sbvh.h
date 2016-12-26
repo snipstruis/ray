@@ -11,8 +11,11 @@ enum SplitKind {
 struct SplitDecision {
     SplitDecision(): minCost(INFINITY), chosenSplitNo(-1), chosenAxis(-1), splitKind(OBJECT) {}
 
+    SplitDecision(float cost, int splitNo, int axis, SplitKind kind): 
+        minCost(cost), chosenSplitNo(splitNo), chosenAxis(axis), splitKind(kind) {}
+
     // once the dust has settled, check we've got a result
-    void sanityCheck() {
+    void sanityCheck() const {
         assert(minCost < INFINITY);
         assert(chosenSplitNo >= 0);
         assert(chosenSplitNo < SLICES_PER_AXIS);
@@ -20,25 +23,15 @@ struct SplitDecision {
         assert(chosenAxis < 3);
     }
 
-    void addCandidate(float cost, int splitNo, int axis, SplitKind kind) {
-        // cost=INFINITY should already be eliminated at this point
-        assert(cost < INFINITY);
+    void merge(SplitDecision const& other) {
+        other.sanityCheck();
 
-#if 0
-    std::cout  << "   cand: cost " << cost;
-    std::cout  << " splitNo " << splitNo;
-    std::cout  << " axis " << axis;
-    std::cout  << " kind " << (kind == OBJECT ? "OBJECT" : "SPATIAL");
-#endif
-
-        if(cost < minCost) {
-            minCost = cost;
-            chosenSplitNo = splitNo;
-            chosenAxis = axis;
-            splitKind = kind;
-    //        std::cout << " ***";
+        if(other.minCost < minCost) {
+            minCost = other.minCost;
+            chosenSplitNo = other.chosenSplitNo;
+            chosenAxis = other.chosenAxis;
+            splitKind = other.splitKind;
         }
-    //    std::cout << std::endl;
     }
 
     // lowest cost we've seen so far
@@ -115,7 +108,6 @@ struct SBVHSplitter {
         //std::cout << " tl " << totalLeft << " tr " << totalRight << std::endl;
         //assert(totalLeft == totalRight);
 
-        //std::cout << std::endl;
         for(unsigned int i = 0; i < (slices.size() - 1) ; i++) {
             // glue slices together into a left slice and a right slice
             AABB leftBounds;
@@ -124,7 +116,6 @@ struct SBVHSplitter {
             for(unsigned int j = 0; j <= i; j++){
                 leftBounds = unionAABB(leftBounds, slices[j].bounds);
                 leftCount += slices[j].leftCount();
-//                std::cout << "L";
             }
 
             AABB rightBounds;
@@ -133,7 +124,6 @@ struct SBVHSplitter {
             for(unsigned int j = i+1; j < slices.size(); j++){
                 rightBounds = unionAABB(rightBounds, slices[j].bounds);
                 rightCount += slices[j].rightCount();
-//                std::cout << "R";
             }
 
             if(leftCount == 0 && rightCount == 0)
@@ -156,9 +146,8 @@ struct SBVHSplitter {
             
             float cost = (1 + (leftCount * areaLeft + rightCount * areaRight) / boundingSurfaceArea);
 
-            decision.addCandidate(cost, i, axis, kind);
+            decision.merge(SplitDecision(cost, i, axis, kind));
         }
-        //std::cout << std::endl;
     }
 
     // tries an SAH Object split on the given axis.
@@ -345,7 +334,7 @@ struct SBVHSplitter {
             TrySpatialSplit(triangles, indicies, boundingArea, extremaBounds, axis, decision);
         }
 
-        std::cout << decision;
+//        std::cout << decision;
         decision.sanityCheck();
 
 //        std::cout << " chosenAxis " << chosenAxis;
@@ -436,7 +425,7 @@ struct SBVHSplitter {
             }
         }
 
-        std::cout << std::endl;
+//        std::cout << std::endl;
         return true; // yes, we split!
     }
 };
