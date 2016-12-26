@@ -7,18 +7,10 @@ struct SBVHSplitter {
 
     // Slice (or bucket) used when trying a split
     struct Slice{
-        Slice() : count (0), axis(-1) {}
+        Slice() : count(0) {}
 
         AABB aabb;
         int count;
-        int axis;
-    };
-
-    struct Cost {
-        Cost(float _cost) : cost(_cost) {}
-        Cost() :cost(0.0f) {}
-
-        float cost;
     };
 
     // tries an SAH Object split on the given axis. Returns false if no split could be performed.
@@ -163,7 +155,7 @@ struct SBVHSplitter {
         // ok, we're going to split. parition the indicies based on bucket
         for(unsigned int idx : indicies) {
             // determine slice in which this one belongs
-            float val = triangles[idx].getAverageCoord(chosenAxis);
+            const float val = triangles[idx].getAverageCoord(chosenAxis);
             const float ratio = ((val - low) / sliceWidth);
             unsigned int sliceNo = ratio * SLICES_PER_AXIS;
             if(sliceNo == SLICES_PER_AXIS)
