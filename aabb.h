@@ -59,7 +59,7 @@ inline AABB unionAABB(AABB const& a, AABB const& b){
 }
 
 inline AABB unionPoint(AABB const& a, glm::vec3 b){
-    AABB result = AABB{glm::min(a.low,b), glm::max(a.high,b)};
+    AABB result = AABB{glm::min(a.low, b), glm::max(a.high, b)};
     result.sanityCheck();
     return result;
 }
@@ -96,13 +96,7 @@ inline AABB buildAABBExtrema(
         TrianglePos const& t = triangles[indicies[i]];
 
         for(unsigned int j = 0; j < 3; j++) {
-            result.low[0] = std::min(result.low[0], t.v[j][0]);
-            result.low[1] = std::min(result.low[1], t.v[j][1]);
-            result.low[2] = std::min(result.low[2], t.v[j][2]);
-
-            result.high[0] = std::max(result.high[0], t.v[j][0]);
-            result.high[1] = std::max(result.high[1], t.v[j][1]);
-            result.high[2] = std::max(result.high[2], t.v[j][2]);
+            result = unionPoint(result, t.v[j]);
         }
     }
 
