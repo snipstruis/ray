@@ -307,33 +307,91 @@ struct SBVHSplitter {
             TriangleMapping& leftIndicies,    // out: resultant left set
             TriangleMapping& rightIndicies) { // out: resultant right set
 
-            const float low = centroidBounds.low[decision.chosenAxis];
-            const float high = centroidBounds.high[decision.chosenAxis];
+        const float low = centroidBounds.low[decision.chosenAxis];
+        const float high = centroidBounds.high[decision.chosenAxis];
         
-            // at this point, low must be < high (ie not equal) as we've chosen it as a split axis
-            // this means there must be a point in this axis we can split the triangles
-            assert(low < high);
-            const float sliceWidth = high - low;
+        // at this point, low must be < high (ie not equal) as we've chosen it as a split axis
+        // this means there must be a point in this axis we can split the triangles
+        assert(low < high);
+        const float sliceWidth = high - low;
 
-            // ok, we're going to split. parition the indicies based on bucket
-            for(unsigned int idx : indicies) {
-                // determine slice in which this one belongs
-                const float val = triangles[idx].getAverageCoord(decision.chosenAxis);
-                const float ratio = ((val - low) / sliceWidth);
-                int sliceNo = ratio * SLICES_PER_AXIS;
-                if(sliceNo == SLICES_PER_AXIS)
-                    sliceNo--;
+        // ok, we're going to split. parition the indicies based on bucket
+        for(unsigned int idx : indicies) {
+            // determine slice in which this one belongs
+            const float val = triangles[idx].getAverageCoord(decision.chosenAxis);
+            const float ratio = ((val - low) / sliceWidth);
+            int sliceNo = ratio * SLICES_PER_AXIS;
+            if(sliceNo == SLICES_PER_AXIS)
+                sliceNo--;
 
-                if(sliceNo <= decision.chosenSplitNo)
-                    leftIndicies.push_back(idx);
-                else
-                    rightIndicies.push_back(idx);
+            if(sliceNo <= decision.chosenSplitNo)
+                leftIndicies.push_back(idx);
+            else
+                rightIndicies.push_back(idx);
+        }
+
+        // make sure all triangles are accounted for. we don't make duplicate triangles, 
+        // so all tris should be on one side only
+        assert(leftIndicies.size() + rightIndicies.size() == indicies.size());
+    }
+
+    static void DoSpatialSplit(
+            SplitDecision const& decision,
+            AABB const& extremaBounds,
+            TrianglePosSet const& triangles,  // in: master triangle array
+            TriangleMapping const& indicies,  // in: set of triangle indicies to split 
+            TriangleMapping& leftIndicies,    // out: resultant left set
+            TriangleMapping& rightIndicies) { // out: resultant right set
+
+        const float low = extremaBounds.low[decision.chosenAxis];
+        const float high = extremaBounds.high[decision.chosenAxis];
+        
+        // at this point, low must be < high (ie not equal) as we've chosen it as a split axis
+        // this means there must be a point in this axis we can split the triangles
+        assert(low < high);
+        const float range = high - low;
+        const float sliceWidth = range / (float)SLICES_PER_AXIS;
+
+        float splitPoint = ((decision.chosenSplitNo + 1) * sliceWidth) + low;
+#if 0
+//    std::cout << std::endl;
+        std::cout << " low " << low;
+        std::cout << " high " << high;
+        std::cout << " sliceWidth " << sliceWidth;
+
+        std::cout << " splitPoint " << splitPoint;
+#endif
+
+        assert(splitPoint < high);
+        assert(splitPoint > low);
+        assert(decision.chosenSplitNo < (SLICES_PER_AXIS - 1));
+
+        // ok, we're going to split. parition the indicies based on bucket
+        for(unsigned int idx : indicies) {
+            // determine slice in which this one belongs
+            TrianglePos const& tri = triangles[idx];
+
+            if(tri.getMinCoord(decision.chosenAxis) <= splitPoint) {
+                leftIndicies.push_back(idx);
             }
 
-            // make sure all triangles are accounted for. we don't make duplicate triangles, 
-            // so all tris should be on one side only
-            assert(leftIndicies.size() + rightIndicies.size() == indicies.size());
+            if(tri.getMaxCoord(decision.chosenAxis) >= splitPoint) {
+                rightIndicies.push_back(idx);
+            }
+        }
+
+#if 0
+        std::cout << " count " << indicies.size();
+        std::cout << " leftCount " << leftIndicies.size();
+        std::cout << " rightCount " << rightIndicies.size();
+#endif
+
+        assert(leftIndicies.size() + rightIndicies.size() >= indicies.size());
+        assert(leftIndicies.size() <= indicies.size());
+        assert(rightIndicies.size() <= indicies.size());
+
     }
+
 
     static bool GetSplit(
             BVH& bvh,                         // in: bvh root
@@ -389,52 +447,7 @@ struct SBVHSplitter {
         } else {
             bvh.spatialSplits++;
 
-            const float low = extremaBounds.low[decision.chosenAxis];
-            const float high = extremaBounds.high[decision.chosenAxis];
-        
-            // at this point, low must be < high (ie not equal) as we've chosen it as a split axis
-            // this means there must be a point in this axis we can split the triangles
-            assert(low < high);
-            const float range = high - low;
-            const float sliceWidth = range / (float)SLICES_PER_AXIS;
-
-            float splitPoint = ((decision.chosenSplitNo + 1) * sliceWidth) + low;
-#if 0
-//            std::cout << std::endl;
-            std::cout << " low " << low;
-            std::cout << " high " << high;
-            std::cout << " sliceWidth " << sliceWidth;
-
-            std::cout << " splitPoint " << splitPoint;
-#endif
-
-            assert(splitPoint < high);
-            assert(splitPoint > low);
-            assert(decision.chosenSplitNo < (SLICES_PER_AXIS - 1));
-
-            // ok, we're going to split. parition the indicies based on bucket
-            for(unsigned int idx : indicies) {
-                // determine slice in which this one belongs
-                TrianglePos const& tri = triangles[idx];
-
-                if(tri.getMinCoord(decision.chosenAxis) <= splitPoint) {
-                    leftIndicies.push_back(idx);
-                }
-
-                if(tri.getMaxCoord(decision.chosenAxis) >= splitPoint) {
-                    rightIndicies.push_back(idx);
-                }
-            }
-
-#if 0
-            std::cout << " count " << indicies.size();
-            std::cout << " leftCount " << leftIndicies.size();
-            std::cout << " rightCount " << rightIndicies.size();
-#endif
-
-            assert(leftIndicies.size() + rightIndicies.size() >= indicies.size());
-            assert(leftIndicies.size() <= indicies.size());
-            assert(rightIndicies.size() <= indicies.size());
+            DoSpatialSplit(decision, extremaBounds, triangles, indicies, leftIndicies, rightIndicies);
 
             // so this sucks. If all the triangles land on one side, then don't split; this 
             // would mean we'll recurse forever.
