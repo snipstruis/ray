@@ -33,7 +33,7 @@ void dumpBVHStatsRecurse(BVH const& bvh, BVHNode const& node, int depth, BVHStat
     }
 }
 
-void dumpBVHStats(BVH const& bvh){
+void dumpBVHStats(BVH const& bvh, TrianglePosSet const& triangles){
     BVHStatsTotal stats;
     dumpBVHStatsRecurse(bvh, bvh.root(), 0, stats);
 
@@ -58,11 +58,14 @@ void dumpBVHStats(BVH const& bvh){
     float avgDepth = sumDepth / ((float)stats.perLeaf.size());
     float avgTri = sumTri / ((float)stats.perLeaf.size());
 
+    float triDupPercent = (sumTri/((float)triangles.size())) * 100.0f;
+
     std::cout << "=========================================================================================\n";
     std::cout << "BVH Stats\n";
     std::cout << "root AABB " << bvh.root().bounds << "\n";
     std::cout << "Total nodes " << bvh.nodes.size() << " total leaves " << stats.perLeaf.size();
-    std::cout << " Total tri indicies " << bvh.indicies.size() << "\n";
+    std::cout << " Total tri indicies " << bvh.indicies.size();
+    std::cout << " triDupPercent " << triDupPercent << "\n";
     std::cout << "Per leaf: min tri   " << minTri << " max Tri " << maxTri << " avgTri " << avgTri << "\n";
     std::cout << "          min depth " << minDepth << " max Depth " << maxDepth<< " avgDepth " << avgDepth<< "\n";
 
@@ -102,17 +105,6 @@ void doSanityCheckBVH(BVH& bvh, TrianglePosSet const& triangles) {
     // check triangle refs are sane
     for(unsigned int i : bvh.indicies) {
         assert(i < triangles.size());
-        
-        // check uniqueness
-        bool found = false;
-        for(unsigned int j : bvh.indicies) {
-            if(found) {
-                assert(j != i);
-            } 
-            else {
-                found = (i == j);
-            }
-        }
     }
 
     assert(bvh.nodes.size() >= bvh.nodeCount() + 1);
