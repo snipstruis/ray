@@ -85,7 +85,6 @@ struct SBVHSplitter {
         int entryCount, exitCount;
     };
 
-
     // calculate cost after slicing
     template<class SliceArrayType>
     static void FindMinCostSplit(
@@ -105,8 +104,6 @@ struct SBVHSplitter {
                 slice.bounds.sanityCheck();
             }
         }
-        //std::cout << " tl " << totalLeft << " tr " << totalRight << std::endl;
-        //assert(totalLeft == totalRight);
 
         for(unsigned int i = 0; i < (slices.size() - 1) ; i++) {
             // glue slices together into a left slice and a right slice
@@ -145,7 +142,6 @@ struct SBVHSplitter {
             }
             
             float cost = (1 + (leftCount * areaLeft + rightCount * areaRight) / boundingSurfaceArea);
-
             decision.merge(SplitDecision(cost, i, axis, kind));
         }
     }
