@@ -35,8 +35,9 @@ struct CentroidSAHSplitter {
 
         // bounds of centroids must be within total triangle bounds
         centroidBounds.sanityCheck();
-        //FIXME: this is failing for some reason
-        //assert(containsAABB(bounds, centroidBounds));
+
+        // centroid bounds must be inside triangle extrema bounds
+        assert(containsAABB(bounds, centroidBounds));
 
         // find longest axis
         unsigned int axis = centroidBounds.longestAxis();
