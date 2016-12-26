@@ -13,49 +13,14 @@ struct SBVHSplitter {
         int count;
     };
 
-    // tries an SAH Object split on the given axis. Returns false if no split could be done.
-    // note this only returns the split bucket and the cost - it doesn't actually change anything
-    static bool TryObjectSplit(
-            TrianglePosSet const& triangles,  // in: master triangle array
-            TriangleMapping const& indicies,  // in: set of triangle indicies to split 
-            float boundingSurfaceArea,        // in: surface area of extrema bounding box
-            AABB const& centroidBounds,       // in: bounds of this set of triangles
-            int axis,                         // in: axis to test
-            float& minCost,                   // out: min cost split we found
-            int& splitNo) {                   // out: split point for this min cost
-        assert(indicies.size() > 1);
+    typedef std::array<Slice, SLICES_PER_AXIS> SliceArray;
 
-        // slice parent bounding box into slices along the longest axis
-        // and count the triangle centroids in it
-        std::array<Slice, SLICES_PER_AXIS> slices;
-
-        const float low = centroidBounds.low[axis];
-        const float high = centroidBounds.high[axis];
-        // it's possible to get a case where low==high. just ignore this axis
-        if(!(low < high))
-            return false;
-
-        const float sliceWidth = high - low;
-
-        for(int const idx : indicies) {
-            const TrianglePos& tri = triangles[idx];
-            
-            // drop this centroid into a slice
-            const float pos = tri.getAverageCoord(axis);
-            const float ratio = ((pos - low) / sliceWidth);
-            unsigned int sliceNo = ratio * SLICES_PER_AXIS;
-
-            if(sliceNo == SLICES_PER_AXIS)
-                sliceNo--;
-
-            const AABB triBounds = triangleBounds(tri);
-
-            assert(sliceNo < slices.size());
-            slices[sliceNo].aabb = unionAABB(slices[sliceNo].aabb, triBounds);
-            slices[sliceNo].count++;
-        }
-
-        // calculate cost after each slice
+    // calculate cost after slicing
+    static void FindMinCostSplit(
+            SliceArray const& slices,   // in: slices to consider
+            float boundingSurfaceArea, // in: surface area of extrema bounding box
+            float& minCost,            // out: min cost split we found
+            int& splitNo) {            // out: split point for this min cost
 
         std::array<float, SLICES_PER_AXIS - 1> costs;
 
@@ -92,6 +57,52 @@ struct SBVHSplitter {
                 minCost = costs[i];
             }
         }
+    }
+
+    // tries an SAH Object split on the given axis. Returns false if no split could be done.
+    // note this only returns the split bucket and the cost - it doesn't actually change anything
+    static bool TryObjectSplit(
+            TrianglePosSet const& triangles,  // in: master triangle array
+            TriangleMapping const& indicies,  // in: set of triangle indicies to split 
+            float boundingSurfaceArea,        // in: surface area of extrema bounding box
+            AABB const& centroidBounds,       // in: bounds of this set of triangles
+            int axis,                         // in: axis to test
+            float& minCost,                   // out: min cost split we found
+            int& splitNo) {                   // out: split point for this min cost
+        assert(indicies.size() > 1);
+
+        // slice parent bounding box into slices along the longest axis
+        // and count the triangle centroids in it
+        SliceArray slices;
+
+        const float low = centroidBounds.low[axis];
+        const float high = centroidBounds.high[axis];
+        // it's possible to get a case where low==high. just ignore this axis
+        if(!(low < high))
+            return false;
+
+        const float sliceWidth = high - low;
+
+        for(int const idx : indicies) {
+            const TrianglePos& tri = triangles[idx];
+            
+            // drop this centroid into a slice
+            const float pos = tri.getAverageCoord(axis);
+            const float ratio = ((pos - low) / sliceWidth);
+            unsigned int sliceNo = ratio * SLICES_PER_AXIS;
+
+            if(sliceNo == SLICES_PER_AXIS)
+                sliceNo--;
+
+            const AABB triBounds = triangleBounds(tri);
+
+            assert(sliceNo < slices.size());
+            slices[sliceNo].aabb = unionAABB(slices[sliceNo].aabb, triBounds);
+            slices[sliceNo].count++;
+        }
+
+        FindMinCostSplit(slices, boundingSurfaceArea, minCost, splitNo);
+
         return true; // success!
     }
 
@@ -101,7 +112,7 @@ struct SBVHSplitter {
             TrianglePosSet const& triangles,  // in: master triangle array
             TriangleMapping const& indicies,  // in: set of triangle indicies to split 
             float boundingSurfaceArea,        // in: surface area of extrema bounding box
-            AABB const& centroidBounds,       // in: bounds of this set of triangles
+            AABB const& extremaBounds,        // in: bounds of this set of triangles
             int axis,                         // in: axis to test
             float& minCost,                   // out: min cost split we found
             int& splitNo) {                   // out: split point for this min cost
@@ -109,6 +120,40 @@ struct SBVHSplitter {
         assert(indicies.size() > 1);
 
         return false;
+
+        // slice parent bounding box into slices along the longest axis
+        // and count the triangle centroids in it
+        SliceArray slices;
+
+        const float low = extremaBounds.low[axis];
+        const float high = extremaBounds.high[axis];
+        // it's possible to get a case where low==high. just ignore this axis
+        if(!(low < high))
+            return false;
+
+        const float sliceWidth = high - low;
+
+        for(int const idx : indicies) {
+            const TrianglePos& tri = triangles[idx];
+            
+            // drop this centroid into a slice
+            const float pos = tri.getAverageCoord(axis);
+            const float ratio = ((pos - low) / sliceWidth);
+            unsigned int sliceNo = ratio * SLICES_PER_AXIS;
+
+            if(sliceNo == SLICES_PER_AXIS)
+                sliceNo--;
+
+            const AABB triBounds = triangleBounds(tri);
+
+            assert(sliceNo < slices.size());
+            slices[sliceNo].aabb = unionAABB(slices[sliceNo].aabb, triBounds);
+            slices[sliceNo].count++;
+        }
+
+        FindMinCostSplit(slices, boundingSurfaceArea, minCost, splitNo);
+
+        return true; // success!
     }
 
     static bool GetSplit(
@@ -162,7 +207,7 @@ struct SBVHSplitter {
             float cost;
             int splitNo;
 
-            if(!TrySpatialSplit(triangles, indicies, boundingArea, centroidBounds, axis, cost, splitNo))
+            if(!TrySpatialSplit(triangles, indicies, boundingArea, extremaBounds, axis, cost, splitNo))
                 continue;
 
             if(cost < minCost) {
