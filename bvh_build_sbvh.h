@@ -9,7 +9,7 @@ struct SBVHSplitter {
     struct Slice{
         Slice() : count(0) {}
 
-        AABB aabb;
+        AABB bounds;
         int count;
     };
 
@@ -47,37 +47,33 @@ struct SBVHSplitter {
             int axis,                  // in: axis we're splitting on
             SplitDecision& decision) { // out: resultant decision
 
-        std::array<float, SLICES_PER_AXIS - 1> costs;
-
-        for(unsigned int i = 0; i < costs.size() ; i++) {
+        for(unsigned int i = 0; i < (slices.size() - 1) ; i++) {
             // glue slices together into a left slice and a right slice
             Slice left; 
             for(unsigned int j = 0; j <= i; j++){
-                left.aabb = unionAABB(left.aabb, slices[j].aabb);
+                left.bounds = unionAABB(left.bounds, slices[j].bounds);
                 left.count += slices[j].count;
             }
 
             Slice right;
-            for(unsigned int j = i+1; j < costs.size(); j++){
-                right.aabb = unionAABB(right.aabb, slices[j].aabb);
+            for(unsigned int j = i+1; j < (slices.size() - 1); j++){
+                right.bounds= unionAABB(right.bounds, slices[j].bounds);
                 right.count += slices[j].count;
             }
 
             //assert(left.count > 0);
             //assert(right.count > 0);
-            float al = surfaceAreaAABB(left.aabb);
-            float ar = surfaceAreaAABB(right.aabb);
+            float al = surfaceAreaAABB(left.bounds);
+            float ar = surfaceAreaAABB(right.bounds);
             
             float cost = (1 + (left.count * al + right.count * ar) / boundingSurfaceArea);
-            costs[i] = cost;
-        }
-        
-        for(unsigned int i = 1; i < costs.size(); i++){
-            decision.addCandidate(costs[i], i, axis);
+
+            decision.addCandidate(cost, i, axis);
         }
     }
 
     // tries an SAH Object split on the given axis.
+    // may be a no-op if the given axis is zero length
     static void TryObjectSplit(
             TrianglePosSet const& triangles,  // in: master triangle array
             TriangleMapping const& indicies,  // in: set of triangle indicies to split 
@@ -97,14 +93,14 @@ struct SBVHSplitter {
         if(!(low < high))
             return;
 
-        const float sliceWidth = high - low;
+        const float range = high - low;
 
         for(int const idx : indicies) {
             const TrianglePos& tri = triangles[idx];
             
             // drop this centroid into a slice
             const float pos = tri.getAverageCoord(axis);
-            const float ratio = ((pos - low) / sliceWidth);
+            const float ratio = ((pos - low) / range);
             unsigned int sliceNo = ratio * SLICES_PER_AXIS;
 
             if(sliceNo == SLICES_PER_AXIS)
@@ -113,15 +109,46 @@ struct SBVHSplitter {
             const AABB triBounds = triangleBounds(tri);
 
             assert(sliceNo < slices.size());
-            slices[sliceNo].aabb = unionAABB(slices[sliceNo].aabb, triBounds);
+            slices[sliceNo].bounds = unionAABB(slices[sliceNo].bounds, triBounds);
             slices[sliceNo].count++;
         }
 
         FindMinCostSplit(slices, boundingSurfaceArea, axis, decision);
     }
 
-    // tries an SAH Spatial split on the given axis. Returns false if no split could be done.
-    // similarly to TryObjectSplit, this is 'read only'
+    // slice (clip) a triangle by an axis-aligned plane perpendicular to @axis at point @splitPoint
+    static void AAplaneTriangle(
+            TrianglePos const& t, 
+            int axis, 
+            float splitPoint, 
+            std::array<glm::vec3, 2>& res) {
+
+        // grab the 'other 2' axis..
+        int a1 = (axis + 1) % 3;
+        int a2 = (axis + 2) % 3;
+        unsigned int current = 0;
+
+        for(int i = 0; i < 3; i++) {
+            const glm::vec3& v0 = t.v[i];
+            const glm::vec3& v1 = t.v[(i + 1) % 3];
+
+            // if at different sides of the splitpoint...
+            if((v0[axis] <= splitPoint) && (v1[axis] > splitPoint)){
+                // intersect
+                float dx = (v0[axis] - splitPoint) / (v0[axis] - v1[axis]);
+
+                assert(current < res.size());
+                res[current][axis] = splitPoint;
+                res[current][a1] = (v0[a1] - v1[a1]) * dx;
+                res[current][a2] = (v0[a2] - v1[a2]) * dx;
+                current++;
+            }
+            assert(current == 2);
+        }
+    }
+
+    // tries an SAH Spatial split on the given axis. 
+    // may be a no-op if the given axis is zero length
     static void TrySpatialSplit(
             TrianglePosSet const& triangles,  // in: master triangle array
             TriangleMapping const& indicies,  // in: set of triangle indicies to split 
@@ -131,8 +158,6 @@ struct SBVHSplitter {
             SplitDecision& decision) {        // out: resultant decision
 
         assert(indicies.size() > 1);
-
-        return ;
 
         // slice parent bounding box into slices along the longest axis
         // and count the triangle centroids in it
@@ -144,11 +169,44 @@ struct SBVHSplitter {
         if(!(low < high))
             return;
 
-        const float sliceWidth = high - low;
+        const float range = high - low;
+        const float sliceWidth = range / (float)SLICES_PER_AXIS;
 
+        // walk all triangles
         for(int const idx : indicies) {
             const TrianglePos& tri = triangles[idx];
+
+            // walk across the slices
+            for(int sliceNo = 0; sliceNo < SLICES_PER_AXIS; sliceNo++) {
+                float sliceLow = (sliceNo * sliceWidth) + low;
+                float sliceHigh = sliceLow + sliceWidth;
+                assert(sliceHigh <= high);
+
+                // does this tri fall in this slice?
+                if(tri.getMinCoord(axis) > sliceHigh || tri.getMaxCoord(axis) < sliceLow)
+                    continue;
             
+                if(tri.getMinCoord(axis) < sliceLow) {
+                    std::array<glm::vec3, 2> intersect;
+                    AAplaneTriangle(tri, axis, sliceLow, intersect);
+                    slices[sliceNo].bounds = unionPoint(slices[sliceNo].bounds, intersect[0]);
+                    slices[sliceNo].bounds = unionPoint(slices[sliceNo].bounds, intersect[1]);
+                    slices[sliceNo].count++;
+                }
+
+                if(tri.getMaxCoord(axis) > sliceHigh) {
+                    std::array<glm::vec3, 2> intersect;
+                    AAplaneTriangle(tri, axis, sliceHigh, intersect);
+                    slices[sliceNo].bounds = unionPoint(slices[sliceNo].bounds, intersect[0]);
+                    slices[sliceNo].bounds = unionPoint(slices[sliceNo].bounds, intersect[1]);
+                    slices[sliceNo].count++;
+                }
+            }
+        }
+            
+#if 0
+
+
             // drop this centroid into a slice
             const float pos = tri.getAverageCoord(axis);
             const float ratio = ((pos - low) / sliceWidth);
@@ -162,7 +220,7 @@ struct SBVHSplitter {
             assert(sliceNo < slices.size());
             slices[sliceNo].aabb = unionAABB(slices[sliceNo].aabb, triBounds);
             slices[sliceNo].count++;
-        }
+#endif
 
         FindMinCostSplit(slices, boundingSurfaceArea, axis, decision);
     }
@@ -170,7 +228,7 @@ struct SBVHSplitter {
     static bool GetSplit(
             TrianglePosSet const& triangles,  // in: master triangle array
             TriangleMapping const& indicies,  // in: set of triangle indicies to split 
-            AABB const& extremaBounds,               // in: bounds of this set of triangles
+            AABB const& extremaBounds,        // in: bounds of this set of triangles
             TriangleMapping& leftIndicies,    // out: resultant left set
             TriangleMapping& rightIndicies) { // out: resultant right set
 
@@ -268,27 +326,6 @@ class BoundsPartitioner {
         }
 }
 
-void AAplaneTriangle(TrianglePos const& t, int axis, float plane, glm::vec3* p0, flm::vec3* p1){
-    int points = 0;
-    glm::vec3 p[2];
-    int a1=(axis+1)%3;
-    int a2=(axis+2)%3;
-    for(int i=0;i<3;i++){
-        // if at different sides of the splitpoint...
-        glm::vec3 t0 = t.v[i];
-        glm::vec3 t1 = t.v[(i+1)%3];
-        if((t0[axis] <= plane) ^^ (t1[axis] <= plane)){
-            // intersect
-            float dx = (t0[axis]-plane)/(t0[axis]-t1[axis]);
-            p[points][axis] = plane;
-            p[points][a1] = dx*t0;
-            p[points][a2] = dx*t1;
-            points++;
-        }
-    }
-    *p0=p[0];
-    *p1=p[1];
-}
 
 // Surface Area Heuristic splitter
 struct SAHSplitter{
