@@ -24,12 +24,19 @@ struct SplitDecision {
         // cost=INFINITY should already be eliminated at this point
         assert(cost < INFINITY);
 
+    std::cout  << "   cand: cost " << cost;
+    std::cout  << " splitNo " << splitNo;
+    std::cout  << " axis " << axis;
+    std::cout  << " kind " << (kind == OBJECT ? "OBJECT" : "SPATIAL");
+
         if(cost < minCost) {
             minCost = cost;
             chosenSplitNo = splitNo;
             chosenAxis = axis;
             splitKind = kind;
+            std::cout << " ***";
         }
+        std::cout << std::endl;
     }
 
     // lowest cost we've seen so far
@@ -53,7 +60,7 @@ struct SBVHSplitter {
 
     // Slice (or bucket) used when trying an Object split
     struct ObjectSlice{
-        Slice() : count(0) {}
+        ObjectSlice() : count(0) {}
 
         int leftCount() const {
             return count;
@@ -69,7 +76,7 @@ struct SBVHSplitter {
 
     // Slice (or bucket) used when trying a Spatial split
     struct SpatialSlice{
-        Slice() : entryCount(0), exitCount(0) {}
+        SpatialSlice() : entryCount(0), exitCount(0) {}
 
         int leftCount() const {
             return entryCount;
@@ -85,7 +92,7 @@ struct SBVHSplitter {
 
 
     // calculate cost after slicing
-    template<SliceArrayType>
+    template<class SliceArrayType>
     static void FindMinCostSplit(
             SliceArrayType const& slices,  // in: slices to consider
             float boundingSurfaceArea,     // in: surface area of extrema bounding box
@@ -94,42 +101,44 @@ struct SBVHSplitter {
             SplitDecision& decision) {     // out: resultant decision
 
         for(auto const& slice : slices) {
-            if(slice.count > 0) {
+            if(slice.leftCount() > 0 || slice.rightCount() > 0) {
                 slice.bounds.sanityCheck();
             }
         }
 
         for(unsigned int i = 0; i < (slices.size() - 1) ; i++) {
             // glue slices together into a left slice and a right slice
-            ObjectSlice left; 
+            AABB leftBounds;
+            int leftCount = 0;
             for(unsigned int j = 0; j <= i; j++){
-                left.bounds = unionAABB(left.bounds, slices[j].bounds);
-                left.count += slices[j].leftCount();
+                leftBounds = unionAABB(leftBounds, slices[j].bounds);
+                leftCount += slices[j].leftCount();
             }
 
-            ObjectSlice right;
+            AABB rightBounds;
+            int rightCount = 0;
             for(unsigned int j = i+1; j < (slices.size() - 1); j++){
-                right.bounds= unionAABB(right.bounds, slices[j].bounds);
-                right.count += slices[j].rightCount();
+                rightBounds= unionAABB(rightBounds, slices[j].bounds);
+                rightCount += slices[j].rightCount();
             }
 
-            if(left.count == 0 && right.count == 0)
+            if(leftCount == 0 && rightCount == 0)
                 continue;
 
             float areaLeft = 0.0f;
             float areaRight = 0.0f;
 
-            if(left.count > 0) {
-                left.bounds.sanityCheck();
-                areaLeft = surfaceAreaAABB(left.bounds);
+            if(leftCount > 0) {
+                leftBounds.sanityCheck();
+                areaLeft = surfaceAreaAABB(leftBounds);
             }
 
-            if(right.count > 0) {
-                right.bounds.sanityCheck();
-                areaLeft = surfaceAreaAABB(right.bounds);
+            if(rightCount > 0) {
+                rightBounds.sanityCheck();
+                areaLeft = surfaceAreaAABB(rightBounds);
             }
             
-            float cost = (1 + (left.count * areaLeft + right.count * areaRight) / boundingSurfaceArea);
+            float cost = (1 + (leftCount * areaLeft + rightCount * areaRight) / boundingSurfaceArea);
 
             decision.addCandidate(cost, i, axis, kind);
         }
@@ -174,7 +183,7 @@ struct SBVHSplitter {
             triBounds.sanityCheck();
 
             assert(sliceNo < slices.size());
-            Slice& slice = slices[sliceNo]; 
+            auto& slice = slices[sliceNo]; 
 
             slice.bounds = unionAABB(slices[sliceNo].bounds, triBounds);
             slice.bounds.sanityCheck();
@@ -184,23 +193,12 @@ struct SBVHSplitter {
         FindMinCostSplit(slices, boundingSurfaceArea, axis, OBJECT, decision);
     }
 
-    typedef std::array<glm::vec3, 2> VecPair;
-
     // slice (clip) a triangle by an axis-aligned plane perpendicular to @axis at point @splitPoint
     static void AAplaneTriangle(
             TrianglePos const& t, 
             int axis, 
             float splitPoint, 
             VecPair& res) {
-#if 0
-          std::cout << std::endl;
-          std::cout << std::setprecision(9);
-          std::cout << t << std::endl;
-          std::cout << "tri min " << t.getMinCoord(axis) << std::endl;
-          std::cout << "tri max " << t.getMaxCoord(axis) << std::endl;
-          std::cout << " axis " << axis ;
-          std::cout << " splitPoint " << splitPoint << std::endl;
-#endif
         
         assert(splitPoint > t.getMinCoord(axis));
         assert(splitPoint < t.getMaxCoord(axis));
@@ -214,13 +212,9 @@ struct SBVHSplitter {
             const glm::vec3& v0 = t.v[i];
             const glm::vec3& v1 = t.v[(i + 1) % 3];
 
- //           std::cout << " v0 " << v0 << std::endl;
-//            std::cout << " v1 " << v1 << std::endl;
-
             // if at different sides of the splitpoint...
             if(((v0[axis] <= splitPoint) && (v1[axis] > splitPoint)) ||
                ((v1[axis] <= splitPoint) && (v0[axis] > splitPoint))){
-  //              std::cout << " -- intersect" <<std::endl;
                 // intersect
                 float dx = (v1[axis] - splitPoint) / (v1[axis] - v0[axis]);
 
@@ -230,12 +224,8 @@ struct SBVHSplitter {
                 res[current][a2] = ((v1[a2] - v0[a2]) * dx) + v0[a2];
                 current++;
             }
-            else {
-    //            std::cout << " -- NO intersect" <<std::endl;
-            }
         }
-      //    std::cout << " res0 " << res[0] << std::endl;
-        //  std::cout << " res1 " << res[1] << std::endl;
+        // should have intersected exactly twice
         assert(current == 2);
     }
 
@@ -279,6 +269,7 @@ struct SBVHSplitter {
         for(int const idx : indicies) {
             const TrianglePos& tri = triangles[idx];
 
+        std::cout << std::endl;
             // walk across the slices
             for(int sliceNo = 0; sliceNo < SLICES_PER_AXIS; sliceNo++) {
                 float sliceLow = ((float)sliceNo * sliceWidth) + low;
@@ -293,34 +284,73 @@ struct SBVHSplitter {
                 std::cout << " maxCoord " << tri.getMaxCoord(axis);
                 std::cout << std::endl;
 #endif
+                std::cout << "|";
                 // does this tri fall in this slice?
                 // note we consider an == to be a miss, as it means one extreme coord is sitting on 
                 // the boundary rather than clipping it
                 if(tri.getMinCoord(axis) >= sliceHigh || tri.getMaxCoord(axis) <= sliceLow) {
+                    std::cout << "..| ";
                     continue;
                 }
             
-                Slice& slice = slices[sliceNo];
+                auto& slice = slices[sliceNo];
 
                 // tri clips low side of slice?
+                bool clippedLow = false;
+
                 if(tri.getMinCoord(axis) < sliceLow) {
+                    std::cout << "\\";
                     VecPair intersect;
                     AAplaneTriangle(tri, axis, sliceLow, intersect);
-                    slice.bounds = unionPoint(slice.bounds, intersect[0]);
-                    slice.bounds = unionPoint(slice.bounds, intersect[1]);
-                    slice.count++;
+                    slice.bounds = unionVecPair(slice.bounds, intersect);
+                    clippedLow = true;
+                } else {
+                    // doesn't clip low side - tri must start in this slice
+                    std::cout << "S";
+                    slice.entryCount++;
                 }
 
                 // tri clips high side of slice?
+                bool clippedHigh = false;
+
                 if(tri.getMaxCoord(axis) > sliceHigh) {
+                    std::cout << "/";
                     VecPair intersect;
                     AAplaneTriangle(tri, axis, sliceHigh, intersect);
-                    slice.bounds = unionPoint(slice.bounds, intersect[0]);
-                    slice.bounds = unionPoint(slice.bounds, intersect[1]);
-                    slice.count++;
+                    slice.bounds = unionVecPair(slice.bounds, intersect);
+                    clippedHigh = true;
+                } else {
+                    // doesn't clip high side - tri must end in this slice
+                    std::cout << "E";
+                    slice.exitCount++;
                 }
+
+                // in the case where a triangle doesn't clip both sides - that is, it starts, ends
+                // or is fully contained in this slice, we need to grow bounds to contain the verticies
+                // are within this slice. strictly speaking, this outer test is redundant, but we've
+                // already tested this once, might as well take advantage (yes, i know, more branchy code is bad)
+                // sigh
+                if(!clippedLow || !clippedHigh) {
+                    int num = 0;
+                    for(int i = 0; i < 3; i++) {
+                        float val = tri.v[i][axis];
+                        // note we do >= and <= here, as we earlier excluded points that sit exactly on the 
+                        // split point. so take care of them now.
+                        if(val <= sliceHigh || val >= sliceLow) {
+                            slice.bounds = unionPoint(slice.bounds, tri.v[i]);
+                            num++;
+                        }
+                    }
+                    assert(num > 0);
+                    std::cout << "|-";
+                } else {
+                    std::cout << "| ";
+                }
+
             }
+        std::cout << std::endl;
         }
+        std::cout << std::endl;
             
         FindMinCostSplit(slices, boundingSurfaceArea, axis, SPATIAL, decision);
     }
