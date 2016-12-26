@@ -2,6 +2,7 @@
 
 #include "basics.h"
 #include "primitive.h"
+#include "utils.h"
 
 #include "glm/vec3.hpp"
 #include "glm/gtx/io.hpp"
@@ -58,8 +59,18 @@ inline AABB unionAABB(AABB const& a, AABB const& b){
     return {glm::min(a.low, b.low), glm::max(a.high, b.high)};
 }
 
-inline AABB unionPoint(AABB const& a, glm::vec3 b){
+// union of AABB and point 
+inline AABB unionPoint(AABB const& a, glm::vec3 const& b){
     AABB result = AABB{glm::min(a.low, b), glm::max(a.high, b)};
+    result.sanityCheck();
+    return result;
+}
+
+// union of AABB and 2 points 
+inline AABB unionVecPair(AABB const& a, VecPair const& p){
+    AABB result = unionPoint(a, p[0]);
+    result.sanityCheck();
+    result = unionPoint(result, p[1]);
     result.sanityCheck();
     return result;
 }
