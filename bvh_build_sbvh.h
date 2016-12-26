@@ -133,18 +133,19 @@ struct SBVHSplitter {
             const glm::vec3& v1 = t.v[(i + 1) % 3];
 
             // if at different sides of the splitpoint...
-            if((v0[axis] <= splitPoint) && (v1[axis] > splitPoint)){
+            if(((v0[axis] <= splitPoint) && (v1[axis] > splitPoint)) ||
+               ((v1[axis] <= splitPoint) && (v0[axis] > splitPoint))){
                 // intersect
-                float dx = (v0[axis] - splitPoint) / (v0[axis] - v1[axis]);
+                float dx = (v1[axis] - splitPoint) / (v1[axis] - v0[axis]);
 
                 assert(current < res.size());
                 res[current][axis] = splitPoint;
-                res[current][a1] = (v0[a1] - v1[a1]) * dx;
-                res[current][a2] = (v0[a2] - v1[a2]) * dx;
+                res[current][a1] = ((v1[a1] - v0[a1]) * dx) + v0[a1];
+                res[current][a2] = ((v1[a2] - v0[a2]) * dx) + v0[a2];
                 current++;
             }
-            assert(current == 2);
         }
+        assert(current == 2);
     }
 
     // tries an SAH Spatial split on the given axis. 
@@ -253,10 +254,10 @@ struct SBVHSplitter {
         // walk the 3 axis, find the lowest cost split
         // ... firstly, try object splits
         for(int axis = 0; axis < 3; axis++) {
-            TryObjectSplit(triangles, indicies, boundingArea, centroidBounds, axis, decision);
+//TryObjectSplit(triangles, indicies, boundingArea, centroidBounds, axis, decision);
         }
 
-        decision.sanityCheck();
+//        decision.sanityCheck();
 
         for(int axis = 0; axis < 3; axis++) {
             TrySpatialSplit(triangles, indicies, boundingArea, extremaBounds, axis, decision);
