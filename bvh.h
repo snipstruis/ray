@@ -44,7 +44,7 @@ struct BVHNode {
 static_assert(sizeof(BVHNode) == 32, "BVHNode size");
 
 struct BVH {
-    BVH() : nextFree(2) {
+    BVH() : nextFree(2), objectSplits(0), spatialSplits(0) {
         nodes.resize(1); // ensure at least root exists
     } 
 
@@ -84,5 +84,9 @@ struct BVH {
     std::vector<BVHNode> nodes;
     TriangleMapping indicies;
     unsigned int nextFree;
+    
+    // a few stats
+    unsigned int objectSplits;
+    unsigned int spatialSplits;
 };
 
