@@ -1,0 +1,84 @@
+{
+    "load_meshes" : {
+        "cube" : "cube.obj",
+        "plane" : "plane.obj"
+    },
+    "world" : {
+        "objects" : [
+            {
+                "kind" : "mesh",
+                "mesh_name" : "plane",
+                "transform" : {
+                    "translate" : { "x" : 0, "y" : -1, "z" : 0},
+                    "scale" : { "x" : 1000, "y" : 1, "z" : 1000}
+                }
+            },
+            {
+                "kind" : "mesh",
+                "mesh_name" : "cube",
+                "transform" : {
+                    "translate" : { "x" : -0, "y" : 0, "z" : 0}
+                }
+            },
+            {
+                "kind" : "mesh",
+                "mesh_name" : "cube",
+                "transform" : {
+                    "translate" : { "x" : -0, "y" : 0, "z" : 5}
+                }
+            },
+            {
+                "kind" : "mesh",
+                "mesh_name" : "cube",
+                "transform" : {
+                    "translate" : { "x" : -0, "y" : 0, "z" : 10}
+                }
+            },
+            {
+                "kind" : "mesh",
+                "mesh_name" : "cube",
+                "transform" : {
+                    "translate" : { "x" : -2, "y" : 0, "z" : 0}
+                }
+            },
+            {
+                "kind" : "mesh",
+                "mesh_name" : "cube",
+                "transform" : {
+                    "translate" : { "x" : -2, "y" : 0, "z" : 5}
+                }
+            },
+            {
+                "kind" : "mesh",
+                "mesh_name" : "cube",
+                "transform" : {
+                    "translate" : { "x" : -2, "y" : 0, "z" : 10}
+                }
+            }
+        ],
+        "lights" : [
+            {
+                "kind" : "point",
+                "color" : {"red" : 5, "green" : 5, "blue" : 5},
+                "position" : { "x" : -3, "y" : 3, "z" : 10}
+            },
+            {
+                "kind" : "point",
+                "color" : {"red" : 5, "green" : 5, "blue" : 5},
+                "position" : { "x" : -4, "y" : 12, "z" : 8}
+            },
+            {
+                "kind" : "point",
+                "color" : {"red" : 5, "green" : 5, "blue" : 5},
+                "position" : { "x" : 2, "y" : 4, "z" : 15}
+            }
+        ]
+        
+    },
+    "camera" : {
+        "origin" : { "x" : 4, "y" : 4, "z" : -1},
+        "look_angle" : { "yaw" : -45, "pitch" : 30},
+        "fov" : 90
+    }
+}
+
