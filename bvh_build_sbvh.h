@@ -1,9 +1,55 @@
 #pragma once
 
+// max number of slices (buckets) to test when splitting
+static constexpr int SLICES_PER_AXIS = 8;
+
+enum SplitKind {
+    OBJECT,
+    SPATIAL
+};
+
+struct SplitDecision {
+    SplitDecision(): minCost(INFINITY), chosenSplitNo(-1), chosenAxis(-1), splitKind(OBJECT) {}
+
+    // once the dust has settled, check we've got a result
+    void sanityCheck() {
+        assert(minCost < INFINITY);
+        assert(chosenSplitNo >= 0);
+        assert(chosenSplitNo < SLICES_PER_AXIS);
+        assert(chosenAxis >= 0);
+        assert(chosenAxis < 3);
+    }
+
+    void addCandidate(float cost, int splitNo, int axis, SplitKind kind) {
+        // cost=INFINITY should already be eliminated at this point
+        assert(cost < INFINITY);
+
+        if(cost < minCost) {
+            minCost = cost;
+            chosenSplitNo = splitNo;
+            chosenAxis = axis;
+            splitKind = kind;
+        }
+    }
+
+    // lowest cost we've seen so far
+    float minCost;
+    // for this minCost - 
+    int chosenSplitNo;
+    int chosenAxis;
+    SplitKind splitKind;
+};
+
+std::ostream& operator<<(std::ostream& os, const SplitDecision& d) {
+    os << " minCost " << d.minCost;
+    os << " chosenSplitNo " << d.chosenSplitNo;
+    os << " chosenAxis " << d.chosenAxis;
+    os << " splitKind " << (d.splitKind == OBJECT ? "OBJECT" : "SPATIAL");
+    return os;
+}
+
 // build an SBVH - that is a Split Bounding Volume Hierachy
 struct SBVHSplitter {
-    // max number of slices (buckets) to test when splitting
-    static constexpr int SLICES_PER_AXIS = 8;
 
     // Slice (or bucket) used when trying a split
     struct Slice{
@@ -15,37 +61,19 @@ struct SBVHSplitter {
 
     typedef std::array<Slice, SLICES_PER_AXIS> SliceArray;
 
-    struct SplitDecision {
-        SplitDecision(): minCost(INFINITY), chosenSplitNo(-1), chosenAxis(-1) {}
-
-        // once the dust has settled, check we've got a result
-        void sanityCheck() {
-            assert(minCost < INFINITY);
-            assert(chosenSplitNo >= 0);
-            assert(chosenSplitNo < SLICES_PER_AXIS);
-            assert(chosenAxis >= 0);
-            assert(chosenAxis < 3);
-        }
-
-        void addCandidate(float cost, int splitNo, int axis) {
-            if(cost < minCost) {
-                minCost = cost;
-                chosenSplitNo = splitNo;
-                chosenAxis = axis;
-            }
-        }
-
-        float minCost;
-        int chosenSplitNo;
-        int chosenAxis;
-    };
-
     // calculate cost after slicing
     static void FindMinCostSplit(
             SliceArray const& slices,  // in: slices to consider
             float boundingSurfaceArea, // in: surface area of extrema bounding box
             int axis,                  // in: axis we're splitting on
+            SplitKind kind,            // in: kind of split we're performing (for stats purposes)
             SplitDecision& decision) { // out: resultant decision
+
+        for(auto const& slice : slices) {
+            if(slice.count > 0) {
+                slice.bounds.sanityCheck();
+            }
+        }
 
         for(unsigned int i = 0; i < (slices.size() - 1) ; i++) {
             // glue slices together into a left slice and a right slice
@@ -61,14 +89,25 @@ struct SBVHSplitter {
                 right.count += slices[j].count;
             }
 
-            //assert(left.count > 0);
-            //assert(right.count > 0);
-            float al = surfaceAreaAABB(left.bounds);
-            float ar = surfaceAreaAABB(right.bounds);
-            
-            float cost = (1 + (left.count * al + right.count * ar) / boundingSurfaceArea);
+            if(left.count == 0 && right.count == 0)
+                continue;
 
-            decision.addCandidate(cost, i, axis);
+            float areaLeft = 0.0f;
+            float areaRight = 0.0f;
+
+            if(left.count > 0) {
+                left.bounds.sanityCheck();
+                areaLeft = surfaceAreaAABB(left.bounds);
+            }
+
+            if(right.count > 0) {
+                right.bounds.sanityCheck();
+                areaLeft = surfaceAreaAABB(right.bounds);
+            }
+            
+            float cost = (1 + (left.count * areaLeft + right.count * areaRight) / boundingSurfaceArea);
+
+            decision.addCandidate(cost, i, axis, kind);
         }
     }
 
@@ -107,21 +146,40 @@ struct SBVHSplitter {
                 sliceNo--;
 
             const AABB triBounds = triangleBounds(tri);
+            triBounds.sanityCheck();
 
             assert(sliceNo < slices.size());
-            slices[sliceNo].bounds = unionAABB(slices[sliceNo].bounds, triBounds);
-            slices[sliceNo].count++;
+            Slice& slice = slices[sliceNo]; 
+
+            slice.bounds = unionAABB(slices[sliceNo].bounds, triBounds);
+            slice.bounds.sanityCheck();
+            slice.count++;
+
         }
 
-        FindMinCostSplit(slices, boundingSurfaceArea, axis, decision);
+        FindMinCostSplit(slices, boundingSurfaceArea, axis, OBJECT, decision);
     }
+
+    typedef std::array<glm::vec3, 2> VecPair;
 
     // slice (clip) a triangle by an axis-aligned plane perpendicular to @axis at point @splitPoint
     static void AAplaneTriangle(
             TrianglePos const& t, 
             int axis, 
             float splitPoint, 
-            std::array<glm::vec3, 2>& res) {
+            VecPair& res) {
+#if 0
+          std::cout << std::endl;
+          std::cout << std::setprecision(9);
+          std::cout << t << std::endl;
+          std::cout << "tri min " << t.getMinCoord(axis) << std::endl;
+          std::cout << "tri max " << t.getMaxCoord(axis) << std::endl;
+          std::cout << " axis " << axis ;
+          std::cout << " splitPoint " << splitPoint << std::endl;
+#endif
+        
+        assert(splitPoint > t.getMinCoord(axis));
+        assert(splitPoint < t.getMaxCoord(axis));
 
         // grab the 'other 2' axis..
         int a1 = (axis + 1) % 3;
@@ -132,9 +190,13 @@ struct SBVHSplitter {
             const glm::vec3& v0 = t.v[i];
             const glm::vec3& v1 = t.v[(i + 1) % 3];
 
+ //           std::cout << " v0 " << v0 << std::endl;
+//            std::cout << " v1 " << v1 << std::endl;
+
             // if at different sides of the splitpoint...
             if(((v0[axis] <= splitPoint) && (v1[axis] > splitPoint)) ||
                ((v1[axis] <= splitPoint) && (v0[axis] > splitPoint))){
+  //              std::cout << " -- intersect" <<std::endl;
                 // intersect
                 float dx = (v1[axis] - splitPoint) / (v1[axis] - v0[axis]);
 
@@ -144,7 +206,12 @@ struct SBVHSplitter {
                 res[current][a2] = ((v1[a2] - v0[a2]) * dx) + v0[a2];
                 current++;
             }
+            else {
+    //            std::cout << " -- NO intersect" <<std::endl;
+            }
         }
+      //    std::cout << " res0 " << res[0] << std::endl;
+        //  std::cout << " res1 " << res[1] << std::endl;
         assert(current == 2);
     }
 
@@ -166,64 +233,72 @@ struct SBVHSplitter {
 
         const float low = extremaBounds.low[axis];
         const float high = extremaBounds.high[axis];
+
+        assert(low <= high);
+
         // it's possible to get a case where low==high. just ignore this axis
         if(!(low < high))
             return;
 
         const float range = high - low;
         const float sliceWidth = range / (float)SLICES_PER_AXIS;
-
+#if 0
+        std::cout << std::endl;
+        std::cout << std::setprecision(9);
+        std::cout << " low " << low;
+        std::cout << " high " << high;
+        std::cout << " sliceWidth " << sliceWidth;
+        std::cout << std::endl;
+#endif
         // walk all triangles
         for(int const idx : indicies) {
             const TrianglePos& tri = triangles[idx];
 
             // walk across the slices
             for(int sliceNo = 0; sliceNo < SLICES_PER_AXIS; sliceNo++) {
-                float sliceLow = (sliceNo * sliceWidth) + low;
+                float sliceLow = ((float)sliceNo * sliceWidth) + low;
                 float sliceHigh = sliceLow + sliceWidth;
-                assert(sliceHigh <= high);
+                assert(sliceHigh <= (high + EPSILON));
 
+#if 0
+                std::cout << "  " << sliceNo << ":";
+                std::cout << " sliceLow " << sliceLow;
+                std::cout << " sliceHigh " << sliceHigh;
+                std::cout << " minCoord " << tri.getMinCoord(axis);
+                std::cout << " maxCoord " << tri.getMaxCoord(axis);
+                std::cout << std::endl;
+#endif
                 // does this tri fall in this slice?
-                if(tri.getMinCoord(axis) > sliceHigh || tri.getMaxCoord(axis) < sliceLow)
+                // note we consider an == to be a miss, as it means one extreme coord is sitting on 
+                // the boundary rather than clipping it
+                if(tri.getMinCoord(axis) >= sliceHigh || tri.getMaxCoord(axis) <= sliceLow) {
+//                    std::cout << " full miss" << std::endl;      
                     continue;
+                }
             
+                Slice& slice = slices[sliceNo];
+
+                // tri clips low side of slice?
                 if(tri.getMinCoord(axis) < sliceLow) {
-                    std::array<glm::vec3, 2> intersect;
+                    VecPair intersect;
                     AAplaneTriangle(tri, axis, sliceLow, intersect);
-                    slices[sliceNo].bounds = unionPoint(slices[sliceNo].bounds, intersect[0]);
-                    slices[sliceNo].bounds = unionPoint(slices[sliceNo].bounds, intersect[1]);
-                    slices[sliceNo].count++;
+                    slice.bounds = unionPoint(slice.bounds, intersect[0]);
+                    slice.bounds = unionPoint(slice.bounds, intersect[1]);
+                    slice.count++;
                 }
 
+                // tri clips high side of slice?
                 if(tri.getMaxCoord(axis) > sliceHigh) {
-                    std::array<glm::vec3, 2> intersect;
+                    VecPair intersect;
                     AAplaneTriangle(tri, axis, sliceHigh, intersect);
-                    slices[sliceNo].bounds = unionPoint(slices[sliceNo].bounds, intersect[0]);
-                    slices[sliceNo].bounds = unionPoint(slices[sliceNo].bounds, intersect[1]);
-                    slices[sliceNo].count++;
+                    slice.bounds = unionPoint(slice.bounds, intersect[0]);
+                    slice.bounds = unionPoint(slice.bounds, intersect[1]);
+                    slice.count++;
                 }
             }
         }
             
-#if 0
-
-
-            // drop this centroid into a slice
-            const float pos = tri.getAverageCoord(axis);
-            const float ratio = ((pos - low) / sliceWidth);
-            unsigned int sliceNo = ratio * SLICES_PER_AXIS;
-
-            if(sliceNo == SLICES_PER_AXIS)
-                sliceNo--;
-
-            const AABB triBounds = triangleBounds(tri);
-
-            assert(sliceNo < slices.size());
-            slices[sliceNo].aabb = unionAABB(slices[sliceNo].aabb, triBounds);
-            slices[sliceNo].count++;
-#endif
-
-        FindMinCostSplit(slices, boundingSurfaceArea, axis, decision);
+        FindMinCostSplit(slices, boundingSurfaceArea, axis, SPATIAL, decision);
     }
 
     static bool GetSplit(
@@ -254,15 +329,16 @@ struct SBVHSplitter {
         // walk the 3 axis, find the lowest cost split
         // ... firstly, try object splits
         for(int axis = 0; axis < 3; axis++) {
-//TryObjectSplit(triangles, indicies, boundingArea, centroidBounds, axis, decision);
+            TryObjectSplit(triangles, indicies, boundingArea, centroidBounds, axis, decision);
         }
 
-//        decision.sanityCheck();
+        decision.sanityCheck();
 
         for(int axis = 0; axis < 3; axis++) {
             TrySpatialSplit(triangles, indicies, boundingArea, extremaBounds, axis, decision);
         }
 
+        std::cout << decision;
         decision.sanityCheck();
 
 //        std::cout << " chosenAxis " << chosenAxis;
