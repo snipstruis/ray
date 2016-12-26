@@ -79,8 +79,13 @@ inline float volumeAABB(AABB const& a) {
     return (a.high[0] - a.low[0]) * (a.high[1] - a.low[1]) * (a.high[2] - a.low[2]);
 }
 
+inline float surfaceAreaAABB(AABB const& aabb) {
+    const glm::vec3 d = aabb.high-aabb.low;
+    return 2.0f * (d.x*d.y + d.x*d.z + d.y*d.z);
+}
+
 inline std::ostream& operator<<(std::ostream& os, const AABB& a) {
-    os << a.low << ":" << a.high << " volume " << volumeAABB(a);
+    os << a.low << ":" << a.high << " SA " << surfaceAreaAABB(a);
     return os;
 }
 
@@ -196,11 +201,6 @@ float rayIntersectsAABB(AABB const& a, glm::vec3 const& rayOrigin, glm::vec3 con
     	return INFINITY;
 
     return tmin;
-}
-
-inline float surfaceAreaAABB(AABB const& aabb) {
-    glm::vec3 d = aabb.high-aabb.low;
-    return 2.0f * (d.x*d.y + d.x*d.z + d.y*d.z);
 }
 
 inline AABB triangleBounds(TrianglePos const& t) {
