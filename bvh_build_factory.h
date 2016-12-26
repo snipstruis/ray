@@ -29,7 +29,7 @@ inline BVH* buildBVH(Scene& s, BVHMethod method) {
     std::cout << "BVH build time " << t.sample() << std::endl;
 
     sanityCheckBVH(*bvh, s.primitives.pos);
-    dumpBVHStats(*bvh);
+    dumpBVHStats(*bvh, s.primitives.pos);
 
     return bvh;
 }
