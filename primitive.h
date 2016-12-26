@@ -39,6 +39,13 @@ struct TrianglePos{
         return glm::vec3(getAverageCoord(0), getAverageCoord(1), getAverageCoord(2));
     }
 
+    // not nescessarily the best name - determines if this tri has not become a point or line
+    // which seems to happen with some agressive transforms. this trips up the error checking later on
+    // note this uses the != operator, so we need to think carefully about this
+    bool hasArea() const {
+        return (v[0] != v[1]) && (v[1] != v[2]) && (v[2] != v[0]);
+    }
+
     glm::vec3 v[3];
 };
 

@@ -19,7 +19,7 @@ inline BVH* buildBVH(Scene& s, BVHMethod method) {
     BVH* bvh = nullptr;
 
     switch(method) {
-        case BVHMethod_STUPID:       bvh = buildStupidBVH(s);      break;
+  //      case BVHMethod_STUPID:       bvh = buildStupidBVH(s);      break;
         case BVHMethod_CENTROID_SAH: bvh = buildCentroidSAHBVH(s); break;
         case BVHMethod_SBVH:         bvh = buildSBVH(s);           break;
         case __BVHMethod_MAX: assert(false); break; // shouldn't happen

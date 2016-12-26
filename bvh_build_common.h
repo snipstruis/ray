@@ -1,5 +1,6 @@
 #pragma once
 
+#include "aabb.h"
 #include "bvh.h"
 #include "bvh_diag.h"
 #include "scene.h"
@@ -11,7 +12,7 @@
 
 
 enum BVHMethod {
-    BVHMethod_STUPID,
+//    BVHMethod_STUPID,
     BVHMethod_CENTROID_SAH,
     BVHMethod_SBVH,
     __BVHMethod_MAX
@@ -19,7 +20,7 @@ enum BVHMethod {
 
 const char* BVHMethodStr(BVHMethod m) {
     switch(m) {
-        case BVHMethod_STUPID: return "STUPID";
+ //       case BVHMethod_STUPID: return "STUPID";
         case BVHMethod_CENTROID_SAH: return "SAH";
         case BVHMethod_SBVH: return "SBVH";
         case __BVHMethod_MAX: return "shouldnt happen";
@@ -73,11 +74,10 @@ void subdivide(
 
 #if 0
         // walk the index array, build left and right sides.
-        std::cout << " leftcount " << leftIndicies.size();
+        std::cout << " leftCount " << leftIndicies.size();
         std::cout << " rightCount " << rightIndicies.size();
-        std::cout << std::endl;
-        std::cout << std::endl;
 #endif
+        std::cout << std::endl;
 
         // if either of these fire, we've not split, we've put all the triangles on one side
         // (in which case, it's either a bad split value, or we should have created a leaf)

@@ -203,8 +203,7 @@ Mesh loadMesh(Scene& s, std::string const& filename){
             // if this obj file has no materials, we'll get a -1 here
             if(localMatID < 0) {
                 globalMatID = DEFAULT_MATERIAL;
-            }
-            else {
+            } else {
                 // ok, triangle has a material...
                 // have we created/mapped this material yet?
                 auto it = matMap.find(localMatID);
@@ -212,8 +211,7 @@ Mesh loadMesh(Scene& s, std::string const& filename){
                     // nope, need to create it.
                     globalMatID = createMaterial(s, materials[localMatID]);
                     matMap[localMatID] = globalMatID;
-                }
-                else {
+                } else {
                     globalMatID = it->second;
                 }
             }
@@ -249,19 +247,28 @@ void transformMeshIntoScene(Scene& s, Mesh const& mesh, glm::mat4x4 const& trans
     s.primitives.pos.reserve(mesh.pos.size());
     s.primitives.extra.reserve(mesh.extra.size());
 
-    for(auto const& mt : mesh.pos){
-        s.primitives.pos.emplace_back(
-            transformV3(mt.v[0], transform, 1.0f), 
-            transformV3(mt.v[1], transform, 1.0f), 
-            transformV3(mt.v[2], transform, 1.0f));
-    }
+    for(unsigned int i = 0; i < mesh.pos.size(); i++){
+        TrianglePos const& origPos = mesh.pos[i];
 
-    for(auto const& mt : mesh.extra) {
+        TrianglePos pos(
+            transformV3(origPos.v[0], transform, 1.0f), 
+            transformV3(origPos.v[1], transform, 1.0f), 
+            transformV3(origPos.v[2], transform, 1.0f));
+
+        if(!pos.hasArea()) {
+            std::cout << "culling triangle @ " << i << std::endl;
+            continue;
+        }
+
+        s.primitives.pos.push_back(pos);
+
+        TriangleExtra const& origExtra = mesh.extra[i];
+
         s.primitives.extra.emplace_back(
-            glm::normalize(transformV3(mt.n[0], transform, 0.0f)), 
-            glm::normalize(transformV3(mt.n[1], transform, 0.0f)), 
-            glm::normalize(transformV3(mt.n[2], transform, 0.0f)), 
-            mt.mat);
+            glm::normalize(transformV3(origExtra.n[0], transform, 0.0f)), 
+            glm::normalize(transformV3(origExtra.n[1], transform, 0.0f)), 
+            glm::normalize(transformV3(origExtra.n[2], transform, 0.0f)), 
+            origExtra.mat);
     }
 }
 

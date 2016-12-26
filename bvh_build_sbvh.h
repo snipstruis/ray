@@ -51,23 +51,47 @@ std::ostream& operator<<(std::ostream& os, const SplitDecision& d) {
 // build an SBVH - that is a Split Bounding Volume Hierachy
 struct SBVHSplitter {
 
-    // Slice (or bucket) used when trying a split
-    struct Slice{
+    // Slice (or bucket) used when trying an Object split
+    struct ObjectSlice{
         Slice() : count(0) {}
+
+        int leftCount() const {
+            return count;
+        }
+
+        int rightCount() const {
+            return count;
+        }
 
         AABB bounds;
         int count;
     };
 
-    typedef std::array<Slice, SLICES_PER_AXIS> SliceArray;
+    // Slice (or bucket) used when trying a Spatial split
+    struct SpatialSlice{
+        Slice() : entryCount(0), exitCount(0) {}
+
+        int leftCount() const {
+            return entryCount;
+        }
+
+        int rightCount() const {
+            return exitCount;
+        }
+
+        AABB bounds;
+        int entryCount, exitCount;
+    };
+
 
     // calculate cost after slicing
+    template<SliceArrayType>
     static void FindMinCostSplit(
-            SliceArray const& slices,  // in: slices to consider
-            float boundingSurfaceArea, // in: surface area of extrema bounding box
-            int axis,                  // in: axis we're splitting on
-            SplitKind kind,            // in: kind of split we're performing (for stats purposes)
-            SplitDecision& decision) { // out: resultant decision
+            SliceArrayType const& slices,  // in: slices to consider
+            float boundingSurfaceArea,     // in: surface area of extrema bounding box
+            int axis,                      // in: axis we're splitting on
+            SplitKind kind,                // in: kind of split we're performing (for stats purposes)
+            SplitDecision& decision) {     // out: resultant decision
 
         for(auto const& slice : slices) {
             if(slice.count > 0) {
@@ -77,16 +101,16 @@ struct SBVHSplitter {
 
         for(unsigned int i = 0; i < (slices.size() - 1) ; i++) {
             // glue slices together into a left slice and a right slice
-            Slice left; 
+            ObjectSlice left; 
             for(unsigned int j = 0; j <= i; j++){
                 left.bounds = unionAABB(left.bounds, slices[j].bounds);
-                left.count += slices[j].count;
+                left.count += slices[j].leftCount();
             }
 
-            Slice right;
+            ObjectSlice right;
             for(unsigned int j = i+1; j < (slices.size() - 1); j++){
                 right.bounds= unionAABB(right.bounds, slices[j].bounds);
-                right.count += slices[j].count;
+                right.count += slices[j].rightCount();
             }
 
             if(left.count == 0 && right.count == 0)
@@ -124,6 +148,7 @@ struct SBVHSplitter {
 
         // slice parent bounding box into slices along the longest axis
         // and count the triangle centroids in it
+        typedef std::array<ObjectSlice, SLICES_PER_AXIS> SliceArray;
         SliceArray slices;
 
         const float low = centroidBounds.low[axis];
@@ -154,7 +179,6 @@ struct SBVHSplitter {
             slice.bounds = unionAABB(slices[sliceNo].bounds, triBounds);
             slice.bounds.sanityCheck();
             slice.count++;
-
         }
 
         FindMinCostSplit(slices, boundingSurfaceArea, axis, OBJECT, decision);
@@ -229,6 +253,7 @@ struct SBVHSplitter {
 
         // slice parent bounding box into slices along the longest axis
         // and count the triangle centroids in it
+        typedef std::array<SpatialSlice, SLICES_PER_AXIS> SliceArray;
         SliceArray slices;
 
         const float low = extremaBounds.low[axis];
@@ -272,7 +297,6 @@ struct SBVHSplitter {
                 // note we consider an == to be a miss, as it means one extreme coord is sitting on 
                 // the boundary rather than clipping it
                 if(tri.getMinCoord(axis) >= sliceHigh || tri.getMaxCoord(axis) <= sliceLow) {
-//                    std::cout << " full miss" << std::endl;      
                     continue;
                 }
             
@@ -320,10 +344,18 @@ struct SBVHSplitter {
         // triangle centroids
         const AABB centroidBounds = buildAABBCentroid(triangles, indicies, 0, indicies.size());
 
-        // bounds of centroids must be within total triangle bounds
         centroidBounds.sanityCheck();
-        assert(containsAABB(extremaBounds, centroidBounds));
-
+#if 1
+        // bounds of centroids must be within total triangle bounds
+        if(!containsAABB(extremaBounds, centroidBounds)) {
+            extremaBounds.sanityCheck();
+            centroidBounds.sanityCheck();
+            std::cout << "FAIL " << std::endl;
+            std::cout << extremaBounds << std::endl << centroidBounds << std::endl;
+            std::cout << " triCount " << indicies.size() << std::endl;
+            assert(false);
+        }
+#endif
         SplitDecision decision;
 
         // walk the 3 axis, find the lowest cost split
@@ -349,29 +381,82 @@ struct SBVHSplitter {
             return false; // no splitting here, chopper. make a leaf with this triangle set
         }
 
-        const float low = centroidBounds.low[decision.chosenAxis];
-        const float high = centroidBounds.high[decision.chosenAxis];
-        assert(low < high);
-        const float sliceWidth = high - low;
+        if(decision.splitKind == OBJECT) {
+            const float low = centroidBounds.low[decision.chosenAxis];
+            const float high = centroidBounds.high[decision.chosenAxis];
+        
+            // at this point, low must be < high (ie not equal) as we've chosen it as a split axis
+            // this means there must be a point in this axis we can split the triangles
+            assert(low < high);
+            const float sliceWidth = high - low;
 
-        // ok, we're going to split. parition the indicies based on bucket
-        for(unsigned int idx : indicies) {
-            // determine slice in which this one belongs
-            const float val = triangles[idx].getAverageCoord(decision.chosenAxis);
-            const float ratio = ((val - low) / sliceWidth);
-            int sliceNo = ratio * SLICES_PER_AXIS;
-            if(sliceNo == SLICES_PER_AXIS)
-                sliceNo--;
+            // ok, we're going to split. parition the indicies based on bucket
+            for(unsigned int idx : indicies) {
+                // determine slice in which this one belongs
+                const float val = triangles[idx].getAverageCoord(decision.chosenAxis);
+                const float ratio = ((val - low) / sliceWidth);
+                int sliceNo = ratio * SLICES_PER_AXIS;
+                if(sliceNo == SLICES_PER_AXIS)
+                    sliceNo--;
 
-            if(sliceNo <= decision.chosenSplitNo)
-                leftIndicies.push_back(idx);
-            else
-                rightIndicies.push_back(idx);
+                if(sliceNo <= decision.chosenSplitNo)
+                    leftIndicies.push_back(idx);
+                else
+                    rightIndicies.push_back(idx);
+            }
+
+            // make sure all triangles are accounted for. we don't make duplicate triangles, 
+            // so all tris should be on one side only
+            assert(leftIndicies.size() + rightIndicies.size() == indicies.size());
+        } else {
+            const float low = extremaBounds.low[decision.chosenAxis];
+            const float high = extremaBounds.high[decision.chosenAxis];
+        
+            // at this point, low must be < high (ie not equal) as we've chosen it as a split axis
+            // this means there must be a point in this axis we can split the triangles
+            assert(low < high);
+            const float range = high - low;
+            const float sliceWidth = range / (float)SLICES_PER_AXIS;
+
+            std::cout << std::endl;
+            std::cout << " low " << low;
+            std::cout << " high " << high;
+            std::cout << " sliceWidth " << sliceWidth;
+
+            float splitPoint = ((decision.chosenSplitNo + 1) * sliceWidth) + low;
+
+            std::cout << " splitPoint " << splitPoint;
+
+            assert(splitPoint < high);
+            assert(splitPoint > low);
+            assert(decision.chosenSplitNo < (SLICES_PER_AXIS - 1));
+
+            // ok, we're going to split. parition the indicies based on bucket
+            for(unsigned int idx : indicies) {
+                // determine slice in which this one belongs
+                TrianglePos const& tri = triangles[idx];
+
+                if(tri.getMinCoord(decision.chosenAxis) <= splitPoint) {
+                    leftIndicies.push_back(idx);
+                }
+
+                if(tri.getMaxCoord(decision.chosenAxis) >= splitPoint) {
+                    rightIndicies.push_back(idx);
+                }
+            }
+
+            std::cout << " count " << indicies.size();
+            std::cout << " leftCount " << leftIndicies.size();
+            std::cout << " rightCount " << rightIndicies.size();
+            std::cout << std::endl;
+
+            // make sure all triangles are accounted for. we don't make duplicate triangles, 
+            // so all tris should be on one side only
+            assert(leftIndicies.size() + rightIndicies.size() >= indicies.size());
+            assert(leftIndicies.size() < indicies.size());
+            assert(rightIndicies.size() < indicies.size());
         }
 
-        // make sure all triangles are accounted for. we don't make duplicate triangles, 
-        // so all tris should be on one side only
-        assert(leftIndicies.size() + rightIndicies.size() == indicies.size());
         return true; // yes, we split!
     }
 };
