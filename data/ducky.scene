@@ -1,0 +1,29 @@
+{
+    "load_meshes" : {
+        "ducky" : "ducky.obj"
+    },
+    "world" : {
+        "objects" : [
+            {
+                "kind" : "mesh",
+                "mesh_name" : "ducky",
+                "transform" : {
+                    "translate" : { "x" : -1, "y" : 2, "z" : -1},
+                    "scale" : { "x" : 0.003, "y" :0.003, "z" : 0.003},
+                    "rotate" : { "x" : 0, "y" : 19.00, "z" : 0.00}
+                }
+            }
+        ],
+        "lights" : 
+        [
+            {
+                "kind" : "point",
+                "color" : {"red" : 10, "green" : 10, "blue" : 10},
+                "position" : { "x" : 3, "y" :3, "z" :3}
+            }
+        ]
+        
+    },
+    "camera" : {"fov":25,"look_angle":{"pitch":18,"yaw":-133},"origin":{"x":1.30392277240753,"y":3.31339168548584,"z":1.36357247829437}}
+}
+
