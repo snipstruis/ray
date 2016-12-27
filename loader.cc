@@ -271,7 +271,9 @@ void transformMeshIntoScene(Scene& s, Mesh const& mesh, glm::mat4x4 const& trans
             glm::normalize(transformV3(origExtra.n[2], transform, 0.0f)), 
             origExtra.mat);
     }
-    std::cout << "Culled " << cullCount << " triangles" << std::endl;
+    if(cullCount > 0) {
+        std::cout << "Culled " << cullCount << " triangles" << std::endl;
+    }
 }
 
 void handleMesh(Scene& s, MeshMap const& meshes, json const& o) {
