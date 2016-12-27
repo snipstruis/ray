@@ -340,13 +340,11 @@ struct SBVHSplitter {
             Slice left, right;
 
             for(unsigned int j = 0; j <= i; j++){
-                std::cout << "L";
                 left.bounds = unionAABB(left.bounds, slices[j].bounds);
                 left.count += slices[j].count;
             }
 
             for(unsigned int j = i+1; j < slices.size(); j++){
-                std::cout << "R";
                 right.bounds = unionAABB(right.bounds, slices[j].bounds);
                 right.count += slices[j].count;
             }
@@ -373,14 +371,7 @@ struct SBVHSplitter {
             float cRight = right.count * areaRight;
             float cost = 1 + ((cLeft + cRight) / boundingSurfaceArea);
 
-            std::cout << " countLeft " << left.count;
-            std::cout << " countRight " << right.count;
-            std::cout << " cLeft " << cLeft;
-            std::cout << " cRight " << cRight;
-            std::cout << std::endl << "    ";
-
             SplitDecision result(cost, i, axis, kind);
-            std::cout << result << std::endl;
             decision.merge(result);
         }
     }
@@ -404,11 +395,6 @@ struct SBVHSplitter {
         assert(low < high);
         const float sliceWidth = high - low;
 
-        std::cout << " low " << low;
-        std::cout << " high " << high;
-        std::cout << " chosen " << decision.chosenSplitNo;
-        std::cout << std::endl;
-
         // ok, we're going to split. parition the indicies based on bucket
         for(unsigned int idx : indicies) {
             // determine slice in which this one belongs
@@ -418,15 +404,11 @@ struct SBVHSplitter {
             if(sliceNo == SLICES_PER_AXIS)
                 sliceNo--;
             
-            std::cout << " slice " << sliceNo;
-
             if(sliceNo <= decision.chosenSplitNo)
                 leftIndicies.push_back(idx);
             else
                 rightIndicies.push_back(idx);
         }
-
-        std::cout << std::endl;
 
         // make sure all triangles are accounted for. we don't make duplicate triangles, 
         // so all tris should be on one side only
