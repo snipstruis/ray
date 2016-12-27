@@ -228,6 +228,7 @@ struct SBVHSplitter {
             TriangleMapping& rightIndicies) { // out: resultant right set
 
         assert(decision.splitKind == SPATIAL);
+        assert(decision.chosenSplitNo < (SLICES_PER_AXIS - 1));
 
         const float low = extremaBounds.low[decision.chosenAxis];
         const float high = extremaBounds.high[decision.chosenAxis];
@@ -242,7 +243,6 @@ struct SBVHSplitter {
 
         assert(splitPoint < high);
         assert(splitPoint > low);
-        assert(decision.chosenSplitNo < (SLICES_PER_AXIS - 1));
 
         // ok, we're going to split. parition the indicies based on bucket
         for(unsigned int idx : indicies) {
@@ -262,8 +262,10 @@ struct SBVHSplitter {
         assert(leftIndicies.size() <= indicies.size());
         assert(rightIndicies.size() <= indicies.size());
 
-        // so this sucks. If all the triangles land on one side, then don't split; this 
-        // would mean we'll recurse forever.
+        // so this sucks. 
+        // We've ended up putting all triangles in (at least) one side of the split. 
+        // If we do nothing here, we'll just recurse forever, trying the same split again and again.
+        // So, undo our work, and return false. We'll then fall back on the best object split we've got.
         if(leftIndicies.size() == indicies.size() || rightIndicies.size() == indicies.size()) {
             leftIndicies.clear();
             rightIndicies.clear();
@@ -440,7 +442,8 @@ struct SBVHSplitter {
 
         SplitDecision bestSpatial;
 
-        // ... now give spatial splits a go.
+        // walk the 3 axis, find the lowest cost split
+        // ... give spatial splits a go.
         for(int axis = 0; axis < 3; axis++) {
             TrySpatialSplits(triangles, indicies, boundingArea, extremaBounds, axis, bestSpatial);
         }
@@ -449,14 +452,14 @@ struct SBVHSplitter {
 
         SplitDecision bestObject;
 
-        // walk the 3 axis, find the lowest cost split
-        // ... firstly, try object splits
+        // ... try object splits
         for(int axis = 0; axis < 3; axis++) { 
             TryObjectSplits(triangles, indicies, boundingArea, centroidBounds, axis, bestObject);
         }
 
         bestObject.sanityCheck();
 
+        // find ultimate best split decision..
         SplitDecision best;
         best.merge(bestSpatial);
         best.merge(bestObject);
@@ -470,10 +473,13 @@ struct SBVHSplitter {
 
         // okeydokes, we're going to split this node.. object or spatial split?
         if(best.splitKind == SPATIAL) {
+            //std::cout << "trying spatial count " << indicies.size() << " " << best;
             if(DoSpatialSplit(best, extremaBounds, triangles, indicies, leftIndicies, rightIndicies)) {
+          //     std::cout << " success " << std::endl;
                 bvh.spatialSplits++;
                 return true;
             }
+        //std::cout << " fail" << std::endl;
         }
 
         bvh.objectSplits++;
