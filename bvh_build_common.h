@@ -45,7 +45,7 @@ void subdivide(
     TriangleMapping leftIndicies, rightIndicies;
 
     // call into the specific splitter function
-    bool didSplit = Splitter::GetSplit(bvh, triangles, fromIndicies, node.bounds, leftIndicies, rightIndicies);
+    bool didSplit = Splitter::TrySplit(bvh, triangles, fromIndicies, node.bounds, leftIndicies, rightIndicies);
 
     // if the splitter didn't split, we are creating a leaf.
     if(!didSplit) {

@@ -18,7 +18,7 @@ struct CentroidSAHSplitter {
         int count;
     };
 
-    static bool GetSplit(
+    static bool TrySplit(
             BVH& bvh,                         // in: bvh root
             TrianglePosSet const& triangles,  // in: master triangle array
             TriangleMapping const& indicies,  // in: set of triangle indicies to split 

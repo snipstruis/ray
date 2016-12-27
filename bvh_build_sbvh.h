@@ -54,34 +54,18 @@ std::ostream& operator<<(std::ostream& os, const SplitDecision& d) {
 struct SBVHSplitter {
 
     // Slice (or bucket) used when trying an Object split
-    struct ObjectSlice{
-        ObjectSlice() : count(0) {}
-
-        int leftCount() const {
-            return count;
-        }
-
-        int rightCount() const {
-            return count;
-        }
+    struct Slice{
+        Slice() : count(0) {}
 
         AABB bounds;
         int count;
     };
 
-    typedef std::array<ObjectSlice, SLICES_PER_AXIS> ObjectSliceArray;
+    typedef std::array<Slice, SLICES_PER_AXIS> SliceArray;
 
     // Slice used when trying a Spatial split
     struct SpatialSlice{
         SpatialSlice() : entryCount(0), exitCount(0) {}
-
-        int leftCount() const {
-            return entryCount;
-        }
-
-        int rightCount() const {
-            return exitCount;
-        }
 
         AABB bounds;
         int entryCount, exitCount;
@@ -97,36 +81,21 @@ struct SBVHSplitter {
             SplitKind kind,                  // in: kind of split we're performing (for stats purposes)
             SplitDecision& decision) {       // in/out: resultant decision
 
-        int totalLeft = 0;
-        int totalRight = 0;
-        for(auto const& slice : slices) {
-            totalLeft += slice.leftCount();
-            totalRight += slice.rightCount();
-
-            if(slice.leftCount() > 0 || slice.rightCount() > 0) {
-                slice.bounds.sanityCheck();
-            }
-        }
-
         for(unsigned int i = 0; i < (slices.size() - 1) ; i++) {
-            // glue slices together into a left slice and a right slice
-            AABB leftBounds;
-            int leftCount = 0;
+            // glue slices together into a left & right total cost
+            Slice left, right;
 
             for(unsigned int j = 0; j <= i; j++){
-                leftBounds = unionAABB(leftBounds, slices[j].bounds);
-                leftCount += slices[j].leftCount();
+                left.bounds = unionAABB(left.bounds, slices[j].bounds);
+                left.count += slices[j].entryCount;
             }
-
-            AABB rightBounds;
-            int rightCount = 0;
 
             for(unsigned int j = i+1; j < slices.size(); j++){
-                rightBounds = unionAABB(rightBounds, slices[j].bounds);
-                rightCount += slices[j].rightCount();
+                right.bounds = unionAABB(right.bounds, slices[j].bounds);
+                right.count += slices[j].exitCount;
             }
 
-            if(leftCount == 0 && rightCount == 0)
+            if(left.count == 0 && right.count == 0)
                 continue;
             //assert(leftCount > 0);
             //assert(rightCount > 0);
@@ -134,17 +103,17 @@ struct SBVHSplitter {
             float areaLeft = 0.0f;
             float areaRight = 0.0f;
 
-            if(leftCount > 0) {
-                leftBounds.sanityCheck();
-                areaLeft = surfaceAreaAABB(leftBounds);
+            if(left.count > 0) {
+                left.bounds.sanityCheck();
+                areaLeft = surfaceAreaAABB(left.bounds);
             }
 
-            if(rightCount > 0) {
-                rightBounds.sanityCheck();
-                areaRight = surfaceAreaAABB(rightBounds);
+            if(right.count > 0) {
+                right.bounds.sanityCheck();
+                areaRight = surfaceAreaAABB(right.bounds);
             }
             
-            float cost = (1 + (leftCount * areaLeft + rightCount * areaRight) / boundingSurfaceArea);
+            float cost = (1 + (left.count * areaLeft + right.count * areaRight) / boundingSurfaceArea);
             decision.merge(SplitDecision(cost, i, axis, kind));
         }
     }
@@ -305,7 +274,6 @@ struct SBVHSplitter {
 
         // slice parent bounding box into slices along the longest axis
         // and count the triangle centroids in it
-        typedef std::array<ObjectSlice, SLICES_PER_AXIS> SliceArray;
         SliceArray slices;
 
         const float low = centroidBounds.low[axis];
@@ -343,42 +311,33 @@ struct SBVHSplitter {
 
     // calculate cost after slicing
     static void FindObjectMinCostSplit(
-            ObjectSliceArray const& slices,  // in: slices to consider
+            SliceArray const& slices,      // in: slices to consider
             float boundingSurfaceArea,     // in: surface area of extrema bounding box
             int axis,                      // in: axis we're splitting on
             SplitKind kind,                // in: kind of split we're performing (for stats purposes)
             SplitDecision& decision) {     // out: resultant decision
 
-        int totalLeft = 0;
-        int totalRight = 0;
         for(auto const& slice : slices) {
-            totalLeft += slice.leftCount();
-            totalRight += slice.rightCount();
-
-            if(slice.leftCount() > 0 || slice.rightCount() > 0) {
+            if(slice.count > 0) {
                 slice.bounds.sanityCheck();
             }
         }
 
         for(unsigned int i = 0; i < (slices.size() - 1) ; i++) {
             // glue slices together into a left slice and a right slice
-            AABB leftBounds;
-            int leftCount = 0;
+            Slice left, right;
 
             for(unsigned int j = 0; j <= i; j++){
-                leftBounds = unionAABB(leftBounds, slices[j].bounds);
-                leftCount += slices[j].leftCount();
+                left.bounds = unionAABB(left.bounds, slices[j].bounds);
+                left.count += slices[j].count;
             }
-
-            AABB rightBounds;
-            int rightCount = 0;
 
             for(unsigned int j = i+1; j < slices.size(); j++){
-                rightBounds = unionAABB(rightBounds, slices[j].bounds);
-                rightCount += slices[j].rightCount();
+                right.bounds = unionAABB(right.bounds, slices[j].bounds);
+                right.count += slices[j].count;
             }
 
-            if(leftCount == 0 && rightCount == 0)
+            if(left.count == 0 && right.count == 0)
                 continue;
             //assert(leftCount > 0);
             //assert(rightCount > 0);
@@ -386,17 +345,17 @@ struct SBVHSplitter {
             float areaLeft = 0.0f;
             float areaRight = 0.0f;
 
-            if(leftCount > 0) {
-                leftBounds.sanityCheck();
-                areaLeft = surfaceAreaAABB(leftBounds);
+            if(left.count > 0) {
+                left.bounds.sanityCheck();
+                areaLeft = surfaceAreaAABB(left.bounds);
             }
 
-            if(rightCount > 0) {
-                rightBounds.sanityCheck();
-                areaRight = surfaceAreaAABB(rightBounds);
+            if(right.count > 0) {
+                right.bounds.sanityCheck();
+                areaRight = surfaceAreaAABB(right.bounds);
             }
             
-            float cost = (1 + (leftCount * areaLeft + rightCount * areaRight) / boundingSurfaceArea);
+            float cost = (1 + (left.count * areaLeft + right.count * areaRight) / boundingSurfaceArea);
             decision.merge(SplitDecision(cost, i, axis, kind));
         }
     }
@@ -438,7 +397,7 @@ struct SBVHSplitter {
         assert(leftIndicies.size() + rightIndicies.size() == indicies.size());
     }
 
-    static bool GetSplit(
+    static bool TrySplit(
             BVH& bvh,                         // in: bvh root
             TrianglePosSet const& triangles,  // in: master triangle array
             TriangleMapping const& indicies,  // in: set of triangle indicies to split 
