@@ -69,7 +69,9 @@ struct SBVHSplitter {
         int count;
     };
 
-    // Slice (or bucket) used when trying a Spatial split
+    typedef std::array<ObjectSlice, SLICES_PER_AXIS> ObjectSliceArray;
+
+    // Slice used when trying a Spatial split
     struct SpatialSlice{
         SpatialSlice() : entryCount(0), exitCount(0) {}
 
@@ -85,14 +87,15 @@ struct SBVHSplitter {
         int entryCount, exitCount;
     };
 
+    typedef std::array<SpatialSlice, SLICES_PER_AXIS> SpatialSliceArray;
+
     // calculate cost after slicing
-    template<class SliceArrayType>
-    static void FindMinCostSplit(
-            SliceArrayType const& slices,  // in: slices to consider
-            float boundingSurfaceArea,     // in: surface area of extrema bounding box
-            int axis,                      // in: axis we're splitting on
-            SplitKind kind,                // in: kind of split we're performing (for stats purposes)
-            SplitDecision& decision) {     // out: resultant decision
+    static void FindSpatialMinCostSplit(
+            SpatialSliceArray const& slices, // in: slices to consider
+            float boundingSurfaceArea,       // in: surface area of extrema bounding box
+            int axis,                        // in: axis we're splitting on
+            SplitKind kind,                  // in: kind of split we're performing (for stats purposes)
+            SplitDecision& decision) {       // in/out: resultant decision
 
         int totalLeft = 0;
         int totalRight = 0;
@@ -161,8 +164,7 @@ struct SBVHSplitter {
 
         // slice parent bounding box into slices along the longest axis
         // and count the triangle centroids in it
-        typedef std::array<SpatialSlice, SLICES_PER_AXIS> SliceArray;
-        SliceArray slices;
+        SpatialSliceArray slices;
 
         const float low = extremaBounds.low[axis];
         const float high = extremaBounds.high[axis];
@@ -244,7 +246,7 @@ struct SBVHSplitter {
             }
         }
             
-        FindMinCostSplit(slices, boundingSurfaceArea, axis, SPATIAL, decision);
+        FindSpatialMinCostSplit(slices, boundingSurfaceArea, axis, SPATIAL, decision);
     }
 
     // parition triangles in a spatial split
@@ -336,7 +338,67 @@ struct SBVHSplitter {
             slice.count++;
         }
 
-        FindMinCostSplit(slices, boundingSurfaceArea, axis, OBJECT, decision);
+        FindObjectMinCostSplit(slices, boundingSurfaceArea, axis, OBJECT, decision);
+    }
+
+    // calculate cost after slicing
+    static void FindObjectMinCostSplit(
+            ObjectSliceArray const& slices,  // in: slices to consider
+            float boundingSurfaceArea,     // in: surface area of extrema bounding box
+            int axis,                      // in: axis we're splitting on
+            SplitKind kind,                // in: kind of split we're performing (for stats purposes)
+            SplitDecision& decision) {     // out: resultant decision
+
+        int totalLeft = 0;
+        int totalRight = 0;
+        for(auto const& slice : slices) {
+            totalLeft += slice.leftCount();
+            totalRight += slice.rightCount();
+
+            if(slice.leftCount() > 0 || slice.rightCount() > 0) {
+                slice.bounds.sanityCheck();
+            }
+        }
+
+        for(unsigned int i = 0; i < (slices.size() - 1) ; i++) {
+            // glue slices together into a left slice and a right slice
+            AABB leftBounds;
+            int leftCount = 0;
+
+            for(unsigned int j = 0; j <= i; j++){
+                leftBounds = unionAABB(leftBounds, slices[j].bounds);
+                leftCount += slices[j].leftCount();
+            }
+
+            AABB rightBounds;
+            int rightCount = 0;
+
+            for(unsigned int j = i+1; j < slices.size(); j++){
+                rightBounds = unionAABB(rightBounds, slices[j].bounds);
+                rightCount += slices[j].rightCount();
+            }
+
+            if(leftCount == 0 && rightCount == 0)
+                continue;
+            //assert(leftCount > 0);
+            //assert(rightCount > 0);
+
+            float areaLeft = 0.0f;
+            float areaRight = 0.0f;
+
+            if(leftCount > 0) {
+                leftBounds.sanityCheck();
+                areaLeft = surfaceAreaAABB(leftBounds);
+            }
+
+            if(rightCount > 0) {
+                rightBounds.sanityCheck();
+                areaRight = surfaceAreaAABB(rightBounds);
+            }
+            
+            float cost = (1 + (leftCount * areaLeft + rightCount * areaRight) / boundingSurfaceArea);
+            decision.merge(SplitDecision(cost, i, axis, kind));
+        }
     }
 
     // parition triangles in an object split
