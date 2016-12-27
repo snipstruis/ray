@@ -147,7 +147,7 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
     ScreenBuffer screenBuffer; // will be sized on first loop
 
     VisMode mode = VisMode::Default;
-    float vis_scale = 1.f;
+    float vis_scale = 1.0f;
 
     AvgTimer frameTimer;
     while(true){
@@ -163,7 +163,7 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
 
         if(oldMethod != bvhMethod) {
             std::cout << "BVH method " << BVHMethodStr(oldMethod) << "->";
-            std::cout << BVHMethodStr(bvhMethod ) << std::endl;
+            std::cout << BVHMethodStr(bvhMethod) << std::endl;
             delete bvh;
             bvh = buildBVH(s, bvhMethod);
             // clear the frametime average - given we're doing a new type of bvh

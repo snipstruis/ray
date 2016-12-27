@@ -41,6 +41,7 @@ struct AvgTimer {
     // clear average
     void reset() {
         average = 0.0f;
+        timer.sample();
     }
 
     float average;
