@@ -1,7 +1,8 @@
 #pragma once
 
 // max number of slices (buckets) to test when splitting
-static constexpr int SLICES_PER_AXIS = 8;
+constexpr int SLICES_PER_AXIS = 8;
+constexpr float SAH_ALPHA = 10e-15;
 
 enum SplitKind {
     OBJECT,
@@ -73,55 +74,9 @@ struct SBVHSplitter {
 
     typedef std::array<SpatialSlice, SLICES_PER_AXIS> SpatialSliceArray;
 
-    // calculate cost after slicing
-    static void FindSpatialMinCostSplit(
-            SpatialSliceArray const& slices, // in: slices to consider
-            float boundingSurfaceArea,       // in: surface area of extrema bounding box
-            int axis,                        // in: axis we're splitting on
-            SplitKind kind,                  // in: kind of split we're performing (for stats purposes)
-            SplitDecision& decision) {       // in/out: resultant decision
-
-        for(unsigned int i = 0; i < (slices.size() - 1) ; i++) {
-            // glue slices together into a left & right total cost
-            Slice left, right;
-
-            for(unsigned int j = 0; j <= i; j++){
-                left.bounds = unionAABB(left.bounds, slices[j].bounds);
-                left.count += slices[j].entryCount;
-            }
-
-            for(unsigned int j = i+1; j < slices.size(); j++){
-                right.bounds = unionAABB(right.bounds, slices[j].bounds);
-                right.count += slices[j].exitCount;
-            }
-
-            if(left.count == 0 && right.count == 0)
-                continue;
-            //assert(leftCount > 0);
-            //assert(rightCount > 0);
-
-            float areaLeft = 0.0f;
-            float areaRight = 0.0f;
-
-            if(left.count > 0) {
-                left.bounds.sanityCheck();
-                areaLeft = surfaceAreaAABB(left.bounds);
-            }
-
-            if(right.count > 0) {
-                right.bounds.sanityCheck();
-                areaRight = surfaceAreaAABB(right.bounds);
-            }
-            
-            float cost = (1 + (left.count * areaLeft + right.count * areaRight) / boundingSurfaceArea);
-            decision.merge(SplitDecision(cost, i, axis, kind));
-        }
-    }
-
-
     // tries an SAH Spatial split on the given axis. 
     // may be a no-op if the given axis is zero length
-    static void TrySpatialSplit(
+    static void TrySpatialSplits(
             TrianglePosSet const& triangles,  // in: master triangle array
             TriangleMapping const& indicies,  // in: set of triangle indicies to split 
             float boundingSurfaceArea,        // in: surface area of extrema bounding box
@@ -218,6 +173,51 @@ struct SBVHSplitter {
         FindSpatialMinCostSplit(slices, boundingSurfaceArea, axis, SPATIAL, decision);
     }
 
+    // calculate cost after slicing
+    static void FindSpatialMinCostSplit(
+            SpatialSliceArray const& slices, // in: slices to consider
+            float boundingSurfaceArea,       // in: surface area of extrema bounding box
+            int axis,                        // in: axis we're splitting on
+            SplitKind kind,                  // in: kind of split we're performing (for stats purposes)
+            SplitDecision& decision) {       // in/out: resultant decision
+
+        for(unsigned int i = 0; i < (slices.size() - 1) ; i++) {
+            // glue slices together into a left & right total cost
+            Slice left, right;
+
+            for(unsigned int j = 0; j <= i; j++){
+                left.bounds = unionAABB(left.bounds, slices[j].bounds);
+                left.count += slices[j].entryCount;
+            }
+
+            for(unsigned int j = i+1; j < slices.size(); j++){
+                right.bounds = unionAABB(right.bounds, slices[j].bounds);
+                right.count += slices[j].exitCount;
+            }
+
+            if(left.count == 0 && right.count == 0)
+                continue;
+            //assert(leftCount > 0);
+            //assert(rightCount > 0);
+
+            float areaLeft = 0.0f;
+            float areaRight = 0.0f;
+
+            if(left.count > 0) {
+                left.bounds.sanityCheck();
+                areaLeft = surfaceAreaAABB(left.bounds);
+            }
+
+            if(right.count > 0) {
+                right.bounds.sanityCheck();
+                areaRight = surfaceAreaAABB(right.bounds);
+            }
+            
+            float cost = (1 + (left.count * areaLeft + right.count * areaRight) / boundingSurfaceArea);
+            decision.merge(SplitDecision(cost, i, axis, kind));
+        }
+    }
+
     // parition triangles in a spatial split
     static void DoSpatialSplit(
             SplitDecision const& decision,
@@ -263,7 +263,7 @@ struct SBVHSplitter {
 
     // tries an SAH Object split on the given axis.
     // may be a no-op if the given axis is zero length
-    static void TryObjectSplit(
+    static void TryObjectSplits(
             TrianglePosSet const& triangles,  // in: master triangle array
             TriangleMapping const& indicies,  // in: set of triangle indicies to split 
             float boundingSurfaceArea,        // in: surface area of extrema bounding box
@@ -397,6 +397,7 @@ struct SBVHSplitter {
         assert(leftIndicies.size() + rightIndicies.size() == indicies.size());
     }
 
+    // main splitter entry point
     static bool TrySplit(
             BVH& bvh,                         // in: bvh root
             TrianglePosSet const& triangles,  // in: master triangle array
@@ -421,20 +422,21 @@ struct SBVHSplitter {
 
         SplitDecision decision;
 
+        // ... now give spatial splits a go.
+        for(int axis = 0; axis < 3; axis++) {
+            TrySpatialSplits(triangles, indicies, boundingArea, extremaBounds, axis, decision);
+        }
+
+        decision.sanityCheck();
+
         // walk the 3 axis, find the lowest cost split
         // ... firstly, try object splits
         for(int axis = 0; axis < 3; axis++) { 
-            TryObjectSplit(triangles, indicies, boundingArea, centroidBounds, axis, decision);
+            TryObjectSplits(triangles, indicies, boundingArea, centroidBounds, axis, decision);
         }
 
         decision.sanityCheck();
 
-        // ... now give spatial splits a go.
-        for(int axis = 0; axis < 3; axis++) {
-            TrySpatialSplit(triangles, indicies, boundingArea, extremaBounds, axis, decision);
-        }
-
-        decision.sanityCheck();
 
         // check termination heurisic...
         if(decision.minCost > indicies.size()) {
