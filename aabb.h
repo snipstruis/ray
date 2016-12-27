@@ -75,6 +75,24 @@ inline AABB unionVecPair(AABB const& a, VecPair const& p){
     return result;
 }
 
+// union of AABB and triangle
+inline AABB unionTriangle(AABB const& a, TrianglePos const& t) {
+    AABB result;
+    result = unionPoint(a, t.v[0]);
+    result = unionPoint(result, t.v[1]);
+    result = unionPoint(result, t.v[2]);
+    result.sanityCheck();
+    return result;
+}
+
+inline AABB triangleBounds(TrianglePos const& t) {
+    AABB result;
+    for(int i = 0 ; i < 3; i++)
+        result = unionPoint(result, t.v[i]);
+    result.sanityCheck();
+    return result;
+}
+
 inline float volumeAABB(AABB const& a) {
     return (a.high[0] - a.low[0]) * (a.high[1] - a.low[1]) * (a.high[2] - a.low[2]);
 }
@@ -201,12 +219,4 @@ float rayIntersectsAABB(AABB const& a, glm::vec3 const& rayOrigin, glm::vec3 con
     	return INFINITY;
 
     return tmin;
-}
-
-inline AABB triangleBounds(TrianglePos const& t) {
-    AABB result;
-    for(int i = 0 ; i < 3; i++)
-        result = unionPoint(result, t.v[i]);
-    result.sanityCheck();
-    return result;
 }
