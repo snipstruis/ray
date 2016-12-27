@@ -219,13 +219,15 @@ struct SBVHSplitter {
     }
 
     // parition triangles in a spatial split
-    static void DoSpatialSplit(
+    static bool DoSpatialSplit(
             SplitDecision const& decision,
             AABB const& extremaBounds,
             TrianglePosSet const& triangles,  // in: master triangle array
             TriangleMapping const& indicies,  // in: set of triangle indicies to split 
             TriangleMapping& leftIndicies,    // out: resultant left set
             TriangleMapping& rightIndicies) { // out: resultant right set
+
+        assert(decision.splitKind == SPATIAL);
 
         const float low = extremaBounds.low[decision.chosenAxis];
         const float high = extremaBounds.high[decision.chosenAxis];
@@ -259,6 +261,16 @@ struct SBVHSplitter {
         assert(leftIndicies.size() + rightIndicies.size() >= indicies.size());
         assert(leftIndicies.size() <= indicies.size());
         assert(rightIndicies.size() <= indicies.size());
+
+        // so this sucks. If all the triangles land on one side, then don't split; this 
+        // would mean we'll recurse forever.
+        if(leftIndicies.size() == indicies.size() || rightIndicies.size() == indicies.size()) {
+            leftIndicies.clear();
+            rightIndicies.clear();
+            return false;
+        }
+
+        return true;
     }
 
     // tries an SAH Object split on the given axis.
@@ -328,11 +340,13 @@ struct SBVHSplitter {
             Slice left, right;
 
             for(unsigned int j = 0; j <= i; j++){
+                std::cout << "L";
                 left.bounds = unionAABB(left.bounds, slices[j].bounds);
                 left.count += slices[j].count;
             }
 
             for(unsigned int j = i+1; j < slices.size(); j++){
+                std::cout << "R";
                 right.bounds = unionAABB(right.bounds, slices[j].bounds);
                 right.count += slices[j].count;
             }
@@ -355,8 +369,19 @@ struct SBVHSplitter {
                 areaRight = surfaceAreaAABB(right.bounds);
             }
             
-            float cost = (1 + (left.count * areaLeft + right.count * areaRight) / boundingSurfaceArea);
-            decision.merge(SplitDecision(cost, i, axis, kind));
+            float cLeft = left.count * areaLeft;
+            float cRight = right.count * areaRight;
+            float cost = 1 + ((cLeft + cRight) / boundingSurfaceArea);
+
+            std::cout << " countLeft " << left.count;
+            std::cout << " countRight " << right.count;
+            std::cout << " cLeft " << cLeft;
+            std::cout << " cRight " << cRight;
+            std::cout << std::endl << "    ";
+
+            SplitDecision result(cost, i, axis, kind);
+            std::cout << result << std::endl;
+            decision.merge(result);
         }
     }
 
@@ -369,6 +394,8 @@ struct SBVHSplitter {
             TriangleMapping& leftIndicies,    // out: resultant left set
             TriangleMapping& rightIndicies) { // out: resultant right set
 
+        assert(decision.splitKind == OBJECT);
+
         const float low = centroidBounds.low[decision.chosenAxis];
         const float high = centroidBounds.high[decision.chosenAxis];
         
@@ -376,6 +403,11 @@ struct SBVHSplitter {
         // this means there must be a point in this axis we can split the triangles
         assert(low < high);
         const float sliceWidth = high - low;
+
+        std::cout << " low " << low;
+        std::cout << " high " << high;
+        std::cout << " chosen " << decision.chosenSplitNo;
+        std::cout << std::endl;
 
         // ok, we're going to split. parition the indicies based on bucket
         for(unsigned int idx : indicies) {
@@ -385,12 +417,16 @@ struct SBVHSplitter {
             int sliceNo = ratio * SLICES_PER_AXIS;
             if(sliceNo == SLICES_PER_AXIS)
                 sliceNo--;
+            
+            std::cout << " slice " << sliceNo;
 
             if(sliceNo <= decision.chosenSplitNo)
                 leftIndicies.push_back(idx);
             else
                 rightIndicies.push_back(idx);
         }
+
+        std::cout << std::endl;
 
         // make sure all triangles are accounted for. we don't make duplicate triangles, 
         // so all tris should be on one side only
@@ -420,47 +456,53 @@ struct SBVHSplitter {
 
         centroidBounds.sanityCheck();
 
-        SplitDecision decision;
+        SplitDecision bestSpatial;
 
         // ... now give spatial splits a go.
         for(int axis = 0; axis < 3; axis++) {
-            TrySpatialSplits(triangles, indicies, boundingArea, extremaBounds, axis, decision);
+            TrySpatialSplits(triangles, indicies, boundingArea, extremaBounds, axis, bestSpatial);
         }
 
-        decision.sanityCheck();
+        bestSpatial.sanityCheck();
+
+        SplitDecision bestObject;
 
         // walk the 3 axis, find the lowest cost split
         // ... firstly, try object splits
         for(int axis = 0; axis < 3; axis++) { 
-            TryObjectSplits(triangles, indicies, boundingArea, centroidBounds, axis, decision);
+            TryObjectSplits(triangles, indicies, boundingArea, centroidBounds, axis, bestObject);
         }
 
-        decision.sanityCheck();
+        bestObject.sanityCheck();
 
+        SplitDecision best;
+        best.merge(bestSpatial);
+        best.merge(bestObject);
+
+    //    std::cout << "best " << best << std::endl;
 
         // check termination heurisic...
-        if(decision.minCost > indicies.size()) {
+        if(best.minCost > indicies.size()) {
             return false; // no splitting here, chopper. make a leaf with this triangle set
         }
 
         // okeydokes, we're going to split this node.. object or spatial split?
-        if(decision.splitKind == OBJECT) {
-            bvh.objectSplits++;
-
-            DoObjectSplit(decision, centroidBounds, triangles, indicies, leftIndicies, rightIndicies);
-        } else {
-            bvh.spatialSplits++;
-
-            DoSpatialSplit(decision, extremaBounds, triangles, indicies, leftIndicies, rightIndicies);
-
-            // so this sucks. If all the triangles land on one side, then don't split; this 
-            // would mean we'll recurse forever.
-            if(leftIndicies.size() == indicies.size() || rightIndicies.size() == indicies.size()) {
-                bvh.spatialSplits--;
- //               std::cout << " -- sigh, nasty term"  << std::endl;
-                return false;
+        if(best.splitKind == SPATIAL) {
+            if(DoSpatialSplit(best, extremaBounds, triangles, indicies, leftIndicies, rightIndicies)) {
+                bvh.spatialSplits++;
+                return true;
             }
         }
+
+        bvh.objectSplits++;
+
+        DoObjectSplit(bestObject, centroidBounds, triangles, indicies, leftIndicies, rightIndicies);
+#if 0
+        std::cout <<  " count " << indicies.size();
+        std::cout << " left " << leftIndicies.size();
+        std::cout << " right " << rightIndicies.size();
+        std::cout <<std::endl;
+#endif
 
         return true; // yes, we split!
     }
