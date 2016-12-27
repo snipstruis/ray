@@ -10,10 +10,23 @@ enum SplitKind {
 };
 
 struct SplitDecision {
-    SplitDecision(): minCost(INFINITY), chosenSplitNo(-1), chosenAxis(-1), splitKind(OBJECT) {}
+    SplitDecision(): 
+        minCost(INFINITY), 
+        chosenSplitNo(-1), 
+        chosenAxis(-1), 
+        splitKind(OBJECT), 
+        leftCount(0), 
+        rightCount(0) 
+    {}
 
-    SplitDecision(float cost, int splitNo, int axis, SplitKind kind): 
-        minCost(cost), chosenSplitNo(splitNo), chosenAxis(axis), splitKind(kind) {}
+    SplitDecision(float cost, int splitNo, int axis, SplitKind kind, int _leftCount = 0, int _rightCount = 0): 
+        minCost(cost), 
+        chosenSplitNo(splitNo), 
+        chosenAxis(axis), 
+        splitKind(kind),
+        leftCount(_leftCount), 
+        rightCount(_rightCount) 
+    {}
 
     // once the dust has settled, check we've got a result
     void sanityCheck() const {
@@ -22,6 +35,8 @@ struct SplitDecision {
         assert(chosenSplitNo < SLICES_PER_AXIS);
         assert(chosenAxis >= 0);
         assert(chosenAxis < 3);
+        assert(leftCount >= 0);
+        assert(rightCount >= 0);
     }
 
     void merge(SplitDecision const& other) {
@@ -32,6 +47,8 @@ struct SplitDecision {
             chosenSplitNo = other.chosenSplitNo;
             chosenAxis = other.chosenAxis;
             splitKind = other.splitKind;
+            leftCount = other.leftCount;
+            rightCount = other.rightCount;
         }
     }
 
@@ -41,6 +58,10 @@ struct SplitDecision {
     int chosenSplitNo;
     int chosenAxis;
     SplitKind splitKind;
+    // for spatial splits, we remember the counts on either side of the split point, 
+    // we use this when unsplitting
+    int leftCount;
+    int rightCount;
 };
 
 std::ostream& operator<<(std::ostream& os, const SplitDecision& d) {
@@ -48,6 +69,8 @@ std::ostream& operator<<(std::ostream& os, const SplitDecision& d) {
     os << " chosenSplitNo " << d.chosenSplitNo;
     os << " chosenAxis " << d.chosenAxis;
     os << " splitKind " << (d.splitKind == OBJECT ? "OBJECT" : "SPATIAL");
+    os << " leftCount " << d.leftCount;
+    os << " rightCount " << d.rightCount;
     return os;
 }
 
@@ -214,7 +237,7 @@ struct SBVHSplitter {
             }
             
             float cost = (1 + (left.count * areaLeft + right.count * areaRight) / boundingSurfaceArea);
-            decision.merge(SplitDecision(cost, i, axis, kind));
+            decision.merge(SplitDecision(cost, i, axis, kind, left.count, right.count));
         }
     }
 
@@ -244,17 +267,67 @@ struct SBVHSplitter {
         assert(splitPoint < high);
         assert(splitPoint > low);
 
+        // for the purposes of reference-unsplitting, calc the bounds on both sides of the split
+        AABB boundsLeft, boundsRight;
+
+        for(unsigned int idx : indicies) {
+            // determine slice in which this one belongs
+            TrianglePos const& tri = triangles[idx];
+            if(tri.getMinCoord(decision.chosenAxis) <= splitPoint) {
+                boundsLeft = unionTriangle(boundsLeft, tri);
+            }
+
+            if(tri.getMaxCoord(decision.chosenAxis) >= splitPoint) {
+                boundsRight = unionTriangle(boundsRight, tri);
+            }
+        }
+
+        float areaLeft = surfaceAreaAABB(boundsLeft);
+        float areaRight = surfaceAreaAABB(boundsRight);
+        float areaTotal = surfaceAreaAABB(extremaBounds);
+
+        float cSplit = (areaLeft * decision.leftCount) + (areaRight * decision.rightCount);
+
+        assert(areaLeft <= areaTotal);
+        assert(areaRight <= areaTotal);
+
         // ok, we're going to split. parition the indicies based on bucket
         for(unsigned int idx : indicies) {
             // determine slice in which this one belongs
             TrianglePos const& tri = triangles[idx];
+            float minCoord = tri.getMinCoord(decision.chosenAxis); 
+            float maxCoord = tri.getMaxCoord(decision.chosenAxis); 
 
-            if(tri.getMinCoord(decision.chosenAxis) <= splitPoint) {
-                leftIndicies.push_back(idx);
-            }
+            // firstly, let's check if this is a split reference - ie the triangle spans the split
+            // point.. if so, we'll do the 'unsplitting' test
+            
+            if(minCoord <= splitPoint && maxCoord >= splitPoint) { 
+                //  unsplitting: get the union bounds on both sides of the split
+                AABB unionLeft = unionTriangle(boundsLeft, tri);
+                AABB unionRight = unionTriangle(boundsRight, tri);
 
-            if(tri.getMaxCoord(decision.chosenAxis) >= splitPoint) {
-                rightIndicies.push_back(idx);
+                // and the costs for going left or right
+                float cL = (surfaceAreaAABB(unionLeft)*decision.leftCount) + (areaRight*(decision.rightCount-1));
+                float cR = (areaLeft*(decision.leftCount-1)) + (surfaceAreaAABB(unionRight)*decision.rightCount);
+
+                // go the cheapest option
+                if(cSplit < cL && cSplit < cR) {
+                    leftIndicies.push_back(idx);
+                    rightIndicies.push_back(idx);
+                } else if (cL < cR) {
+                    leftIndicies.push_back(idx);
+                } else { // cR is cheapest
+                    rightIndicies.push_back(idx);
+                }
+            } else {
+                // triangle is not split - just thwack it one one side
+                if(minCoord < splitPoint) {
+                    assert(maxCoord < splitPoint);
+                    leftIndicies.push_back(idx);
+                } else {
+                    assert(maxCoord > splitPoint);
+                    rightIndicies.push_back(idx);
+                }
             }
         }
 
