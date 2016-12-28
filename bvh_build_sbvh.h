@@ -2,7 +2,8 @@
 
 // max number of slices (buckets) to test when splitting
 constexpr int SLICES_PER_AXIS = 8;
-constexpr float SAH_ALPHA = 10e-15;
+// alpha value used with excluding spatial splits per section 4.5 of the paper
+constexpr float SBVH_ALPHA = 10e-8;
 
 enum SplitKind {
     OBJECT,
@@ -10,8 +11,9 @@ enum SplitKind {
 };
 
 struct SplitDecision {
-    SplitDecision(): 
+    SplitDecision() : 
         minCost(INFINITY), 
+        surfaceArea(0.0f),
         chosenSplitNo(-1), 
         chosenAxis(-1), 
         splitKind(OBJECT), 
@@ -19,13 +21,24 @@ struct SplitDecision {
         rightCount(0) 
     {}
 
-    SplitDecision(float cost, int splitNo, int axis, SplitKind kind, int _leftCount = 0, int _rightCount = 0): 
+    SplitDecision(float cost, int splitNo, int axis, SplitKind kind, int _leftCount , int _rightCount) : 
         minCost(cost), 
+        surfaceArea(0.0f),
         chosenSplitNo(splitNo), 
         chosenAxis(axis), 
         splitKind(kind),
         leftCount(_leftCount), 
         rightCount(_rightCount) 
+    {}
+
+    SplitDecision(float cost, float _surfaceArea, int splitNo, int axis, SplitKind kind) :
+        minCost(cost), 
+        surfaceArea(_surfaceArea),
+        chosenSplitNo(splitNo), 
+        chosenAxis(axis), 
+        splitKind(kind),
+        leftCount(0), 
+        rightCount(0) 
     {}
 
     // once the dust has settled, check we've got a result
@@ -44,6 +57,7 @@ struct SplitDecision {
 
         if(other.minCost < minCost) {
             minCost = other.minCost;
+            surfaceArea = other.surfaceArea;
             chosenSplitNo = other.chosenSplitNo;
             chosenAxis = other.chosenAxis;
             splitKind = other.splitKind;
@@ -54,6 +68,8 @@ struct SplitDecision {
 
     // lowest cost we've seen so far
     float minCost;
+    // surface area of the union of the 2x bounding boxes for an object split
+    float surfaceArea;
     // for this minCost - 
     int chosenSplitNo;
     int chosenAxis;
@@ -62,6 +78,7 @@ struct SplitDecision {
     // we use this when unsplitting
     int leftCount;
     int rightCount;
+    
 };
 
 std::ostream& operator<<(std::ostream& os, const SplitDecision& d) {
@@ -446,7 +463,8 @@ struct SBVHSplitter {
             float cRight = right.count * areaRight;
             float cost = 1 + ((cLeft + cRight) / boundingSurfaceArea);
 
-            SplitDecision result(cost, i, axis, kind);
+            float unionSurfaceArea = surfaceAreaAABB(unionAABB(left.bounds, right.bounds));
+            SplitDecision result(cost, unionSurfaceArea, i, axis, kind);
             decision.merge(result);
         }
     }
@@ -537,8 +555,6 @@ struct SBVHSplitter {
         best.merge(bestSpatial);
         best.merge(bestObject);
 
-    //    std::cout << "best " << best << std::endl;
-
         // check termination heurisic...
         if(best.minCost > indicies.size()) {
             return false; // no splitting here, chopper. make a leaf with this triangle set
@@ -546,24 +562,28 @@ struct SBVHSplitter {
 
         // okeydokes, we're going to split this node.. object or spatial split?
         if(best.splitKind == SPATIAL) {
-            //std::cout << "trying spatial count " << indicies.size() << " " << best;
-            if(DoSpatialSplit(best, extremaBounds, triangles, indicies, leftIndicies, rightIndicies)) {
-          //     std::cout << " success " << std::endl;
-                bvh.spatialSplits++;
-                return true;
+            // okeydokes, we're attempting a spatial split...
+            // perform the 'restricting spatial split attempts' check from part 4.5 of the SBVH paper
+            // the best spatial case should be populated with the union bounding box area - 
+            // compare it to the root bounds.
+        
+            // root bounds should be initialised by now...
+            bvh.root().bounds.sanityCheck();
+            float rootBoundsArea = surfaceAreaAABB(bvh.root().bounds);
+            assert(bestObject.surfaceArea > 0.0f);
+            float ratio = bestObject.surfaceArea / rootBoundsArea;
+
+            if(ratio > SBVH_ALPHA) {
+                if(DoSpatialSplit(best, extremaBounds, triangles, indicies, leftIndicies, rightIndicies)) {
+                    bvh.spatialSplits++;
+                    return true;
+                }
             }
-        //std::cout << " fail" << std::endl;
         }
 
         bvh.objectSplits++;
 
         DoObjectSplit(bestObject, centroidBounds, triangles, indicies, leftIndicies, rightIndicies);
-#if 0
-        std::cout <<  " count " << indicies.size();
-        std::cout << " left " << leftIndicies.size();
-        std::cout << " right " << rightIndicies.size();
-        std::cout <<std::endl;
-#endif
 
         return true; // yes, we split!
     }
