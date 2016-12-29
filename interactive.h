@@ -132,7 +132,7 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
     Params p;
     BVH* bvh = buildBVH(s, p.bvhMethod);
 
-    SDL_Window *win = SDL_CreateWindow("Roaytroayzah (initialising)", 10, 10, width, height, 
+    SDL_Window *win = SDL_CreateWindow("Roaytroayzah (initialising)", 50, 50, width, height, 
                                        SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
     SDL_GL_CreateContext(win);
 

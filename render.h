@@ -80,6 +80,8 @@ struct BVHDiagRenderer {
     }
 };
 
+// openMP works a bit differently on windows - hence the two versions of this function
+#ifndef WIN32
 // main render loop
 // assumes screenbuffer is big enough to handle the width*height pixels (per the camera)
 template<class PixelRenderer>
@@ -89,11 +91,7 @@ inline void renderLoop(Scene const& s, BVH const& bvh, Params const& p, ScreenBu
 
     assert(screenBuffer.size() == width * height);
 
-#ifndef WIN32
     #pragma omp parallel for schedule(auto) collapse(2)
-#else //WIN32
-	#pragma omp parallel
-#endif
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             Ray r = s.camera.makeRay(x, y);
@@ -107,6 +105,31 @@ inline void renderLoop(Scene const& s, BVH const& bvh, Params const& p, ScreenBu
         }
     }
 }
+#else
+template<class PixelRenderer>
+inline void renderLoop(Scene const& s, BVH const& bvh, Params const& p, ScreenBuffer& screenBuffer) {
+	int const width = s.camera.width;
+	int const height = s.camera.height;
+
+	assert(screenBuffer.size() == width * height);
+
+
+	for (int y = 0; y < height; y++) {
+		#pragma omp parallel
+		for (int x = 0; x < width; x++) {
+			Ray r = s.camera.makeRay(x, y);
+			unsigned int idx = (height - y - 1) * width + x;
+			Color pixel = PixelRenderer::renderPixel(r, s, bvh, p);
+
+			// it's the render's responsibility to check the pixel is in the legal range [0-1]
+			assert(pixel.isLegal());
+
+			screenBuffer[idx] = pixel;
+		}
+	}
+}
+#endif
+
 
 // select the appropriate pixel renderer and launch the main loop
 inline void renderFrame(Scene& s, BVH const& bvh, Params const& p, ScreenBuffer& screenBuffer){
