@@ -3,5 +3,6 @@ Debug
 Release
 
 ray.VC.db
+*.opendb
 .vs
 ipch
