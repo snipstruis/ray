@@ -7,6 +7,7 @@
 #include "trace.h"
 
 // This file contains the render main loop, and all the pixel colouring code (ie the diagnostic visualisations)
+
 Color value_to_color(float x){
     x*=5;if(x<1) {      return Color(  0,  0,  x);} // black -> blue
     else if(x<2) {x-=1; return Color(  0,  x,  1);} // blue  -> cyan
@@ -17,7 +18,7 @@ Color value_to_color(float x){
 
 // Do a recursive ray trace (ie the default output)
 struct StandardRenderer {
-    static Color renderPixel(Ray const& r, Scene& s, BVH& bvh, Params const& p) {
+    static Color renderPixel(Ray const& r, Scene& s, BVH const& bvh, Params const& p) {
         Color col = trace(r, bvh, s.primitives, s.lights, BLACK, p);
         return ColorClamp(col, 0.0f, 1.0f);
     }
@@ -25,7 +26,7 @@ struct StandardRenderer {
 
 // render surface normals
 struct NormalRenderer {
-    static Color renderPixel(Ray const& r, Scene& s, BVH& bvh, Params const& p) {
+    static Color renderPixel(Ray const& r, Scene& s, BVH const& bvh, Params const& p) {
         auto hit = findClosestIntersectionBVH(bvh, s.primitives, r, p.traversalMode);
 
         if(hit.distance < INFINITY) {
@@ -43,7 +44,7 @@ struct NormalRenderer {
 
 // do a recursive ray trace (ala StandardRenderer), but render the time taken as a color
 struct PerformanceRenderer {
-    static Color renderPixel(Ray const& r, Scene& s, BVH& bvh, Params const& p) {
+    static Color renderPixel(Ray const& r, Scene& s, BVH const& bvh, Params const& p) {
         auto start = std::chrono::high_resolution_clock::now();
         // do the ray trace. we don't care about the result - just how long it took.
         trace(r, bvh, s.primitives, s.lights, BLACK, p);
@@ -56,7 +57,7 @@ struct PerformanceRenderer {
 };
 
 struct BVHDiagRenderer {
-    static Color renderPixel(Ray const& r, Scene& s, BVH& bvh, Params const& p) {
+    static Color renderPixel(Ray const& r, Scene& s, BVH const& bvh, Params const& p) {
         DiagnosticCollector diag;
 
         auto hit = findClosestIntersectionBVH(bvh, s.primitives, r, diag, p.traversalMode);
@@ -86,7 +87,7 @@ struct BVHDiagRenderer {
 // main render loop
 // assumes screenbuffer is big enough to handle the width*height pixels (per the camera)
 template<class PixelRenderer>
-inline void renderLoop(Scene& s, BVH& bvh, ScreenBuffer& screenBuffer, Params const& p) {
+inline void renderLoop(Scene& s, BVH const& bvh, ScreenBuffer& screenBuffer, Params const& p) {
     unsigned int const width  = s.camera.width;
     unsigned int const height = s.camera.height;
 
@@ -108,7 +109,7 @@ inline void renderLoop(Scene& s, BVH& bvh, ScreenBuffer& screenBuffer, Params co
 }
 
 // select the appropriate pixel renderer and launch the main loop
-inline void renderFrame(Scene& s, BVH& bvh, ScreenBuffer& screenBuffer, Params const& p){
+inline void renderFrame(Scene& s, BVH const& bvh, ScreenBuffer& screenBuffer, Params const& p){
     switch(p.visMode) {
     case VisMode::Default:
         renderLoop<StandardRenderer>(s, bvh, screenBuffer, p);
