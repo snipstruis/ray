@@ -1,1 +1,7 @@
 .*.swp
+Debug
+Release
+
+ray.VC.db
+.vs
+ipch
