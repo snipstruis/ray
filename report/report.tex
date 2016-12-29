@@ -1,4 +1,7 @@
-\section{features}
+
+\includegraphics[width=0.5\textwidth]{img/buddha.png}
+
+\section{Features}
 A fully interactive whitted-style raytracer with run time scene loading. 
 For Assignment 2, we added accelerated rendering using BVH traversal. As well as the base requirement for a BVH, we implemented option 1 of the additional options; That is, to implement an SBVH.
 
@@ -85,11 +88,12 @@ For example, on unix systems this command will perform a release build -
 
 A similar command should work with Visual Studio, although the \verb|CMAKE_BUILD_TYPE| is not required - this is set in the Visual Studio gui.
 
-On Windows, SDL2.dll must be available somewhere on the path or in the same dir as the binary. 
 
 Boost is required for the test tree, but not the main system.
 
 \section{Running}
+
+On Windows, SDL2.dll must be available somewhere on the path or in the same dir as the binary. 
 
 There is a collection of test scenes, objects and materials in the data directory. To avoid fighting with relative paths, it works best to cd to this directory before running the system. For example, on windows, assuming the binary is in the Release directory under the root source tree - 
 
@@ -134,3 +138,13 @@ The following external packages were used
 \section{Screencaps}
 
 %\includegraphics[width=0.5\textwidth]{img/colPointLights1sphere}
+ 
+\includegraphics[width=0.5\textwidth]{img/dragon.png}
+\includegraphics[width=0.5\textwidth]{img/dragon-plane.png}
+\includegraphics[width=0.5\textwidth]{img/dragon-traversal-ordered.png}
+\includegraphics[width=0.5\textwidth]{img/dragon-traversal-unordered.png}
+\includegraphics[width=0.5\textwidth]{img/hairball.png}
+\includegraphics[width=0.5\textwidth]{img/hairball-plane.png}
+\includegraphics[width=0.5\textwidth]{img/teapot.png}
+\includegraphics[width=0.5\textwidth]{img/teapot-plane.png}
+
