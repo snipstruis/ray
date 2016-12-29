@@ -18,7 +18,7 @@ Color value_to_color(float x){
 
 // Do a recursive ray trace (ie the default output)
 struct StandardRenderer {
-    static Color renderPixel(Ray const& r, Scene& s, BVH const& bvh, Params const& p) {
+    static Color renderPixel(Ray const& r, Scene const& s, BVH const& bvh, Params const& p) {
         Color col = trace(r, bvh, s.primitives, s.lights, BLACK, p);
         return ColorClamp(col, 0.0f, 1.0f);
     }
@@ -26,7 +26,7 @@ struct StandardRenderer {
 
 // render surface normals
 struct NormalRenderer {
-    static Color renderPixel(Ray const& r, Scene& s, BVH const& bvh, Params const& p) {
+    static Color renderPixel(Ray const& r, Scene const& s, BVH const& bvh, Params const& p) {
         auto hit = findClosestIntersectionBVH(bvh, s.primitives, r, p.traversalMode);
 
         if(hit.distance < INFINITY) {
@@ -44,7 +44,7 @@ struct NormalRenderer {
 
 // do a recursive ray trace (ala StandardRenderer), but render the time taken as a color
 struct PerformanceRenderer {
-    static Color renderPixel(Ray const& r, Scene& s, BVH const& bvh, Params const& p) {
+    static Color renderPixel(Ray const& r, Scene const& s, BVH const& bvh, Params const& p) {
         auto start = std::chrono::high_resolution_clock::now();
         // do the ray trace. we don't care about the result - just how long it took.
         trace(r, bvh, s.primitives, s.lights, BLACK, p);
@@ -57,7 +57,7 @@ struct PerformanceRenderer {
 };
 
 struct BVHDiagRenderer {
-    static Color renderPixel(Ray const& r, Scene& s, BVH const& bvh, Params const& p) {
+    static Color renderPixel(Ray const& r, Scene const& s, BVH const& bvh, Params const& p) {
         DiagnosticCollector diag;
 
         auto hit = findClosestIntersectionBVH(bvh, s.primitives, r, diag, p.traversalMode);
@@ -87,7 +87,7 @@ struct BVHDiagRenderer {
 // main render loop
 // assumes screenbuffer is big enough to handle the width*height pixels (per the camera)
 template<class PixelRenderer>
-inline void renderLoop(Scene& s, BVH const& bvh, ScreenBuffer& screenBuffer, Params const& p) {
+inline void renderLoop(Scene const& s, BVH const& bvh, Params const& p, ScreenBuffer& screenBuffer) {
     unsigned int const width  = s.camera.width;
     unsigned int const height = s.camera.height;
 
@@ -109,19 +109,20 @@ inline void renderLoop(Scene& s, BVH const& bvh, ScreenBuffer& screenBuffer, Par
 }
 
 // select the appropriate pixel renderer and launch the main loop
-inline void renderFrame(Scene& s, BVH const& bvh, ScreenBuffer& screenBuffer, Params const& p){
+inline void renderFrame(Scene& s, BVH const& bvh, Params const& p, ScreenBuffer& screenBuffer){
+
     switch(p.visMode) {
     case VisMode::Default:
-        renderLoop<StandardRenderer>(s, bvh, screenBuffer, p);
+        renderLoop<StandardRenderer>(s, bvh, p, screenBuffer);
         break;
     case VisMode::Normal:
-        renderLoop<NormalRenderer>(s, bvh, screenBuffer, p);
+        renderLoop<NormalRenderer>(s, bvh, p, screenBuffer);
         break;
     case VisMode::Microseconds:
-        renderLoop<PerformanceRenderer>(s, bvh, screenBuffer, p);
+        renderLoop<PerformanceRenderer>(s, bvh, p, screenBuffer);
         break;
     default:
-        renderLoop<BVHDiagRenderer>(s, bvh, screenBuffer, p);
+        renderLoop<BVHDiagRenderer>(s, bvh, p, screenBuffer);
         break;
     }
 }

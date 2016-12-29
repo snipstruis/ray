@@ -173,7 +173,7 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
 
         glViewport(0, 0, s.camera.width, s.camera.height);
 
-        renderFrame(s, *bvh, screenBuffer, p);
+        renderFrame(s, *bvh, p, screenBuffer);
        
         // blit to screen
         glDrawPixels(s.camera.width, s.camera.height, GL_RGB, GL_FLOAT, screenBuffer.data());
