@@ -88,14 +88,14 @@ GuiAction handleEvents(Scene& s, float frameTime, Params& p)
                     case SDL_SCANCODE_M: p.flipSmoothing(); break;
                     case SDL_SCANCODE_B: p.nextBvhMethod(); break;
                     case SDL_SCANCODE_T: p.flipTraversalMode(); break;
-                    case SDL_SCANCODE_0: p.visMode = VisMode::Default; break;
-                    case SDL_SCANCODE_1: p.visMode = VisMode::Microseconds; break;
-                    case SDL_SCANCODE_2: p.visMode = VisMode::Normal; break;
-                    case SDL_SCANCODE_3: p.visMode = VisMode::LeafNode; break;
-                    case SDL_SCANCODE_4: p.visMode = VisMode::TrianglesChecked; break;
-                    case SDL_SCANCODE_5: p.visMode = VisMode::SplitsTraversed; break;
-                    case SDL_SCANCODE_6: p.visMode = VisMode::LeafsChecked; break;
-                    case SDL_SCANCODE_7: p.visMode = VisMode::NodeIndex; break;
+                    case SDL_SCANCODE_0: p.setVisMode(VisMode::Default); break;
+                    case SDL_SCANCODE_1: p.setVisMode(VisMode::Microseconds); break;
+                    case SDL_SCANCODE_2: p.setVisMode(VisMode::Normal); break;
+                    case SDL_SCANCODE_3: p.setVisMode(VisMode::LeafNode); break;
+                    case SDL_SCANCODE_4: p.setVisMode(VisMode::TrianglesChecked); break;
+                    case SDL_SCANCODE_5: p.setVisMode(VisMode::SplitsTraversed); break;
+                    case SDL_SCANCODE_6: p.setVisMode(VisMode::LeafsChecked); break;
+                    case SDL_SCANCODE_7: p.setVisMode(VisMode::NodeIndex); break;
                     default:
                         break;
                 }
@@ -114,9 +114,9 @@ GuiAction handleEvents(Scene& s, float frameTime, Params& p)
     if(kbd[SDL_SCANCODE_D])
         s.camera.moveRight(0.2f * scale);
     if(kbd[SDL_SCANCODE_COMMA])
-        p.visScale *= 0.9f;
+        p.decVisScale();
     if(kbd[SDL_SCANCODE_PERIOD])
-        p.visScale *= 1.1f;
+        p.incVisScale();
     
     return GA_NONE;
 }
@@ -162,7 +162,12 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
             std::cout << GetBVHMethodStr(p.bvhMethod) << std::endl;
             delete bvh;
             bvh = buildBVH(s, p.bvhMethod);
-            // clear the frametime average - given we're doing a new type of bvh
+        }
+
+        // if any params have changed, reset the average
+        if(p.dirty) {
+            std::cout << "resetting average frametime" << std::endl;
+            p.clearDirty();
             frameTimer.reset();
         }
 

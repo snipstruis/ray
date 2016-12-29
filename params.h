@@ -40,7 +40,7 @@ const char* GetTraversalModeStr(TraversalMode m) {
 }
 
 enum class BVHMethod {
-//    STUPID,
+    STUPID,
     CENTROID_SAH,
     SBVH,
     _MAX
@@ -48,7 +48,7 @@ enum class BVHMethod {
 
 const char* GetBVHMethodStr(BVHMethod m) {
     switch(m) {
- //       case BVHMethod::STUPID: return "STUPID";
+        case BVHMethod::STUPID: return "STUPID";
         case BVHMethod::CENTROID_SAH: return "SAH";
         case BVHMethod::SBVH: return "SBVH";
         case BVHMethod::_MAX: return "shouldn't happen";
@@ -63,11 +63,13 @@ struct Params {
         visScale(1.0f),
 		traversalMode(TraversalMode::Ordered),
         bvhMethod(BVHMethod::SBVH),
-        smoothing(true)
+        smoothing(true),
+        dirty(true)
     {}
 
     void flipSmoothing() {
         smoothing = !smoothing;
+        dirty = true;
     }
 
     void flipTraversalMode() {
@@ -75,10 +77,31 @@ struct Params {
             traversalMode = TraversalMode::Unordered;
         else
             traversalMode = TraversalMode::Ordered;
+        dirty = true;
     }
 
     void nextBvhMethod() {
         bvhMethod = (BVHMethod)(((int)(bvhMethod) + 1) % (int)BVHMethod::_MAX);
+        dirty = true;
+    }
+
+    void setVisMode(VisMode m) {
+        visMode = m;
+        dirty = true;
+    }
+
+    void incVisScale() {
+        visScale *= 1.1f;
+        dirty = true;
+    }
+
+    void decVisScale() {
+        visScale *= 0.9f;
+        dirty = true;
+    }
+
+    void clearDirty() {
+        dirty = false;
     }
 
     VisMode visMode;
@@ -86,5 +109,6 @@ struct Params {
 	TraversalMode traversalMode;
     BVHMethod bvhMethod;
     bool smoothing;
+    bool dirty; // has something changed recently?
 };
 
