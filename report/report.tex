@@ -50,16 +50,16 @@ Both an ordered and unordered traversal mode is available (ordered is the defaul
     \end{enumerate}
 
 \subsection{Vis Modes}
-            FIXME: describe this ibetter
+    8 visualisation modes are available. Note: use the , and . keys to scale the visualisation level.
     \begin{enumerate}
-    \item Default (0) - recursive Ray Trace
+    \item Recursive Ray Trace  (0) - recursive Ray Trace
     \item Render Time (1)
-    \item Normals (2) - 
-    \item Default (3) - 
-    \item Default (4) - 
-    \item Default (5) -
-    \item Default (6) - 
-    \item Default (7) -
+    \item Surface Normals (2) 
+    \item Leaf node depth (3) - shows the depth of the final leaf chosen
+    \item Triangles traversed (4) - number of individual triangles intersected
+    \item BVH splits traversed (5) - number of BVH nodes walked
+    \item Leaves checked (6) - number of BVH leaves walked
+    \item Node Index (7) - shows the node number of the selected BVH leaf
     \end{enumerate}
 
 \subsection{Other}
@@ -107,6 +107,8 @@ There is a collection of test scenes, objects and materials in the data director
     \item C - print the current camera parameters
     \item B - change BVH construction method
     \item T - change BVH traversal method (ordered/unordered)
+    \item , - decrease visualisation scaling
+    \item . - increase visualisation scaling
     \item ESC - quit
     \item 0 - view ray-traced image (default)
     \item 1 - visualise per-pixel render time (more red = more render time)
