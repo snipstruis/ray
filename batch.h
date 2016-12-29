@@ -16,11 +16,11 @@ int batchRender(Scene& s, std::string const& imgDir, int width, int height) {
 
     s.camera.width = width;
     s.camera.height = height;
-    BVH* bvh = buildBVH(s, BVHMethod_SBVH);
+    BVH* bvh = buildBVH(s, p.bvhMethod);
 
     std::cout << "starting batch render" << std::endl;
 
-    renderFrame(s, *bvh, screenBuffer, VisMode::Default, 1.0f, p);
+    renderFrame(s, *bvh, screenBuffer, p);
 
     delete bvh;
 

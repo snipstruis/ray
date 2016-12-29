@@ -6,6 +6,7 @@
 #include "bvh_build_sbvh.h"
 #include "bvh_diag.h"
 
+#include "params.h"
 #include "timer.h"
 
 #include <iostream>
@@ -20,9 +21,9 @@ inline BVH* buildBVH(Scene& s, BVHMethod method) {
 
     switch(method) {
   //      case BVHMethod_STUPID:       bvh = buildStupidBVH(s);      break;
-        case BVHMethod_CENTROID_SAH: bvh = buildCentroidSAHBVH(s); break;
-        case BVHMethod_SBVH:         bvh = buildSBVH(s);           break;
-        case __BVHMethod_MAX: assert(false); break; // shouldn't happen
+        case BVHMethod::CENTROID_SAH: bvh = buildCentroidSAHBVH(s); break;
+        case BVHMethod::SBVH:         bvh = buildSBVH(s);           break;
+        case BVHMethod::_MAX: assert(false); break; // shouldn't happen
     };
 
     std::cout << "world triangle count " << s.primitives.pos.size() << std::endl;

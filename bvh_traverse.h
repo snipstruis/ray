@@ -87,17 +87,6 @@ enum class IntersectMode{
     ANY
 };
 
-enum class TraversalMode{
-    UNORDERED,
-    CENTROID,
-    MAX
-} traversalMode = TraversalMode::CENTROID;
-
-char const * const traversalstr[] = {
-    "unordered",
-    "ordered",
-    "SHOULD NOT HAPPEN"
-};
 
 // for a given BVH leaf node, traverse the triangles and find a hit per IntersectMode
 template<IntersectMode MODE, class DiagType>
@@ -168,7 +157,7 @@ MiniIntersection traverseBVH(
     diag.incSplitsTraversed();
 
     // ordered / non-ordered traversal?
-    if constexpr(TRAV==TraversalMode::CENTROID){
+    if constexpr(TRAV==TraversalMode::Ordered){
         // ordered traversal
         glm::vec3 leftCentroid  = centroidAABB(bvh.getNode(node.leftIndex()).bounds);
         glm::vec3 rightCentroid = centroidAABB(bvh.getNode(node.rightIndex()).bounds);
@@ -277,20 +266,22 @@ MiniIntersection findClosestIntersectionBVH(
         BVH const& bvh, 
         Primitives const& primitives, 
         Ray const& ray,
-        DiagnosticCollectorType& diag) {
+        DiagnosticCollectorType& diag,
+        TraversalMode traversalMode) {
 
-    return (traversalMode==TraversalMode::UNORDERED) ?
-        traverseBVH<IntersectMode::CLOSEST, TraversalMode::UNORDERED>(bvh, primitives, ray, 0.f, diag) :
-        traverseBVH<IntersectMode::CLOSEST, TraversalMode::CENTROID>(bvh, primitives, ray, 0.f, diag);
+    return (traversalMode==TraversalMode::Unordered) ?
+        traverseBVH<IntersectMode::CLOSEST, TraversalMode::Unordered>(bvh, primitives, ray, 0.f, diag) :
+        traverseBVH<IntersectMode::CLOSEST, TraversalMode::Ordered>(bvh, primitives, ray, 0.f, diag);
 }
 
 MiniIntersection findClosestIntersectionBVH(
         BVH const& bvh, 
         Primitives const& primitives, 
-        Ray const& ray) {
+        Ray const& ray,
+        TraversalMode traversalMode) {
 
     NullCollector diag;
-    return findClosestIntersectionBVH(bvh, primitives, ray, diag); 
+    return findClosestIntersectionBVH(bvh, primitives, ray, diag, traversalMode); 
 }
 
 template<class DiagnosticCollectorType>
@@ -298,12 +289,13 @@ bool findAnyIntersectionBVH(
         BVH const& bvh, 
         Primitives const& primitives, 
         Ray const& ray,
-        float max_length,
-        DiagnosticCollectorType& diag) {
+        float maxLength,
+        DiagnosticCollectorType& diag,
+        TraversalMode traversalMode) {
     
-    MiniIntersection hit = (traversalMode==TraversalMode::UNORDERED) ?
-        traverseBVH<IntersectMode::ANY, TraversalMode::UNORDERED>(bvh, primitives, ray, max_length, diag) :
-        traverseBVH<IntersectMode::ANY, TraversalMode::CENTROID>(bvh, primitives, ray, max_length, diag);
+    MiniIntersection hit = (traversalMode==TraversalMode::Unordered) ?
+        traverseBVH<IntersectMode::ANY, TraversalMode::Unordered>(bvh, primitives, ray, maxLength, diag) :
+        traverseBVH<IntersectMode::ANY, TraversalMode::Ordered>(bvh, primitives, ray, maxLength, diag);
 
     return hit.hit(); 
 }
@@ -312,9 +304,10 @@ bool findAnyIntersectionBVH(
         BVH const& bvh, 
         Primitives const& primitives, 
         Ray const& ray,
-        float max_length) {
+        float maxLength,
+        TraversalMode traversalMode) {
 
     NullCollector diag;
-    return findAnyIntersectionBVH(bvh, primitives, ray, max_length, diag); 
+    return findAnyIntersectionBVH(bvh, primitives, ray, maxLength, diag, traversalMode); 
 }
 

@@ -17,7 +17,7 @@ Color value_to_color(float x){
 
 // Do a recursive ray trace (ie the default output)
 struct StandardRenderer {
-    static Color renderPixel(Ray const& r, Scene& s, BVH& bvh, float vis_scale, VisMode mode, Params const& p) {
+    static Color renderPixel(Ray const& r, Scene& s, BVH& bvh, Params const& p) {
         Color col = trace(r, bvh, s.primitives, s.lights, BLACK, p);
         return ColorClamp(col, 0.0f, 1.0f);
     }
@@ -25,8 +25,8 @@ struct StandardRenderer {
 
 // render surface normals
 struct NormalRenderer {
-    static Color renderPixel(Ray const& r, Scene& s, BVH& bvh, float vis_scale, VisMode mode, Params const& p) {
-        auto hit = findClosestIntersectionBVH(bvh, s.primitives, r);
+    static Color renderPixel(Ray const& r, Scene& s, BVH& bvh, Params const& p) {
+        auto hit = findClosestIntersectionBVH(bvh, s.primitives, r, p.traversalMode);
 
         if(hit.distance < INFINITY) {
             // we intersected. calc normal and convert to a col
@@ -43,7 +43,7 @@ struct NormalRenderer {
 
 // do a recursive ray trace (ala StandardRenderer), but render the time taken as a color
 struct PerformanceRenderer {
-    static Color renderPixel(Ray const& r, Scene& s, BVH& bvh, float visScale, VisMode mode, Params const& p) {
+    static Color renderPixel(Ray const& r, Scene& s, BVH& bvh, Params const& p) {
         auto start = std::chrono::high_resolution_clock::now();
         // do the ray trace. we don't care about the result - just how long it took.
         trace(r, bvh, s.primitives, s.lights, BLACK, p);
@@ -51,18 +51,18 @@ struct PerformanceRenderer {
         auto end = std::chrono::high_resolution_clock::now();
         auto frametime = std::chrono::duration_cast<std::chrono::duration<float,std::micro>>(end-start).count();
 
-        return value_to_color(0.01 * visScale * frametime);
+        return value_to_color(0.01 * p.visScale * frametime);
     }
 };
 
 struct BVHDiagRenderer {
-    static Color renderPixel(Ray const& r, Scene& s, BVH& bvh, float visScale, VisMode mode, Params const& p) {
+    static Color renderPixel(Ray const& r, Scene& s, BVH& bvh, Params const& p) {
         DiagnosticCollector diag;
 
-        auto hit = findClosestIntersectionBVH(bvh, s.primitives, r, diag);
+        auto hit = findClosestIntersectionBVH(bvh, s.primitives, r, diag, p.traversalMode);
 
         float intensity = 0.0f; 
-        switch(mode) {
+        switch(p.visMode) {
             case VisMode::TrianglesChecked: intensity = diag.trianglesChecked; break;
             case VisMode::SplitsTraversed:  intensity = diag.splitsTraversed; break;
             case VisMode::LeafsChecked:     intensity = diag.leafsChecked; break;
@@ -79,14 +79,14 @@ struct BVHDiagRenderer {
                 assert(false); // we shouldn't be called for other cases
         };
         
-        return value_to_color(visScale * 0.001f * intensity);
+        return value_to_color(p.visScale * 0.001f * intensity);
     }
 };
 
 // main render loop
 // assumes screenbuffer is big enough to handle the width*height pixels (per the camera)
 template<class PixelRenderer>
-inline void renderLoop(Scene& s, BVH& bvh, ScreenBuffer& screenBuffer, float visScale, VisMode mode, Params const& p) {
+inline void renderLoop(Scene& s, BVH& bvh, ScreenBuffer& screenBuffer, Params const& p) {
     unsigned int const width  = s.camera.width;
     unsigned int const height = s.camera.height;
 
@@ -97,7 +97,7 @@ inline void renderLoop(Scene& s, BVH& bvh, ScreenBuffer& screenBuffer, float vis
         for (unsigned int x = 0; x < width; x++) {
             Ray r = s.camera.makeRay(x, y);
             unsigned int idx = (height-y-1) * width+ x;
-            Color pixel = PixelRenderer::renderPixel(r, s, bvh, visScale, mode, p);
+            Color pixel = PixelRenderer::renderPixel(r, s, bvh, p);
 
             // it's the render's responsibility to check the pixel is in the legal range [0-1]
             assert(pixel.isLegal());
@@ -108,19 +108,19 @@ inline void renderLoop(Scene& s, BVH& bvh, ScreenBuffer& screenBuffer, float vis
 }
 
 // select the appropriate pixel renderer and launch the main loop
-inline void renderFrame(Scene& s, BVH& bvh, ScreenBuffer& screenBuffer, VisMode mode, float vis_scale, Params const& p){
-    switch(mode) {
+inline void renderFrame(Scene& s, BVH& bvh, ScreenBuffer& screenBuffer, Params const& p){
+    switch(p.visMode) {
     case VisMode::Default:
-        renderLoop<StandardRenderer>(s, bvh, screenBuffer, vis_scale, mode, p);
+        renderLoop<StandardRenderer>(s, bvh, screenBuffer, p);
         break;
     case VisMode::Normal:
-        renderLoop<NormalRenderer>(s, bvh, screenBuffer, vis_scale, mode, p);
+        renderLoop<NormalRenderer>(s, bvh, screenBuffer, p);
         break;
     case VisMode::Microseconds:
-        renderLoop<PerformanceRenderer>(s, bvh, screenBuffer, vis_scale, mode, p);
+        renderLoop<PerformanceRenderer>(s, bvh, screenBuffer, p);
         break;
     default:
-        renderLoop<BVHDiagRenderer>(s, bvh, screenBuffer, vis_scale, mode, p);
+        renderLoop<BVHDiagRenderer>(s, bvh, screenBuffer, p);
         break;
     }
 }

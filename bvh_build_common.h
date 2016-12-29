@@ -10,23 +10,6 @@
 
 // this is the common library for building BVHes - the specific builders are now in their own file
 
-
-enum BVHMethod {
-//    BVHMethod_STUPID,
-    BVHMethod_CENTROID_SAH,
-    BVHMethod_SBVH,
-    __BVHMethod_MAX
-};
-
-const char* BVHMethodStr(BVHMethod m) {
-    switch(m) {
- //       case BVHMethod_STUPID: return "STUPID";
-        case BVHMethod_CENTROID_SAH: return "SAH";
-        case BVHMethod_SBVH: return "SBVH";
-        case __BVHMethod_MAX: return "shouldnt happen";
-    };
-}
-
 // general purpose recursive BVH subdivider function
 // @Splitter defines the particular constuction algorithm
 template <class Splitter>

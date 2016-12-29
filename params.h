@@ -26,10 +26,41 @@ const char* GetVisModeStr(VisMode m) {
     }
 };
 
+enum class TraversalMode{
+    Unordered,
+    Ordered
+};
+
+const char* GetTraversalModeStr(TraversalMode m) {
+    switch (m) {
+        case TraversalMode::Unordered: return "unordered";
+        case TraversalMode::Ordered: return "ordered";
+    }
+}
+
+enum class BVHMethod {
+//    STUPID,
+    CENTROID_SAH,
+    SBVH,
+    _MAX
+};
+
+const char* GetBVHMethodStr(BVHMethod m) {
+    switch(m) {
+ //       case BVHMethod::STUPID: return "STUPID";
+        case BVHMethod::CENTROID_SAH: return "SAH";
+        case BVHMethod::SBVH: return "SBVH";
+        case BVHMethod::_MAX: return "shouldn't happen";
+    };
+}
+
 // parameters to current render.
 struct Params {
     Params() : 
         visMode(VisMode::Default),
+        visScale(1.0f),
+		traversalMode(TraversalMode::Ordered),
+        bvhMethod(BVHMethod::SBVH),
         smoothing(true)
     {}
 
@@ -37,7 +68,21 @@ struct Params {
         smoothing = !smoothing;
     }
 
+    void flipTraversalMode() {
+        if(traversalMode == TraversalMode::Ordered)
+            traversalMode = TraversalMode::Unordered;
+        else
+            traversalMode = TraversalMode::Ordered;
+    }
+
+    void nextBvhMethod() {
+        bvhMethod = (BVHMethod)(((int)(bvhMethod) + 1) % (int)BVHMethod::_MAX);
+    }
+
     VisMode visMode;
+    float visScale;
+	TraversalMode traversalMode;
+    BVHMethod bvhMethod;
     bool smoothing;
 };
 

@@ -22,7 +22,7 @@
 // this file contains all machinery to operate interactive mode - ie whenever there is a visible window 
 // note frametime is in seconds
 
-void setWindowTitle(Scene const& s, SDL_Window *win, float frametime, BVHMethod bvh, Params const& p)
+void setWindowTitle(Scene const& s, SDL_Window *win, float frametime, Params const& p)
 {
     char title[1024];
 
@@ -38,8 +38,8 @@ void setWindowTitle(Scene const& s, SDL_Window *win, float frametime, BVHMethod 
             "res %dx%d ",
             GetVisModeStr(p.visMode), 
             frametime*1000.0f, 1.0f/frametime,
-            traversalstr[(int)traversalMode],
-            BVHMethodStr(bvh),
+            GetTraversalModeStr(p.traversalMode),
+            GetBVHMethodStr(p.bvhMethod),
             s.camera.origin[0], s.camera.origin[1], s.camera.origin[2],
             glm::degrees(s.camera.yaw), glm::degrees(s.camera.pitch), 
             glm::degrees(s.camera.fov),
@@ -57,7 +57,7 @@ enum GuiAction {
 
 // process input
 // returns action to be performed
-GuiAction handleEvents(Scene& s, float frameTime, VisMode& vis, float& vis_scale, BVHMethod& bvh, Params& p)
+GuiAction handleEvents(Scene& s, float frameTime, Params& p)
 {
     SDL_Event e;
     float scale = frameTime;
@@ -82,22 +82,21 @@ GuiAction handleEvents(Scene& s, float frameTime, VisMode& vis, float& vis_scale
             case SDL_KEYDOWN:
                 switch(e.key.keysym.scancode){
                     case SDL_SCANCODE_ESCAPE:  return GA_QUIT;
-                    case SDL_SCANCODE_P:  return GA_SCREENSHOT;
-                    case SDL_SCANCODE_R:  s.camera.resetView(); break;
-                    case SDL_SCANCODE_C:  printCamera(s.camera); break;
+                    case SDL_SCANCODE_P: return GA_SCREENSHOT;
+                    case SDL_SCANCODE_R: s.camera.resetView(); break;
+                    case SDL_SCANCODE_C: printCamera(s.camera); break;
                     case SDL_SCANCODE_M: p.flipSmoothing(); break;
-                    case SDL_SCANCODE_0: vis = VisMode::Default; break;
-                    case SDL_SCANCODE_1: vis = VisMode::Microseconds; break;
-                    case SDL_SCANCODE_2: vis = VisMode::Normal; break;
-                    case SDL_SCANCODE_3: vis = VisMode::LeafNode; break;
-                    case SDL_SCANCODE_4: vis = VisMode::TrianglesChecked; break;
-                    case SDL_SCANCODE_5: vis = VisMode::SplitsTraversed; break;
-                    case SDL_SCANCODE_6: vis = VisMode::LeafsChecked; break;
-                    case SDL_SCANCODE_7: vis = VisMode::LeafBoxes; break;
-                    case SDL_SCANCODE_8: vis = VisMode::NodeIndex; break;
-                    case SDL_SCANCODE_B: bvh = (BVHMethod)((bvh + 1) % __BVHMethod_MAX); break;
-                    case SDL_SCANCODE_T: traversalMode = 
-                        (TraversalMode)(((int)traversalMode + 1) % (int)TraversalMode::MAX); break;
+                    case SDL_SCANCODE_B: p.nextBvhMethod(); break;
+                    case SDL_SCANCODE_T: p.flipTraversalMode(); break;
+                    case SDL_SCANCODE_0: p.visMode = VisMode::Default; break;
+                    case SDL_SCANCODE_1: p.visMode = VisMode::Microseconds; break;
+                    case SDL_SCANCODE_2: p.visMode = VisMode::Normal; break;
+                    case SDL_SCANCODE_3: p.visMode = VisMode::LeafNode; break;
+                    case SDL_SCANCODE_4: p.visMode = VisMode::TrianglesChecked; break;
+                    case SDL_SCANCODE_5: p.visMode = VisMode::SplitsTraversed; break;
+                    case SDL_SCANCODE_6: p.visMode = VisMode::LeafsChecked; break;
+                    case SDL_SCANCODE_7: p.visMode = VisMode::LeafBoxes; break;
+                    case SDL_SCANCODE_8: p.visMode = VisMode::NodeIndex; break;
                     default:
                         break;
                 }
@@ -116,9 +115,9 @@ GuiAction handleEvents(Scene& s, float frameTime, VisMode& vis, float& vis_scale
     if(kbd[SDL_SCANCODE_D])
         s.camera.moveRight(0.2f * scale);
     if(kbd[SDL_SCANCODE_COMMA])
-        vis_scale *= 0.9;
+        p.visScale *= 0.9;
     if(kbd[SDL_SCANCODE_PERIOD])
-        vis_scale *= 1.1;
+        p.visScale *= 1.1;
     
     return GA_NONE;
 }
@@ -130,12 +129,9 @@ GuiAction handleEvents(Scene& s, float frameTime, VisMode& vis, float& vis_scale
 int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) {
     // first thing's first, create the BVH
     // do this before opening the window to ease debugging
-//    BVHMethod bvhMethod = BVHMethod_CENTROID_SAH;
 
     Params p;
-
-    BVHMethod bvhMethod = BVHMethod_SBVH;
-    BVH* bvh = buildBVH(s, bvhMethod);
+    BVH* bvh = buildBVH(s, p.bvhMethod);
 
     SDL_Window *win = SDL_CreateWindow("Roaytroayzah (initialising)", 10, 10, width, height, 
                                        SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
@@ -150,26 +146,23 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
 
     ScreenBuffer screenBuffer; // will be sized on first loop
 
-    VisMode mode = VisMode::Default;
-    float vis_scale = 1.0f;
-
     AvgTimer frameTimer;
     while(true){
         SDL_GL_GetDrawableSize(win, &s.camera.width, &s.camera.height);
 
-        BVHMethod oldMethod = bvhMethod;
-        GuiAction a = handleEvents(s, frameTimer.timer.lastDiff, mode, vis_scale, bvhMethod, p);
+        BVHMethod oldMethod = p.bvhMethod;
+        GuiAction a = handleEvents(s, frameTimer.timer.lastDiff, p);
 
         if (a==GA_QUIT)
             break;
         else if (a==GA_SCREENSHOT)
             WriteTgaImage(imgDir, s.camera.width, s.camera.height, screenBuffer);
 
-        if(oldMethod != bvhMethod) {
-            std::cout << "BVH method " << BVHMethodStr(oldMethod) << "->";
-            std::cout << BVHMethodStr(bvhMethod) << std::endl;
+        if(oldMethod != p.bvhMethod) {
+            std::cout << "BVH method " << GetBVHMethodStr(oldMethod) << "->";
+            std::cout << GetBVHMethodStr(p.bvhMethod) << std::endl;
             delete bvh;
-            bvh = buildBVH(s, bvhMethod);
+            bvh = buildBVH(s, p.bvhMethod);
             // clear the frametime average - given we're doing a new type of bvh
             frameTimer.reset();
         }
@@ -180,7 +173,7 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
 
         glViewport(0, 0, s.camera.width, s.camera.height);
 
-        renderFrame(s, *bvh, screenBuffer, mode, vis_scale, p);
+        renderFrame(s, *bvh, screenBuffer, p);
        
         // blit to screen
         glDrawPixels(s.camera.width, s.camera.height, GL_RGB, GL_FLOAT, screenBuffer.data());
@@ -189,7 +182,7 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
         if(frameTimer.timer.lastDiff > 1.0f)
             std::cout << "long render - frametime=" << frameTimer.timer.lastDiff << "s" << std::endl;
 
-        setWindowTitle(s, win, frametimeAv, bvhMethod, p);
+        setWindowTitle(s, win, frametimeAv, p);
         SDL_GL_SwapWindow(win);
     }
 

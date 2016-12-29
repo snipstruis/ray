@@ -18,15 +18,15 @@ inline Color calcLightOutput(PointLight const& light,
                      Ray const& ray, 
                      FancyIntersection const& hit, 
                      Material const& mat,
-                     glm::vec3 light_dir) {
+                     glm::vec3 const& lightDir) {
 
     assert(mat.diffuseColor.isFinite());
     assert(mat.specular_highlight.isFinite());
     assert(light.color.isFinite());
     assert(glm::isNormalized(hit.normal, EPSILON));
-    assert(glm::isNormalized(light_dir, EPSILON));
+    assert(glm::isNormalized(lightDir, EPSILON));
 
-    float diff = glm::dot(hit.normal, light_dir);
+    float diff = glm::dot(hit.normal, lightDir);
     float falloff = 1.0f/distance;
     assert(std::isfinite(diff));
     assert(std::isfinite(falloff));
@@ -35,7 +35,7 @@ inline Color calcLightOutput(PointLight const& light,
     assert(ret.isFinite());
 
     if(!mat.specular_highlight.isBlack()){
-        glm::vec3 refl = glm::reflect(light_dir,hit.normal);
+        glm::vec3 refl = glm::reflect(lightDir,hit.normal);
         float dot = glm::dot(ray.direction,refl);
         if(dot>0.f){
             ret += powf(dot, mat.shininess) * mat.specular_highlight * light.color * falloff;
@@ -52,15 +52,17 @@ inline Color calcLightOutput(SpotLight const& light,
                      Ray const& ray, 
                      FancyIntersection const& hit, 
                      Material const& mat,
-                     glm::vec3 light_dir) {
-    float dot = fabs(glm::dot(-light_dir, light.pointDir));
+                     glm::vec3 const& lightDir) {
+
+    float dot = fabs(glm::dot(-lightDir, light.pointDir));
     float outer = light.cosOuterAngle;
     if(dot < outer){ // outside outer cone
-        return Color(0,0,0);
+        return BLACK;
     }
+
     float inner = light.cosInnerAngle;
-    Color lout = calcLightOutput( PointLight(light.pos,light.color),
-                                  distance,ray,hit,mat,light_dir);
+    Color lout = calcLightOutput(PointLight(light.pos,light.color), distance, ray, hit, mat, lightDir);
+
     if(dot > inner){ // inside inner cone
         return lout;
     }else{ // between inner and outer cones
@@ -75,8 +77,9 @@ inline Color diffuse(Ray const& ray,
               Primitives const& primitives,
               LightsType const& lights,
               FancyIntersection const& hit,
-              Material const& mat){
-    Color color = Color(0,0,0);
+              Material const& mat,
+              Params const& p){
+    Color color = BLACK;
 
     for(auto const& light : lights){
         glm::vec3 impact_to_light = light.pos - hit.impact;
@@ -86,7 +89,7 @@ inline Color diffuse(Ray const& ray,
         Ray shadow_ray = Ray(hit.impact + (hit.normal*1e-4f), light_direction, ray.mat, ray.ttl-1);
 
         // does this shadow ray hit any geometry?
-        bool shadow_hit = findAnyIntersectionBVH(bvh, primitives, shadow_ray, light_distance);
+        bool shadow_hit = findAnyIntersectionBVH(bvh, primitives, shadow_ray, light_distance, p.traversalMode);
 
         if(!shadow_hit){
             color += calcLightOutput(light, light_distance, ray, hit, mat, light_direction);
@@ -101,11 +104,13 @@ inline Color calcTotalDiffuse(Ray const& ray,
               Primitives const& primitives,
               Lights const& lights,
               FancyIntersection const& hit,
-              Material const& mat){
+              Material const& mat,
+              Params const& p){
+
     Color color = Color(0,0,0);
 
-    color += diffuse(ray, bvh, primitives, lights.pointLights, hit, mat);
-    color += diffuse(ray, bvh, primitives, lights.spotLights, hit, mat);
+    color += diffuse(ray, bvh, primitives, lights.pointLights, hit, mat, p);
+    color += diffuse(ray, bvh, primitives, lights.spotLights, hit, mat, p);
 
     assert(color.isFinite());
     return color;
@@ -116,19 +121,19 @@ Color trace(Ray const& ray,
             Primitives const& primitives,
             Lights const& lights,
             Color const& alpha,
-            Params const& params){
+            Params const& p){
     assert(alpha.isFinite());
 
     if(ray.ttl<=0) 
         return alpha;
     
-    MiniIntersection hit = findClosestIntersectionBVH(bvh, primitives, ray);
+    MiniIntersection hit = findClosestIntersectionBVH(bvh, primitives, ray, p.traversalMode);
     if(!hit.hit()) 
         return alpha;
 
     TrianglePos const& pos = primitives.pos[hit.triangle];
     TriangleExtra const& tri = primitives.extra[hit.triangle];
-    FancyIntersection fancy = FancyIntersect(hit.distance, pos, tri, ray, params.smoothing);
+    FancyIntersection fancy = FancyIntersect(hit.distance, pos, tri, ray, p.smoothing);
 
     assert(glm::isNormalized(fancy.normal, EPSILON));
 
@@ -147,7 +152,7 @@ Color trace(Ray const& ray,
 
     // shadows and lighting
     if(!mat.diffuseColor.isBlack()){
-        color += calcTotalDiffuse(ray, bvh, primitives, lights, fancy, mat);
+        color += calcTotalDiffuse(ray, bvh, primitives, lights, fancy, mat, p);
     }
 
     assert(color.isFinite());
@@ -176,7 +181,7 @@ Color trace(Ray const& ray,
                 //FIXME: exiting a primitive will set the material to air
                 fancy.internal ? MATERIAL_AIR : fancy.mat, 
                 ray.ttl-1);
-        color += transparency * trace(refract_ray, bvh, primitives, lights, alpha, params);
+        color += transparency * trace(refract_ray, bvh, primitives, lights, alpha, p);
     }
     
     // reflection (mirror)
@@ -185,7 +190,7 @@ Color trace(Ray const& ray,
                     glm::reflect(ray.direction, fancy.normal),
                     ray.mat,
                     ray.ttl-1);
-        color += reflectiveness * trace(r, bvh, primitives, lights, alpha, params);
+        color += reflectiveness * trace(r, bvh, primitives, lights, alpha, p);
     }
 
     // absorption (Beer's law)
