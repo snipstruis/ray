@@ -40,9 +40,9 @@ const char* GetTraversalModeStr(TraversalMode m) {
 }
 
 enum class BVHMethod {
-    STUPID,
-    CENTROID_SAH,
     SBVH,
+    CENTROID_SAH,
+    STUPID,
     _MAX
 };
 
