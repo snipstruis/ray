@@ -162,7 +162,12 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
             std::cout << GetBVHMethodStr(p.bvhMethod) << std::endl;
             delete bvh;
             bvh = buildBVH(s, p.bvhMethod);
-            // clear the frametime average - given we're doing a new type of bvh
+        }
+
+        // if any params have changed, reset the average
+        if(p.dirty) {
+            std::cout << "resetting average frametime" << std::endl;
+            p.clearDirty();
             frameTimer.reset();
         }
 
