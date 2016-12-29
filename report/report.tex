@@ -1,6 +1,6 @@
 \section{features}
 A fully interactive whitted-style raytracer with run time scene loading. 
-For Assignment 2, we added accelerated rendering using BVH traversal.
+For Assignment 2, we added accelerated rendering using BVH traversal. As well as the base requirement for a BVH, we implemented option 1 of the additional options; That is, to implement an SBVH.
 
 \subsection{BVH building}
 3 BVH construction methods are available in the project -
@@ -21,6 +21,8 @@ For Assignment 2, we added accelerated rendering using BVH traversal.
     \item \verb|.mtl| material file loader (using tinyobj)
     \end{enumerate}
 
+\subsection{BVH traversal}
+Both an ordered and unordered traversal mode is available (ordered is the default).
 \subsection{Materials}
     \begin{enumerate}
     \item diffuse lighting with hard shadows
@@ -92,6 +94,7 @@ There is a collection of test scenes, objects and materials in the data director
     \item P - write screenshot image
     \item C - print the current camera parameters
     \item B - change BVH construction method
+    \item T - change BVH traversal method (ordered/unordered)
     \item ESC - quit
     \item 0 - view ray-traced image (default)
     \item 1 - visualise per-pixel render time (more red = more render time)
