@@ -52,7 +52,7 @@ struct PerformanceRenderer {
         auto end = std::chrono::high_resolution_clock::now();
         auto frametime = std::chrono::duration_cast<std::chrono::duration<float,std::micro>>(end-start).count();
 
-        return value_to_color(0.01 * p.visScale * frametime);
+        return value_to_color(0.01f * p.visScale * frametime);
     }
 };
 
@@ -62,16 +62,12 @@ struct BVHDiagRenderer {
 
         auto hit = findClosestIntersectionBVH(bvh, s.primitives, r, diag, p.traversalMode);
 
-        float intensity = 0.0f; 
+        unsigned int intensity = 0; 
         switch(p.visMode) {
             case VisMode::TrianglesChecked: intensity = diag.trianglesChecked; break;
             case VisMode::SplitsTraversed:  intensity = diag.splitsTraversed; break;
             case VisMode::LeafsChecked:     intensity = diag.leafsChecked; break;
             case VisMode::LeafNode:         intensity = diag.leafDepth; break;
-            case VisMode::LeafBoxes:        
-                if(diag.leafDepth > 0)                                
-                    intensity = 1;; 
-                break;
             case VisMode::NodeIndex:
                 if(hit.distance < INFINITY)
                     intensity = diag.nodeIndex; 

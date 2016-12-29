@@ -31,9 +31,9 @@ bool WriteNamedTgaImage(std::string const& fname, unsigned int w, unsigned int h
    	o.put(0);
 
 	for (unsigned int i = 0; i < (h * w); i++) {
-		o.put(buf[i].b * 255);
-		o.put(buf[i].g * 255);
-		o.put(buf[i].r * 255);
+		o.put((char)(buf[i].b * 255));
+		o.put((char)(buf[i].g * 255));
+		o.put((char)(buf[i].r * 255));
 	}   
 
     if(!o.good()) {

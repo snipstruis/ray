@@ -59,7 +59,7 @@ struct CentroidSAHSplitter {
             // drop this centroid into a slice
             const float pos = tri.getAverageCoord(axis);
             const float ratio = ((pos - low) / sliceWidth);
-            unsigned int sliceNo = ratio * SAH_MAX_SLICES;
+            unsigned int sliceNo = (unsigned int)(ratio * SAH_MAX_SLICES);
 
             if(sliceNo == SAH_MAX_SLICES)
                 sliceNo--;
@@ -114,7 +114,7 @@ struct CentroidSAHSplitter {
             // determine slice in which this one belongs
             float val = triangles[idx].getAverageCoord(axis);
             const float ratio = ((val - low) / sliceWidth);
-            unsigned int sliceNo = ratio * SAH_MAX_SLICES;
+            unsigned int sliceNo = (unsigned int)(ratio * SAH_MAX_SLICES);
             if(sliceNo == SAH_MAX_SLICES)
                 sliceNo--;
 

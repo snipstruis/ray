@@ -66,7 +66,7 @@ struct Camera{
 
     // takes a screen co-ord, and returns a ray from the camera through that pixel
     // note that this is in screen space and not world space, the conversion is handled internally
-    Ray makeRay(int x, int y)
+    Ray makeRay(int x, int y) const
     {
         assert(x >= 0);
         assert(y >= 0);
@@ -84,14 +84,14 @@ struct Camera{
         float py = ((float)y)/width;
 
         // using pre-existing u & v vectors, get a point on the screen in world space
-        glm::vec3 screen_point = top_left + (px * u) + (py * v);
+        glm::vec3 screenPoint = top_left + (px * u) + (py * v);
 
         // and a vector from the eye to the screen point
-        glm::vec3 look_vec = screen_point - origin;
+        glm::vec3 lookVec = screenPoint - origin;
         
         // build result - note direction is normalised
         // FIXME: assumes origin point is in the material 'air'
-        return Ray(origin, glm::normalize(look_vec), 0, STARTING_TTL);
+        return Ray(origin, glm::normalize(lookVec), 0, STARTING_TTL);
     };
 
     void sanityCheck() const

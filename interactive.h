@@ -115,9 +115,9 @@ GuiAction handleEvents(Scene& s, float frameTime, Params& p)
     if(kbd[SDL_SCANCODE_D])
         s.camera.moveRight(0.2f * scale);
     if(kbd[SDL_SCANCODE_COMMA])
-        p.visScale *= 0.9;
+        p.visScale *= 0.9f;
     if(kbd[SDL_SCANCODE_PERIOD])
-        p.visScale *= 1.1;
+        p.visScale *= 1.1f;
     
     return GA_NONE;
 }

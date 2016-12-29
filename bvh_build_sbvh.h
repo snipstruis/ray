@@ -3,7 +3,7 @@
 // max number of slices (buckets) to test when splitting
 constexpr int SLICES_PER_AXIS = 8;
 // alpha value used with excluding spatial splits per section 4.5 of the paper
-constexpr float SBVH_ALPHA = 10e-8;
+constexpr float SBVH_ALPHA = 10e-8f;
 
 enum SplitKind {
     OBJECT,
@@ -304,8 +304,8 @@ struct SBVHSplitter {
 
         float cSplit = (areaLeft * decision.leftCount) + (areaRight * decision.rightCount);
 
-        assert(areaLeft <= areaTotal);
-        assert(areaRight <= areaTotal);
+        assert(areaLeft <= surfaceAreaAABB(extremaBounds));
+        assert(areaRight <= surfaceAreaAABB(extremaBounds));
 
         // ok, we're going to split. parition the indicies based on bucket
         for(unsigned int idx : indicies) {
@@ -393,7 +393,7 @@ struct SBVHSplitter {
             // drop this centroid into a slice
             const float pos = tri.getAverageCoord(axis);
             const float ratio = ((pos - low) / range);
-            unsigned int sliceNo = ratio * SLICES_PER_AXIS;
+            unsigned int sliceNo = (unsigned int)(ratio * SLICES_PER_AXIS);
 
             if(sliceNo == SLICES_PER_AXIS)
                 sliceNo--;
@@ -492,7 +492,7 @@ struct SBVHSplitter {
             // determine slice in which this one belongs
             const float val = triangles[idx].getAverageCoord(decision.chosenAxis);
             const float ratio = ((val - low) / sliceWidth);
-            int sliceNo = ratio * SLICES_PER_AXIS;
+            int sliceNo = (unsigned int)(ratio * SLICES_PER_AXIS);
             if(sliceNo == SLICES_PER_AXIS)
                 sliceNo--;
             
