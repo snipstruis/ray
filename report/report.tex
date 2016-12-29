@@ -1,6 +1,14 @@
 \section{features}
-A fully interactive whitted-style raytracer with run time scene loading. Accelerated rendering using BVH traversal.
+A fully interactive whitted-style raytracer with run time scene loading. 
+For Assignment 2, we added accelerated rendering using BVH traversal.
 
+\subsection{BVH building}
+3 BVH construction methods are available in the project -
+    \begin{enumerate}
+        \item Stupid: Builds a 'no-op' BVH; It will have a single root node containing all primitives. This will thus force a linear traversal of all triangles, giving almost the performance of the original assignment 1 ray tracer (although as it contains a bounding box, rays that miss the geometry entirely will be accelerated).
+        \item Standard BVH: A standard BVH, constructed using the surface-area heuristic (SAH) against the longest axis of the set of primitives.
+        \item SBVH: A split BVH which implements both OBJECT and SPATIAL splits against all 3 axis, "reference unsplitting" and spatial split attempt reduction.
+    \end{enumerate}
 \subsection{Run time scene loader}
     \begin{enumerate}
     \item Json scene loader
@@ -46,7 +54,13 @@ A fully interactive whitted-style raytracer with run time scene loading. Acceler
 
 \section{Building}
 
-The source is built using the standard CMake envirnonment.
+\subsection{Building on Windows}
+A visual studio solution is provided (ray.sln). This project was tested and built under Visual Studio 2015 Community. 
+
+It should be a matter of simply loading the solution file into Visual Studio, and building. A release build is recommended as it is significantly faster.
+
+\subsection{Building with Cmake}
+The source can be built using the standard CMake envirnonment. This will work on Windows, macOS and Linux. 
 
 For example, on unix systems this command will do a release build -
 
@@ -61,10 +75,12 @@ Boost is required for the test tree, but not the main system.
 
 \section{Running}
 
+On Windows, SDL2.dll must be available somewhere on the path or in the same dir as the binary. 
+
 There is a collection of test scenes, objects and materials in the data directory. To avoid fighting with relative paths, it works best to cd to this directory before running the system. For example, on windows, assuming the binary is in the Release directory under the root source tree - 
 
 \verb|cd <source_root>\data| \\
-\verb|..\Release\ray.exe col-lights.scene|
+\verb|..\Release\ray.exe teapot-plane.scene|
 
 \section{Input Commands}
     \begin{enumerate}
