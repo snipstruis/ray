@@ -64,7 +64,8 @@ struct Params {
 		traversalMode(TraversalMode::Ordered),
         bvhMethod(BVHMethod::SBVH),
         smoothing(true),
-        dirty(true)
+        dirty(true),
+        visScaleSetManually(false)
     {}
 
     void flipSmoothing() {
@@ -90,14 +91,21 @@ struct Params {
         dirty = true;
     }
 
+    // if the user's not automatically overridden it, auto set the scale
+    void autoSetVisScale(float val) {
+        if(!visScaleSetManually) {
+            visScale = val;
+            std::cout << "auto set vis scale to " << val << std::endl;
+        }
+    }
     void incVisScale() {
         visScale *= 1.1f;
-        dirty = true;
+        visScaleSetManually = true;
     }
 
     void decVisScale() {
         visScale *= 0.9f;
-        dirty = true;
+        visScaleSetManually = true;
     }
 
     void clearDirty() {
@@ -110,5 +118,6 @@ struct Params {
     BVHMethod bvhMethod;
     bool smoothing;
     bool dirty; // has something changed recently?
+    bool visScaleSetManually; // has the user explicitly adjusted vis scale? (ie pressed . or ,) ? 
 };
 

@@ -132,6 +132,10 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
     Params p;
     BVH* bvh = buildBVH(s, p.bvhMethod);
 
+    // max depth is a good starting value for vis scale - at least for bvh stats.. 
+    // maybe consider a different scale value for other outputs like microseconds
+    p.autoSetVisScale(bvh->maxDepth);
+
     SDL_Window *win = SDL_CreateWindow("Roaytroayzah (initialising)", 50, 50, width, height, 
                                        SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
     SDL_GL_CreateContext(win);

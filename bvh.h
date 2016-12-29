@@ -44,11 +44,11 @@ struct BVHNode {
 static_assert(sizeof(BVHNode) == 32, "BVHNode size");
 
 struct BVH {
-    BVH() : nextFree(2), objectSplits(0), spatialSplits(0) {
+    BVH() : nextFree(2), objectSplits(0), spatialSplits(0), maxDepth(0) {
         nodes.resize(1); // ensure at least root exists
     } 
 
-    BVH(unsigned int triangleCount) : nextFree(2), objectSplits(0), spatialSplits(0) {
+    BVH(unsigned int triangleCount) : nextFree(2), objectSplits(0), spatialSplits(0), maxDepth(0) {
         // FIXME:should we be smarter here?
         nodes.resize(triangleCount* 3); 
         //indicies.resize(triangleCount);
@@ -88,5 +88,6 @@ struct BVH {
     // a few stats
     unsigned int objectSplits;
     unsigned int spatialSplits;
+    unsigned int maxDepth;
 };
 

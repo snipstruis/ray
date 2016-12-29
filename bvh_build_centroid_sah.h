@@ -109,6 +109,8 @@ struct CentroidSAHSplitter {
             return false; // no splitting here, chopper
         }
 
+        bvh.objectSplits++;
+
         // ok, we're going to split. parition the indicies based on bucket
         for(unsigned int idx : indicies) {
             // determine slice in which this one belongs

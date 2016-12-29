@@ -33,7 +33,7 @@ void dumpBVHStatsRecurse(BVH const& bvh, BVHNode const& node, int depth, BVHStat
     }
 }
 
-void dumpBVHStats(BVH const& bvh, TrianglePosSet const& triangles){
+void dumpBVHStats(BVH& bvh, TrianglePosSet const& triangles){
     BVHStatsTotal stats;
     dumpBVHStatsRecurse(bvh, bvh.root(), 0, stats);
 
@@ -54,6 +54,9 @@ void dumpBVHStats(BVH const& bvh, TrianglePosSet const& triangles){
         maxDepth = std::max(maxDepth, p.depth);
         sumDepth += p.depth;
     }
+
+    // hang onto the max depth value for later
+    bvh.maxDepth = maxDepth;
 
     float avgDepth = sumDepth / ((float)stats.perLeaf.size());
     float avgTri = sumTri / ((float)stats.perLeaf.size());
