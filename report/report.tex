@@ -9,17 +9,6 @@ For Assignment 2, we added accelerated rendering using BVH traversal. As well as
         \item Standard BVH: A standard BVH, constructed using the surface-area heuristic (SAH) against the longest axis of the set of primitives.
         \item SBVH: A split BVH which implements both OBJECT and SPATIAL splits against all 3 axis, "reference unsplitting" and spatial split attempt reduction.
     \end{enumerate}
-\subsection{Run time scene loader}
-    \begin{enumerate}
-    \item Json scene loader
-        \begin{enumerate}
-        \item Triangle meshes --- loaded from file, and transformed into the world (translate, rotate, scale)
-        \item Point and Spot lights
-        \item camera
-        \end{enumerate}
-    \item \verb|.obj| file loader (using tinyojb)
-    \item \verb|.mtl| material file loader (using tinyobj)
-    \end{enumerate}
 
 \subsection{BVH traversal}
 Both an ordered and unordered traversal mode is available (ordered is the default).
@@ -34,6 +23,18 @@ Both an ordered and unordered traversal mode is available (ordered is the defaul
     \item triangle meshes support smoothing using barycentric interpolation of the vertex normals
     \end{enumerate}
 
+\subsection{Run time scene loader}
+    \begin{enumerate}
+    \item Json scene loader
+        \begin{enumerate}
+        \item Triangle meshes --- loaded from file, and transformed into the world (translate, rotate, scale)
+        \item Point and Spot lights
+        \item camera
+        \end{enumerate}
+    \item \verb|.obj| file loader (using tinyojb)
+    \item \verb|.mtl| material file loader (using tinyobj)
+    \end{enumerate}
+
 \subsection{Camera}
     \begin{enumerate}
     \item resizable windows
@@ -46,6 +47,19 @@ Both an ordered and unordered traversal mode is available (ordered is the defaul
     \item multi-color lighting
     \item point lights
     \item spot lights with linear falloff
+    \end{enumerate}
+
+\subsection{Vis Modes}
+            FIXME: describe this ibetter
+    \begin{enumerate}
+    \item Default (0) - recursive Ray Trace
+    \item Render Time (1)
+    \item Normals (2) - 
+    \item Default (3) - 
+    \item Default (4) - 
+    \item Default (5) -
+    \item Default (6) - 
+    \item Default (7) -
     \end{enumerate}
 
 \subsection{Other}
@@ -64,20 +78,18 @@ It should be a matter of simply loading the solution file into Visual Studio, an
 \subsection{Building with Cmake}
 The source can be built using the standard CMake envirnonment. This will work on Windows, macOS and Linux. 
 
-For example, on unix systems this command will do a release build -
+For example, on unix systems this command will perform a release build -
 
 \verb|cmake -DCMAKE_BUILD_TYPE=Release . ;| \\
 \verb|make|
 
-A similar command should work on Visual Studio, although the \verb|CMAKE_BUILD_TYPE| is not required - this is set in the Visual Studio gui.
+A similar command should work with Visual Studio, although the \verb|CMAKE_BUILD_TYPE| is not required - this is set in the Visual Studio gui.
 
 On Windows, SDL2.dll must be available somewhere on the path or in the same dir as the binary. 
 
 Boost is required for the test tree, but not the main system.
 
 \section{Running}
-
-On Windows, SDL2.dll must be available somewhere on the path or in the same dir as the binary. 
 
 There is a collection of test scenes, objects and materials in the data directory. To avoid fighting with relative paths, it works best to cd to this directory before running the system. For example, on windows, assuming the binary is in the Release directory under the root source tree - 
 
