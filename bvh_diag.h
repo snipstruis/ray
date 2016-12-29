@@ -58,14 +58,11 @@ void dumpBVHStats(BVH const& bvh, TrianglePosSet const& triangles){
     float avgDepth = sumDepth / ((float)stats.perLeaf.size());
     float avgTri = sumTri / ((float)stats.perLeaf.size());
 
-    float triDupPercent = (sumTri/((float)triangles.size())) * 100.0f;
-
     std::cout << "=========================================================================================\n";
     std::cout << "BVH Stats\n";
     std::cout << "root AABB " << bvh.root().bounds << "\n";
     std::cout << "Total nodes " << bvh.nodes.size() << " total leaves " << stats.perLeaf.size();
     std::cout << " Total tri indicies " << bvh.indicies.size();
-    std::cout << " triDupPercent " << triDupPercent << "\n";
     std::cout << "objectSplits " << bvh.objectSplits;
     std::cout << " spatialSplits " << bvh.spatialSplits << "\n";
     std::cout << "Per leaf: min tri   " << minTri << " max Tri " << maxTri << " avgTri " << avgTri << "\n";
@@ -75,6 +72,7 @@ void dumpBVHStats(BVH const& bvh, TrianglePosSet const& triangles){
     std::cout << "=========================================================================================\n";
 }
 
+#ifndef NDEBUG
 // recursively check that every node fully contains its child bounds
 void sanityCheckAABBRecurse(BVH const& bvh, BVHNode const& node, TrianglePosSet const& triangles) {
     if(node.isLeaf()) {
@@ -148,6 +146,7 @@ void doSanityCheckBVH(BVH& bvh, TrianglePosSet const& triangles) {
 
     std::cout << "sanity check OK" <<std::endl;
 }
+#endif
 
 void sanityCheckBVH(BVH& bvh, TrianglePosSet const& triangles) {
 #ifndef NDEBUG

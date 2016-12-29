@@ -2,35 +2,11 @@
 
 #include "bvh.h"
 #include "color.h"
+#include "params.h"
 #include "scene.h"
 #include "trace.h"
 
 // This file contains the render main loop, and all the pixel colouring code (ie the diagnostic visualisations)
-
-enum class VisMode {
-    Default,
-    Microseconds,
-    Normal,
-    NodeIndex,
-    SplitsTraversed,
-    TrianglesChecked,
-    LeafsChecked,
-    LeafNode,
-    LeafBoxes
-};
-
-char const * const modestr[] = {
-    "wooosh",
-    "frametime",
-    "normal",
-    "node index",
-    "splits traversed",
-    "triangles checked",
-    "leafs checked",
-    "leaf depth",
-    "leaf boxes"
-};
-
 Color value_to_color(float x){
     x*=5;if(x<1) {      return Color(  0,  0,  x);} // black -> blue
     else if(x<2) {x-=1; return Color(  0,  x,  1);} // blue  -> cyan

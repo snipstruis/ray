@@ -301,7 +301,6 @@ struct SBVHSplitter {
 
         float areaLeft = surfaceAreaAABB(boundsLeft);
         float areaRight = surfaceAreaAABB(boundsRight);
-        float areaTotal = surfaceAreaAABB(extremaBounds);
 
         float cSplit = (areaLeft * decision.leftCount) + (areaRight * decision.rightCount);
 

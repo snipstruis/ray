@@ -5,6 +5,7 @@
 #include "camera.h"
 #include "loader.h"
 #include "output.h"
+#include "params.h"
 #include "render.h"
 #include "scene.h"
 #include "timer.h"
@@ -21,7 +22,7 @@
 // this file contains all machinery to operate interactive mode - ie whenever there is a visible window 
 // note frametime is in seconds
 
-void setWindowTitle(Scene const& s, SDL_Window *win, float frametime, VisMode mode, BVHMethod bvh)
+void setWindowTitle(Scene const& s, SDL_Window *win, float frametime, BVHMethod bvh, Params const& p)
 {
     char title[1024];
 
@@ -35,7 +36,7 @@ void setWindowTitle(Scene const& s, SDL_Window *win, float frametime, VisMode mo
             "p=%0.0f "
             "f=%0.0f "
             "res %dx%d ",
-            modestr[(int)mode], 
+            GetVisModeStr(p.visMode), 
             frametime*1000.0f, 1.0f/frametime,
             traversalstr[(int)traversalMode],
             BVHMethodStr(bvh),
@@ -56,7 +57,7 @@ enum GuiAction {
 
 // process input
 // returns action to be performed
-GuiAction handleEvents(Scene& s, float frameTime, VisMode& vis, float& vis_scale, BVHMethod& bvh)
+GuiAction handleEvents(Scene& s, float frameTime, VisMode& vis, float& vis_scale, BVHMethod& bvh, Params& p)
 {
     SDL_Event e;
     float scale = frameTime;
@@ -130,6 +131,9 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
     // first thing's first, create the BVH
     // do this before opening the window to ease debugging
 //    BVHMethod bvhMethod = BVHMethod_CENTROID_SAH;
+
+    Params p;
+
     BVHMethod bvhMethod = BVHMethod_SBVH;
     BVH* bvh = buildBVH(s, bvhMethod);
 
@@ -154,7 +158,7 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
         SDL_GL_GetDrawableSize(win, &s.camera.width, &s.camera.height);
 
         BVHMethod oldMethod = bvhMethod;
-        GuiAction a = handleEvents(s, frameTimer.timer.lastDiff, mode, vis_scale, bvhMethod);
+        GuiAction a = handleEvents(s, frameTimer.timer.lastDiff, mode, vis_scale, bvhMethod, p);
 
         if (a==GA_QUIT)
             break;
@@ -185,7 +189,7 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
         if(frameTimer.timer.lastDiff > 1.0f)
             std::cout << "long render - frametime=" << frameTimer.timer.lastDiff << "s" << std::endl;
 
-        setWindowTitle(s, win, frametimeAv, mode, bvhMethod);
+        setWindowTitle(s, win, frametimeAv, bvhMethod, p);
         SDL_GL_SwapWindow(win);
     }
 
