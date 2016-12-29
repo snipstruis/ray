@@ -84,14 +84,18 @@ struct BVHDiagRenderer {
 // assumes screenbuffer is big enough to handle the width*height pixels (per the camera)
 template<class PixelRenderer>
 inline void renderLoop(Scene const& s, BVH const& bvh, Params const& p, ScreenBuffer& screenBuffer) {
-    unsigned int const width  = s.camera.width;
-    unsigned int const height = s.camera.height;
+    int const width  = s.camera.width;
+    int const height = s.camera.height;
 
     assert(screenBuffer.size() == width * height);
 
+#ifndef WIN32
     #pragma omp parallel for schedule(auto) collapse(2)
-    for (unsigned int y = 0; y < height; y++) {
-        for (unsigned int x = 0; x < width; x++) {
+#else //WIN32
+	#pragma omp parallel
+#endif
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
             Ray r = s.camera.makeRay(x, y);
             unsigned int idx = (height-y-1) * width+ x;
             Color pixel = PixelRenderer::renderPixel(r, s, bvh, p);

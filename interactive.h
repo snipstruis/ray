@@ -95,8 +95,7 @@ GuiAction handleEvents(Scene& s, float frameTime, Params& p)
                     case SDL_SCANCODE_4: p.visMode = VisMode::TrianglesChecked; break;
                     case SDL_SCANCODE_5: p.visMode = VisMode::SplitsTraversed; break;
                     case SDL_SCANCODE_6: p.visMode = VisMode::LeafsChecked; break;
-                    case SDL_SCANCODE_7: p.visMode = VisMode::LeafBoxes; break;
-                    case SDL_SCANCODE_8: p.visMode = VisMode::NodeIndex; break;
+                    case SDL_SCANCODE_7: p.visMode = VisMode::NodeIndex; break;
                     default:
                         break;
                 }

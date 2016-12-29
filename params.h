@@ -8,8 +8,7 @@ enum class VisMode {
     SplitsTraversed,
     TrianglesChecked,
     LeafsChecked,
-    LeafNode,
-    LeafBoxes
+    LeafNode
 };
 
 const char* GetVisModeStr(VisMode m) {
@@ -22,8 +21,9 @@ const char* GetVisModeStr(VisMode m) {
         case VisMode::TrianglesChecked: return "triangles checked";
         case VisMode::LeafsChecked: return "leafs checked";
         case VisMode::LeafNode: return "leaf depth";
-        case VisMode::LeafBoxes: return "leaf boxes";
     }
+
+	return ""; // silence msvc warn
 };
 
 enum class TraversalMode{
@@ -36,6 +36,7 @@ const char* GetTraversalModeStr(TraversalMode m) {
         case TraversalMode::Unordered: return "unordered";
         case TraversalMode::Ordered: return "ordered";
     }
+	return ""; // silence msvc warn
 }
 
 enum class BVHMethod {
@@ -52,6 +53,7 @@ const char* GetBVHMethodStr(BVHMethod m) {
         case BVHMethod::SBVH: return "SBVH";
         case BVHMethod::_MAX: return "shouldn't happen";
     };
+	return ""; // silence msvc warn
 }
 
 // parameters to current render.

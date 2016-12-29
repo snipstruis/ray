@@ -117,7 +117,7 @@ MiniIntersection traverseTriangles(
         TrianglePos const& t = prims.pos[triangleIndex];
         float distance = moller_trumbore(t, ray);
 
-        if constexpr(MODE==IntersectMode::ANY){ // if checking for any intersection whatsoever
+        if (MODE==IntersectMode::ANY){ // if checking for any intersection whatsoever
             if(distance > 0 && distance < maxDist){
                 diag.setNodeIndex(nodeIndex);
                 hit.distance = distance;
@@ -157,7 +157,7 @@ MiniIntersection traverseBVH(
     diag.incSplitsTraversed();
 
     // ordered / non-ordered traversal?
-    if constexpr(TRAV==TraversalMode::Ordered){
+    if (TRAV==TraversalMode::Ordered){
         // ordered traversal
         glm::vec3 leftCentroid  = centroidAABB(bvh.getNode(node.leftIndex()).bounds);
         glm::vec3 rightCentroid = centroidAABB(bvh.getNode(node.rightIndex()).bounds);
