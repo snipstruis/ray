@@ -40,7 +40,7 @@ const char* GetTraversalModeStr(TraversalMode m) {
 }
 
 enum class BVHMethod {
-//    STUPID,
+    STUPID,
     CENTROID_SAH,
     SBVH,
     _MAX
@@ -48,7 +48,7 @@ enum class BVHMethod {
 
 const char* GetBVHMethodStr(BVHMethod m) {
     switch(m) {
- //       case BVHMethod::STUPID: return "STUPID";
+        case BVHMethod::STUPID: return "STUPID";
         case BVHMethod::CENTROID_SAH: return "SAH";
         case BVHMethod::SBVH: return "SBVH";
         case BVHMethod::_MAX: return "shouldn't happen";
