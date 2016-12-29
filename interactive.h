@@ -85,7 +85,7 @@ GuiAction handleEvents(Scene& s, float frameTime, VisMode& vis, float& vis_scale
                     case SDL_SCANCODE_P:  return GA_SCREENSHOT;
                     case SDL_SCANCODE_R:  s.camera.resetView(); break;
                     case SDL_SCANCODE_C:  printCamera(s.camera); break;
-                    case SDL_SCANCODE_M: SMOOTHING = !SMOOTHING; break;
+                    case SDL_SCANCODE_M: p.flipSmoothing(); break;
                     case SDL_SCANCODE_0: vis = VisMode::Default; break;
                     case SDL_SCANCODE_1: vis = VisMode::Microseconds; break;
                     case SDL_SCANCODE_2: vis = VisMode::Normal; break;
@@ -180,7 +180,7 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
 
         glViewport(0, 0, s.camera.width, s.camera.height);
 
-        renderFrame(s, *bvh, screenBuffer, mode, vis_scale);
+        renderFrame(s, *bvh, screenBuffer, mode, vis_scale, p);
        
         // blit to screen
         glDrawPixels(s.camera.width, s.camera.height, GL_RGB, GL_FLOAT, screenBuffer.data());

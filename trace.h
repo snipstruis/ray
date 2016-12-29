@@ -115,7 +115,8 @@ Color trace(Ray const& ray,
             BVH const& bvh,
             Primitives const& primitives,
             Lights const& lights,
-            Color const& alpha){
+            Color const& alpha,
+            Params const& params){
     assert(alpha.isFinite());
 
     if(ray.ttl<=0) 
@@ -127,7 +128,7 @@ Color trace(Ray const& ray,
 
     TrianglePos const& pos = primitives.pos[hit.triangle];
     TriangleExtra const& tri = primitives.extra[hit.triangle];
-    FancyIntersection fancy = FancyIntersect(hit.distance, pos, tri, ray);
+    FancyIntersection fancy = FancyIntersect(hit.distance, pos, tri, ray, params.smoothing);
 
     assert(glm::isNormalized(fancy.normal, EPSILON));
 
@@ -175,7 +176,7 @@ Color trace(Ray const& ray,
                 //FIXME: exiting a primitive will set the material to air
                 fancy.internal ? MATERIAL_AIR : fancy.mat, 
                 ray.ttl-1);
-        color += transparency * trace(refract_ray, bvh, primitives, lights, alpha);
+        color += transparency * trace(refract_ray, bvh, primitives, lights, alpha, params);
     }
     
     // reflection (mirror)
@@ -184,7 +185,7 @@ Color trace(Ray const& ray,
                     glm::reflect(ray.direction, fancy.normal),
                     ray.mat,
                     ray.ttl-1);
-        color += reflectiveness * trace(r, bvh, primitives,lights,alpha);
+        color += reflectiveness * trace(r, bvh, primitives, lights, alpha, params);
     }
 
     // absorption (Beer's law)

@@ -9,18 +9,18 @@
 
 int batchRender(Scene& s, std::string const& imgDir, int width, int height) {
     Timer t;
+    Params p;
 
     ScreenBuffer screenBuffer;
     screenBuffer.resize(width * height);
 
     s.camera.width = width;
     s.camera.height = height;
-
     BVH* bvh = buildBVH(s, BVHMethod_SBVH);
 
     std::cout << "starting batch render" << std::endl;
 
-    renderFrame(s, *bvh, screenBuffer, VisMode::Default, 1.0f);
+    renderFrame(s, *bvh, screenBuffer, VisMode::Default, 1.0f, p);
 
     delete bvh;
 

@@ -11,8 +11,6 @@
 #include <cmath>
 #include <cassert>
 
-inline bool SMOOTHING=true;
-
 // Holds the 3 verticies of a triangle.
 struct TrianglePos{
     TrianglePos(glm::vec3 const& v1, glm::vec3 const& v2, glm::vec3 const& v3)
@@ -131,14 +129,19 @@ inline glm::vec3 barycentric(glm::vec3 p, TrianglePos const& tri) {
 
 // compute triangle/ray intersection
 // assumes there is an intersection between t & ray already calculated
-inline FancyIntersection FancyIntersect(float dist, TrianglePos const& p, TriangleExtra const& t, Ray const& ray){
+inline FancyIntersection FancyIntersect(
+        float dist, 
+        TrianglePos const& p, 
+        TriangleExtra const& t, 
+        Ray const& ray,
+        bool smooth){
     assert(dist < INFINITY);
     t.sanityCheck();
 
     glm::vec3 hit = ray.origin + ray.direction * dist;
     glm::vec3 normal;
     // smoothing
-    if(SMOOTHING){
+    if(smooth){
         glm::vec3 bary = barycentric(hit, p);
         normal = glm::normalize(bary.x*t.n[0] + bary.y*t.n[1] + bary.z*t.n[2]);
     }else{

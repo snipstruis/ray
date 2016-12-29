@@ -33,6 +33,10 @@ struct Params {
         smoothing(true)
     {}
 
+    void flipSmoothing() {
+        smoothing = !smoothing;
+    }
+
     VisMode visMode;
     bool smoothing;
 };
