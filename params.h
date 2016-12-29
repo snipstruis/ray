@@ -7,8 +7,8 @@ enum class VisMode {
     NodeIndex,
     SplitsTraversed,
     TrianglesChecked,
-    LeafsChecked,
-    LeafNode
+    LeavesChecked,
+    LeafDepth
 };
 
 const char* GetVisModeStr(VisMode m) {
@@ -19,8 +19,8 @@ const char* GetVisModeStr(VisMode m) {
         case VisMode::NodeIndex: return "node index";
         case VisMode::SplitsTraversed: return "splits traversed";
         case VisMode::TrianglesChecked: return "triangles checked";
-        case VisMode::LeafsChecked: return "leafs checked";
-        case VisMode::LeafNode: return "leaf depth";
+        case VisMode::LeavesChecked: return "leaves checked";
+        case VisMode::LeafDepth: return "leaf depth";
     }
 
 	return ""; // silence msvc warn

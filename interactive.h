@@ -91,10 +91,10 @@ GuiAction handleEvents(Scene& s, float frameTime, Params& p)
                     case SDL_SCANCODE_0: p.setVisMode(VisMode::Default); break;
                     case SDL_SCANCODE_1: p.setVisMode(VisMode::Microseconds); break;
                     case SDL_SCANCODE_2: p.setVisMode(VisMode::Normal); break;
-                    case SDL_SCANCODE_3: p.setVisMode(VisMode::LeafNode); break;
+                    case SDL_SCANCODE_3: p.setVisMode(VisMode::LeafDepth); break;
                     case SDL_SCANCODE_4: p.setVisMode(VisMode::TrianglesChecked); break;
                     case SDL_SCANCODE_5: p.setVisMode(VisMode::SplitsTraversed); break;
-                    case SDL_SCANCODE_6: p.setVisMode(VisMode::LeafsChecked); break;
+                    case SDL_SCANCODE_6: p.setVisMode(VisMode::LeavesChecked); break;
                     case SDL_SCANCODE_7: p.setVisMode(VisMode::NodeIndex); break;
                     default:
                         break;

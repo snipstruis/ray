@@ -26,7 +26,7 @@ struct DiagnosticCollector {
     DiagnosticCollector() : 
         splitsTraversed(0), 
         trianglesChecked(0), 
-        leafsChecked(0), 
+        leavesChecked(0), 
         nodeIndex(0), 
         leafDepth(0) 
     {}
@@ -39,8 +39,8 @@ struct DiagnosticCollector {
         trianglesChecked++;
     }
 
-    void incLeafsChecked() {
-        leafsChecked++;
+    void incLeavesChecked() {
+        leavesChecked++;
     }
 
     void setNodeIndex(unsigned int n){
@@ -52,7 +52,7 @@ struct DiagnosticCollector {
     void combineStats(DiagnosticCollector const& other) {
         splitsTraversed += other.splitsTraversed;
         trianglesChecked += other.trianglesChecked;
-        leafsChecked += other.leafsChecked;
+        leavesChecked += other.leavesChecked;
     }
 
     // combine node selection from child node - these are stats that just refer to the single 
@@ -66,7 +66,7 @@ struct DiagnosticCollector {
 
     unsigned int splitsTraversed;
     unsigned int trianglesChecked;   // number of triangles checked for intersection
-    unsigned int leafsChecked;       // number of leaf nodes checked
+    unsigned int leavesChecked;      // number of leaf nodes checked
     unsigned int nodeIndex;          // nodeIndex with which we ultimately intersected
     unsigned int leafDepth;          // depth of the leaf node with which we ultimately intersected
 };
@@ -75,7 +75,7 @@ struct DiagnosticCollector {
 struct NullCollector {
     static void incSplitsTraversed() {}
     static void incTrianglesChecked() {}
-    static void incLeafsChecked() {}
+    static void incLeavesChecked() {}
     static void incLeafDepth() {}
     static void setNodeIndex(unsigned int nodeIndex) {}
     static void combineStats(NullCollector const& other) {}
@@ -99,7 +99,7 @@ MiniIntersection traverseTriangles(
         float const maxDist,
         DiagType& diag) {
 
-    diag.incLeafsChecked();
+    diag.incLeavesChecked();
 
     BVHNode const& node = bvh.getNode(nodeIndex);
     assert(node.isLeaf());

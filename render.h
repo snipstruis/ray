@@ -66,8 +66,8 @@ struct BVHDiagRenderer {
         switch(p.visMode) {
             case VisMode::TrianglesChecked: intensity = diag.trianglesChecked; break;
             case VisMode::SplitsTraversed:  intensity = diag.splitsTraversed; break;
-            case VisMode::LeafsChecked:     intensity = diag.leafsChecked; break;
-            case VisMode::LeafNode:         intensity = diag.leafDepth; break;
+            case VisMode::LeavesChecked:    intensity = diag.leavesChecked; break;
+            case VisMode::LeafDepth:         intensity = diag.leafDepth; break;
             case VisMode::NodeIndex:
                 if(hit.distance < INFINITY)
                     intensity = diag.nodeIndex; 
