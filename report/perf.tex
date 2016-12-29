@@ -1,0 +1,43 @@
+\section{Performance}
+
+\begin{tabular}{lrlrlr}
+    \toprule
+    \textbf{scene} & \textbf{triangles} & \textbf{type} & \textbf{build time} & \textbf{traversal} & \textbf{frame time} \\
+    \midrule
+    teapot         &      2464 & SBVH &     17ms & ordered   &    66ms \\
+                   &           &      &          & unordered &    61ms \\
+                   &           & BVH  &      3ms & ordered   &    69ms \\
+                   &           &      &          & unordered &    65ms \\
+    \midrule                                     
+    teapot-plane   &      2466 & SBVH &     27ms & ordered   &   113ms \\
+                   &           &      &          & unordered &   100ms \\
+                   &           & BVH  &      3ms & ordered   &   124ms \\
+                   &           &      &          & unordered &   107ms \\
+    \midrule                                     
+    teapot-huge-plane &   2466 & SBVH &     29ms & ordered   &   113ms \\
+                   &           &      &          & unordered &   100ms \\
+                   &           & BVH  &   $<$1ms & ordered   &  8637ms \\
+                   &           &      &          & unordered &  8603ms \\
+    \midrule                                     
+    dragon         &   871 200 & SBVH &   5452ms & ordered   &   121ms \\
+                   &           &      &          & unordered &   159ms \\
+                   &           & BVH  &    865ms & ordered   &   125ms \\
+                   &           &      &          & unordered &   164ms \\
+    \midrule                                     
+    dragon-plane   &   871 202 & SBVH &   5442ms & ordered   &   226ms \\
+                   &           &      &          & unordered &   307ms \\
+                   &           & BVH  &    931ms & ordered   &   231ms \\
+                   &           &      &          & unordered &   299ms \\
+    \midrule                                     
+    hairball       & 2 850 000 & SBVH & 22 057ms & ordered   &  2673ms \\
+                   &           &      &          & unordered &  9506ms \\
+                   &           & BVH  &   2538ms & ordered   &  2728ms \\
+                   &           &      &          & unordered &  9657ms \\
+    \midrule                                     
+    hairball-plane & 2 850 002 & SBVH & 22 180ms & ordered   &  2806ms \\
+                   &           &      &          & unordered &  9853ms \\
+                   &           & BVH  &   2620ms & ordered   &  3567ms \\
+                   &           &      &          & unordered & 10 025ms \\
+    \bottomrule
+\end{tabular}
+
