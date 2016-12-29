@@ -1,5 +1,18 @@
 \section{Performance}
+\subsection{Setup}
+\begin{tabular}{ll}
+    \toprule
+    OS       & Arch Linux 4.8.10 64-bit\\
+    CPU      & Intel{\textregistered} Core{\texttrademark} i7--4750HQ CPU @ 2.00GHz \\
+    Cores    & 4 (8 with hyperthreading) \\
+    Compiler & Clang 3.9.0 \\
+    Flags    & \verb|-NDEBUG -O3 -march=native --std=c++1z -fno-rtti| \\
+             & \verb|-fopenmp -fcolor-diagnostics| \\
+             & \verb|-Wall -Wextra -Wno-unused-parameter| \\
+    \bottomrule
+\end{tabular}
 
+\subsection{Measurements}
 \begin{tabular}{lrlrlr}
     \toprule
     \textbf{scene} & \textbf{triangles} & \textbf{type} & \textbf{build time} & \textbf{traversal} & \textbf{frame time} \\
