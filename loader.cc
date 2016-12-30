@@ -171,7 +171,8 @@ Mesh loadMesh(Scene& s, std::string const& filename){
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
 
-    bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, filename.c_str());
+    std::ifstream in(filename);
+    bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, &in);
     if(!ret) {
         std::stringstream ss;
         ss << "ERROR loading mesh - " << err;
