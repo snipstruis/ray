@@ -1,6 +1,6 @@
 {
     "load_meshes" : {
-        "hairball" : "hairball.obj",
+        "hairball" : "hairball.obj.gz",
         "plane" : "plane.obj"
     },
     "world" : {
