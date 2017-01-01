@@ -1,6 +1,6 @@
 {
     "load_meshes" : {
-        "bunny" : "bunny-hi.obj"
+        "bunny" : "bunny-hi.obj.gz"
     },
     "world" : {
         "objects" : [

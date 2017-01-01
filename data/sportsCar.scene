@@ -1,6 +1,6 @@
 {
     "load_meshes" : {
-        "sportscar" : "sportsCar.obj"
+        "sportscar" : "sportsCar.obj.gz"
     },
     "world" : {
         "objects" : [

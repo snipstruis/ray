@@ -1,6 +1,6 @@
 {
     "load_meshes" : {
-        "dragon" : "dragon.obj",
+        "dragon" : "dragon.obj.gz",
         "plane" : "plane.obj"
     },
     "world" : {

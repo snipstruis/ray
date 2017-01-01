@@ -1,6 +1,6 @@
 {
     "load_meshes" : {
-        "buddha" : "buddha.obj"
+        "buddha" : "buddha.obj.gz"
     },
     "world" : {
         "objects" : [

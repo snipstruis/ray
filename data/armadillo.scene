@@ -1,6 +1,6 @@
 {
     "load_meshes" : {
-        "armadillo" : "armadillo.obj"
+        "armadillo" : "armadillo.obj.gz"
     },
     "world" : {
         "objects" : [
