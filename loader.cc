@@ -176,7 +176,8 @@ struct LoadedObject {
 void loadObject(boost::iostreams::filtering_stream<boost::iostreams::input>& stream, LoadedObject& obj) {
 
     std::string err;
-    bool ret = tinyobj::LoadObj(&obj.attrib, &obj.shapes, &obj.materials, &err, &stream);
+    tinyobj::MaterialFileReader m("./");
+    bool ret = tinyobj::LoadObj(&obj.attrib, &obj.shapes, &obj.materials, &err, &stream, &m);
     if(!ret) {
         std::stringstream ss;
         ss << "ERROR loading mesh - " << err;
