@@ -166,27 +166,64 @@ int createMaterial(Scene& s, tinyobj::material_t const& m){
     return globalMatId;
 }
 
-Mesh loadMesh(Scene& s, std::string const& filename){
-    std::cout << "loading mesh " << filename << std::endl;
-
-    std::string err;
+// concepts from TinyObj
+struct LoadedObject {
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
+};
 
-    std::ifstream f(filename, std::ios_base::in | std::ios_base::binary);
-    boost::iostreams::filtering_stream<boost::iostreams::input> in;
-    in.push(boost::iostreams::gzip_decompressor());
-    in.push(f);
+void loadObject(boost::iostreams::filtering_stream<boost::iostreams::input>& stream, LoadedObject& obj) {
 
-    bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, &in);
+    std::string err;
+    bool ret = tinyobj::LoadObj(&obj.attrib, &obj.shapes, &obj.materials, &err, &stream);
     if(!ret) {
         std::stringstream ss;
         ss << "ERROR loading mesh - " << err;
         throw std::runtime_error(ss.str());
     }
+}
+
+void setupStream(std::string const& filename, LoadedObject& obj) {
+
+    // try gzip stream
+    {
+        std::ifstream f(filename, std::ios_base::in | std::ios_base::binary);
+        boost::iostreams::filtering_stream<boost::iostreams::input> in;
+        in.push(boost::iostreams::gzip_decompressor());
+        in.push(f);
+        in.peek();
+
+        if(in.good()) {
+            std::cout << "... loading gzip'd stream" << std::endl;
+            loadObject(in, obj);
+            return;
+        }
+    }
+
+    // try uncompressed stream
+    {
+        std::ifstream f(filename, std::ios_base::in | std::ios_base::binary);
+        boost::iostreams::filtering_stream<boost::iostreams::input> in;
+        in.push(f);
+        in.peek();
+
+        if(in.good()) {
+            loadObject(in, obj);
+            return;
+        }
+    }
+
+    throw std::runtime_error("couldn't setup stream");
+}
+
+Mesh loadMesh(Scene& s, std::string const& filename){
+    std::cout << "loading mesh " << filename << std::endl;
+
+    LoadedObject obj;
+    setupStream(filename, obj);
         
-    std::cout << "material count " << materials.size() << std::endl;
+    std::cout << "material count " << obj.materials.size() << std::endl;
 
     Mesh mesh;
 
@@ -195,7 +232,7 @@ Mesh loadMesh(Scene& s, std::string const& filename){
     // if a number is not in this map, it doesn't exist globally yet.
     std::map<int, int> matMap;
 
-    for(auto const& shape : shapes) {
+    for(auto const& shape : obj.shapes) {
         // tinyobj should tesselate for us.
         assert(shape.mesh.indices.size() % 3 == 0);
 
@@ -217,7 +254,7 @@ Mesh loadMesh(Scene& s, std::string const& filename){
                 auto it = matMap.find(localMatID);
                 if(it == matMap.end()) {
                     // nope, need to create it.
-                    globalMatID = createMaterial(s, materials[localMatID]);
+                    globalMatID = createMaterial(s, obj.materials[localMatID]);
                     matMap[localMatID] = globalMatID;
                 } else {
                     globalMatID = it->second;
@@ -226,8 +263,8 @@ Mesh loadMesh(Scene& s, std::string const& filename){
             // the array indicies of mesh.pos & mesh.triangles must line up - be careful here.
             assert(mesh.pos.size() == mesh.extra.size());
 
-            mesh.pos.push_back(BuildTrianglePos(attrib, shape, base));
-            mesh.extra.push_back(BuildTriangleExtra(mesh.pos.back(), attrib, shape, base, globalMatID));
+            mesh.pos.push_back(BuildTrianglePos(obj.attrib, shape, base));
+            mesh.extra.push_back(BuildTriangleExtra(mesh.pos.back(), obj.attrib, shape, base, globalMatID));
         }
     }
 
