@@ -15,6 +15,9 @@
 #include <string>
 #include <vector>
 
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+
 using json = nlohmann::json;
 
 glm::vec3 readXYZ(json const& o) {
@@ -171,7 +174,11 @@ Mesh loadMesh(Scene& s, std::string const& filename){
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
 
-    std::ifstream in(filename);
+    std::ifstream f(filename, std::ios_base::in | std::ios_base::binary);
+    boost::iostreams::filtering_stream<boost::iostreams::input> in;
+    in.push(boost::iostreams::gzip_decompressor());
+    in.push(f);
+
     bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, &in);
     if(!ret) {
         std::stringstream ss;

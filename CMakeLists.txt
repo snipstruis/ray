@@ -23,7 +23,7 @@ MESSAGE(STATUS "Using OpenGL lib ${OPENGL_gl_LIBRARY}")
 # common flags
 
 if(NOT WIN32)
-    set(CMAKE_CXX_FLAGS "-march=native --std=c++1z -Wall -Wextra -fno-rtti -Wno-unused-parameter")
+    set(CMAKE_CXX_FLAGS "-march=native --std=c++1z -Wall -Wextra -Wno-unused-parameter")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
 
     # explicitly turn on color diags as this doesn't work automatically under ninja 
@@ -70,7 +70,7 @@ add_executable(ray
 )
 
 # linking
-target_link_libraries(ray SDL2 ${OPENGL_gl_LIBRARY})
+target_link_libraries(ray SDL2 boost_iostreams ${OPENGL_gl_LIBRARY})
 
 # recurse into test
 if(NOT WIN32)
