@@ -90,6 +90,9 @@ endif()
 #add_subdirectory(report)
 
 set(IMG_OUTPUT_DIR "$ENV{HOME}")
+set(INPUT_DIR "${CMAKE_SOURCE_DIR}/data")
+
+message(STATUS "input dir ${INPUT_DIR}")
 message(STATUS "image output dir ${IMG_OUTPUT_DIR}")
 
 # create a target to auto load the raytracer 
@@ -100,15 +103,14 @@ macro(add_scene key scenefile)
 
     # add run-ray-XYZ target
     add_custom_target("run-${SUFFIX}"
-        COMMAND ray ${scenefile} ${IMG_OUTPUT_DIR}
+        COMMAND ray ${INPUT_DIR} ${scenefile} ${IMG_OUTPUT_DIR}
         DEPENDS ray 
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/data
         USES_TERMINAL
         )
 
     # add batch-ray-XYZ target (doesn't do anything yet)
     add_custom_target("batch-${SUFFIX}"
-        COMMAND ray -b ${scenefile} ${IMG_OUTPUT_DIR}
+        COMMAND ray -b ${INPUT_DIR} ${scenefile} ${IMG_OUTPUT_DIR}
         DEPENDS ray 
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/data
         USES_TERMINAL
@@ -118,9 +120,8 @@ macro(add_scene key scenefile)
     # assumes debugger is lldb
     # FIXME: assumes binary name
     add_custom_target("debug-run-${SUFFIX}"
-        COMMAND lldb ${CMAKE_CURRENT_BINARY_DIR}/ray -- ${scenefile} ${IMG_OUTPUT_DIR}
+        COMMAND lldb ${CMAKE_CURRENT_BINARY_DIR}/ray -- ${INPUT_DIR} ${scenefile} ${IMG_OUTPUT_DIR}
         DEPENDS ray 
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/data
         USES_TERMINAL
         )
 
@@ -128,9 +129,8 @@ macro(add_scene key scenefile)
     # assumes debugger is lldb
     # FIXME: assumes binary name
     add_custom_target("debug-batch-${SUFFIX}"
-        COMMAND lldb ${CMAKE_CURRENT_BINARY_DIR}/ray -- -b ${scenefile} ${IMG_OUTPUT_DIR}
+        COMMAND lldb ${CMAKE_CURRENT_BINARY_DIR}/ray -- -b ${INPUT_DIR} ${scenefile} ${IMG_OUTPUT_DIR}
         DEPENDS ray 
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/data
         USES_TERMINAL
         )
 
