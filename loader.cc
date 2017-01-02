@@ -176,10 +176,21 @@ int createMaterial(Scene& s, tinyobj::material_t const& m){
 }
 
 template <class StreamType>
-void loadObject(StreamType& stream, LoadedObject& obj) {
+void loadObject(std::string const& inputDir, StreamType& stream, LoadedObject& obj) {
 
     std::string err;
-    tinyobj::MaterialFileReader m("./");
+    std::string matDir = "./";
+    
+    // need to ensure the material dir has a trailing slash, as tinyobj seems to naively smash the
+    // dir and filename together.
+    if(inputDir.size() > 0) {
+        std::stringstream ss;
+        ss << inputDir << "/";
+        matDir = ss.str();
+    }
+
+    tinyobj::MaterialFileReader m(matDir);
+
     bool ret = tinyobj::LoadObj(&obj.attrib, &obj.shapes, &obj.materials, &err, &stream, &m);
     if(!ret) {
         std::stringstream ss;
@@ -188,19 +199,28 @@ void loadObject(StreamType& stream, LoadedObject& obj) {
     }
 }
 
-void setupStream(std::string const& filename, LoadedObject& obj) {
+void setupStream(std::string const& inputDir, std::string const& filename, LoadedObject& obj) {
+    std::stringstream ss;
+    if(inputDir.size() > 0)
+        ss << inputDir << "/";
+
+    ss << filename;
+    std::cout << "loading mesh " << ss.str() << std::endl;
+
 #ifdef ENABLE_BOOST_IOSTREAMS
     // try gzip stream
     {
-        std::ifstream f(filename, std::ios_base::in | std::ios_base::binary);
+        std::ifstream f(ss.str(), std::ios_base::in | std::ios_base::binary);
         boost::iostreams::filtering_stream<boost::iostreams::input> in;
         in.push(boost::iostreams::gzip_decompressor());
         in.push(f);
+
+        // need to peek at least one byte to trigger any errors
         in.peek();
 
         if(in.good()) {
             std::cout << "... loading gzip'd stream" << std::endl;
-            loadObject(in, obj);
+            loadObject(inputDir, in, obj);
             return;
         }
     }
@@ -208,10 +228,10 @@ void setupStream(std::string const& filename, LoadedObject& obj) {
 
     // try uncompressed stream
     {
-        std::ifstream f(filename, std::ios_base::in);
+        std::ifstream f(ss.str(), std::ios_base::in);
 
         if(f.good()) {
-            loadObject(f, obj);
+            loadObject(inputDir, f, obj);
             return;
         }
     }
@@ -219,11 +239,10 @@ void setupStream(std::string const& filename, LoadedObject& obj) {
     throw std::runtime_error("couldn't setup stream");
 }
 
-Mesh loadMesh(Scene& s, std::string const& filename){
-    std::cout << "loading mesh " << filename << std::endl;
+Mesh loadMesh(std::string const& inputDir, std::string const& filename, Scene& s){
 
     LoadedObject obj;
-    setupStream(filename, obj);
+    setupStream(inputDir, filename, obj);
         
     std::cout << "material count " << obj.materials.size() << std::endl;
 
@@ -389,8 +408,15 @@ void handleCamera(Scene& s, json const& c) {
     s.camera.resetView();
 }
 
-bool loadScene(std::string const& filename, Scene& scene)  {
-    std::ifstream inFile(filename);
+bool loadScene(std::string const& inputDir, std::string const& filename, Scene& scene) {
+    std::stringstream ss;
+    if(inputDir.size() > 0)
+        ss << inputDir << "/";
+
+    ss << filename;
+    std::cout << "loading scene " << ss.str() << std::endl;
+    std::ifstream inFile(ss.str());
+
     json o;
     inFile >> o;
 
@@ -403,7 +429,7 @@ bool loadScene(std::string const& filename, Scene& scene)  {
             if(meshMap.find(it.key()) != meshMap.end()) {
                 throw std::runtime_error("duplicate mesh key");
             }
-            meshMap[it.key()] = loadMesh(scene, it.value());
+            meshMap[it.key()] = loadMesh(inputDir, it.value(), scene);
         }
     }
     else {
@@ -438,10 +464,8 @@ bool setupScene(std::string const& inputDir, std::string const& filename, Scene&
     // sanity check - the fixed materials should now be created
     assert(scene.primitives.materials.size() > 2);
 
-    std::cout << "loading scene " << filename << std::endl;
-
     try{
-        loadScene(filename, scene);
+        loadScene(inputDir, filename, scene);
     } catch (std::exception const& e) {
         std::cerr << "exception loading scene - " << e.what() << std::endl;
         return false;
