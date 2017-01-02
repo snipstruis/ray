@@ -11,6 +11,7 @@ else()
     message(STATUS "build type ${CMAKE_BUILD_TYPE}")
 endif()
 
+find_package(Boost)
 find_package(OpenGL)
 #find_package(OpenCL)
 
@@ -39,6 +40,11 @@ ELSE()
 # win32 flags
 
 ENDIF()
+
+if(Boost_FOUND)
+    MESSAGE(STATUS "Boost found - enabling Boost IOstreams")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_BOOST_IOSTREAMS")
+endif()
 
 # turn this on to enable bounds checking in the stl, but it hurts perf a lot, it seems
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -70,7 +76,11 @@ add_executable(ray
 )
 
 # linking
-target_link_libraries(ray SDL2 boost_iostreams ${OPENGL_gl_LIBRARY})
+target_link_libraries(ray SDL2 ${OPENGL_gl_LIBRARY})
+
+if(Boost_FOUND)
+    target_link_libraries(ray boost_iostreams)
+endif()
 
 # recurse into test
 if(NOT WIN32)

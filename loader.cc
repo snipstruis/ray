@@ -15,10 +15,19 @@
 #include <string>
 #include <vector>
 
+#ifdef ENABLE_BOOST_IOSTREAMS
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
+#endif
 
 using json = nlohmann::json;
+
+// concepts loaded from TinyObj
+struct LoadedObject {
+    tinyobj::attrib_t attrib;
+    std::vector<tinyobj::shape_t> shapes;
+    std::vector<tinyobj::material_t> materials;
+};
 
 glm::vec3 readXYZ(json const& o) {
     glm::vec3 res;
@@ -166,14 +175,8 @@ int createMaterial(Scene& s, tinyobj::material_t const& m){
     return globalMatId;
 }
 
-// concepts from TinyObj
-struct LoadedObject {
-    tinyobj::attrib_t attrib;
-    std::vector<tinyobj::shape_t> shapes;
-    std::vector<tinyobj::material_t> materials;
-};
-
-void loadObject(boost::iostreams::filtering_stream<boost::iostreams::input>& stream, LoadedObject& obj) {
+template <class StreamType>
+void loadObject(StreamType& stream, LoadedObject& obj) {
 
     std::string err;
     tinyobj::MaterialFileReader m("./");
@@ -186,7 +189,7 @@ void loadObject(boost::iostreams::filtering_stream<boost::iostreams::input>& str
 }
 
 void setupStream(std::string const& filename, LoadedObject& obj) {
-
+#ifdef ENABLE_BOOST_IOSTREAMS
     // try gzip stream
     {
         std::ifstream f(filename, std::ios_base::in | std::ios_base::binary);
@@ -201,16 +204,14 @@ void setupStream(std::string const& filename, LoadedObject& obj) {
             return;
         }
     }
+#endif
 
     // try uncompressed stream
     {
-        std::ifstream f(filename, std::ios_base::in | std::ios_base::binary);
-        boost::iostreams::filtering_stream<boost::iostreams::input> in;
-        in.push(f);
-        in.peek();
+        std::ifstream f(filename, std::ios_base::in);
 
-        if(in.good()) {
-            loadObject(in, obj);
+        if(f.good()) {
+            loadObject(f, obj);
             return;
         }
     }
