@@ -388,7 +388,7 @@ void handleCamera(Scene& s, json const& c) {
     s.camera.resetView();
 }
 
-bool loadScene(Scene& s, std::string const& filename)  {
+bool loadScene(std::string const& filename, Scene& scene)  {
     std::ifstream inFile(filename);
     json o;
     inFile >> o;
@@ -402,7 +402,7 @@ bool loadScene(Scene& s, std::string const& filename)  {
             if(meshMap.find(it.key()) != meshMap.end()) {
                 throw std::runtime_error("duplicate mesh key");
             }
-            meshMap[it.key()] = loadMesh(s, it.value());
+            meshMap[it.key()] = loadMesh(scene, it.value());
         }
     }
     else {
@@ -415,32 +415,32 @@ bool loadScene(Scene& s, std::string const& filename)  {
     auto const& objects = world["objects"];
 
     for (auto const& object : objects) {
-        handleObject(s, meshMap, object);
+        handleObject(scene, meshMap, object);
     }
 
     auto const& lights = world["lights"];
     for (auto const& light: lights) {
-        handleLight(s, light);
+        handleLight(scene, light);
     }
 
     if(o.find("camera") != o.end()) {
-        handleCamera(s, o["camera"]);
+        handleCamera(scene, o["camera"]);
     }
 
     return true;
 }
 
-bool setupScene(Scene& s, std::string const& filename)
+bool setupScene(std::string const& inputDir, std::string const& filename, Scene& scene)
 {
-    buildFixedMaterials(s.primitives.materials);
+    buildFixedMaterials(scene.primitives.materials);
 
     // sanity check - the fixed materials should now be created
-    assert(s.primitives.materials.size() > 2);
+    assert(scene.primitives.materials.size() > 2);
 
     std::cout << "loading scene " << filename << std::endl;
 
     try{
-        loadScene(s, filename);
+        loadScene(filename, scene);
     } catch (std::exception const& e) {
         std::cerr << "exception loading scene - " << e.what() << std::endl;
         return false;

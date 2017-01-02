@@ -10,14 +10,18 @@
 int width = 640;
 int height = 640;
 
+void showUsage(const char* binary) {
+    std::cout << "USAGE: " << binary << "[-b] <input dir> <scene file> [image output dir]\n";
+    std::cout << "         -b  batch mode\n";
+}
+
 int main(int argc, char* argv[]){
     std::deque<std::string> args;
     for(int i = 1; i < argc; i++)
         args.push_back(argv[i]);
 
-    if (argc < 2 || argc > 4) {
-        std::cout << "USAGE: " << argv[0] << "[-b] <scene file> [image output dir]\n";
-        std::cout << "         -b  batch mode\n";
+    if (args.size() < 2 || args.size() > 5) {
+        showUsage(argv[0]);
         return -1;
     }
 
@@ -27,6 +31,15 @@ int main(int argc, char* argv[]){
         batch = true;
         args.pop_front();
     }
+
+    if(args.size() < 2) {
+        showUsage(argv[0]);
+        return -1;
+    }
+
+    std::string inputDir = args.front();
+    args.pop_front();
+    std::cout << "using input dir " << inputDir << "\n";
 
     std::string sceneFile = args.front();
     args.pop_front();
@@ -40,19 +53,19 @@ int main(int argc, char* argv[]){
 
     // setup scene first, so we can bail on error without flashing a window briefly (errors are stdout 
     // for now - maybe should be a dialog box in future).
-    Scene s;
-    if(!setupScene(s, sceneFile)) {
+    Scene scene;
+    if(!setupScene(inputDir, sceneFile, scene)) {
         std::cout << "ERROR: failed to setup scene, bailing" << std::endl;
         return -1;
     }
 
-    if(s.primitives.pos.size() == 0) {
+    if(scene.primitives.pos.size() == 0) {
         std::cout << "ERROR: no triangles in scene" << std::endl;
         return -1;
     }
 
     if(batch)
-         return batchRender(s, outputDir, width, height);
+         return batchRender(scene, outputDir, width, height);
     else
-         return interactiveLoop(s, outputDir, width, height);
+         return interactiveLoop(scene, outputDir, width, height);
 }
