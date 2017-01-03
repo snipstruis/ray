@@ -38,6 +38,8 @@ if(NOT WIN32)
 
 ELSE()
 # win32 flags
+    add_definitions("/D_CRT_SECURE_NO_WARNINGS")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /openmp")
 
 ENDIF()
 
