@@ -23,6 +23,21 @@ T clamp(T val, T lo, T hi) {
     return std::min(std::max(val, lo), hi);
 }
 
+// fast non-cryptographic rng developed by Marsaglia
+inline uint32_t xorshift32(uint32_t x){
+    x ^= x << 13;
+    x ^= x >> 17;
+    x ^= x << 5;
+    return x;
+}
+
+struct Rng{
+    Rng(uint32_t seed):state(seed){};
+    uint32_t asUint(){ state = xorshift32(state); return state; }
+    int32_t  asInt(){  return (int32_t)asUint(); }
+    uint32_t state;
+};
+        
 // check an angle is clamped -2pi < angle < 2pi (ie within one rotation either way)
 inline bool isAngleInOneRev(float angle){
     return angle > -2*PI  && angle < 2*PI;

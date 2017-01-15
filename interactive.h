@@ -148,6 +148,7 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
     SDL_SetRelativeMouseMode(SDL_TRUE);
 
     ScreenBuffer screenBuffer; // will be sized on first loop
+    ScreenBuffer clampedScreenBuffer;
 
     AvgTimer frameTimer;
     while(true){
@@ -177,14 +178,18 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
 
         // FIXME: maybe save a bit of work by only doing this if camera's moved
         s.camera.buildCamera();
-        screenBuffer.resize(s.camera.width * s.camera.height);
+        screenBuffer.resize(s.camera.width() * s.camera.height());
+        clampedScreenBuffer.resize(s.camera.width() * s.camera.height());
 
         glViewport(0, 0, s.camera.width, s.camera.height);
 
         renderFrame(s, *bvh, p, screenBuffer);
        
         // blit to screen
-        glDrawPixels(s.camera.width, s.camera.height, GL_RGB, GL_FLOAT, screenBuffer.data());
+        for(int i=0; i<screenBuffer.size(); i++){
+            clampedScreenBuffer[i] = clamp(screenBuffer[i]);
+        }
+        glDrawPixels(s.camera.width(), s.camera.height(), GL_RGB, GL_FLOAT, screenBuffer.data());
 
         float frametimeAv = frameTimer.sample();
         if(frameTimer.timer.lastDiff > 1.0f)
