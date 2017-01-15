@@ -106,13 +106,13 @@ GuiAction handleEvents(Scene& s, float frameTime, Params& p)
     Uint8 const * kbd = SDL_GetKeyboardState(NULL);
 
     if(kbd[SDL_SCANCODE_S])
-        s.camera.moveForward(-0.2f * scale);
+        s.camera.moveForward(-2 * scale);
     if(kbd[SDL_SCANCODE_W]) 
-        s.camera.moveForward(0.2f * scale);
+        s.camera.moveForward(2 * scale);
     if(kbd[SDL_SCANCODE_A])
-        s.camera.moveRight(-0.2f * scale);
+        s.camera.moveRight(-2 * scale);
     if(kbd[SDL_SCANCODE_D])
-        s.camera.moveRight(0.2f * scale);
+        s.camera.moveRight(2 * scale);
     if(kbd[SDL_SCANCODE_COMMA])
         p.decVisScale();
     if(kbd[SDL_SCANCODE_PERIOD])
@@ -130,6 +130,7 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
     // do this before opening the window to ease debugging
 
     Params p;
+    p.setVisMode(VisMode::PathTrace);
     BVH* bvh = buildBVH(s, p.bvhMethod);
 
     // max depth is a good starting value for vis scale - at least for bvh stats.. 

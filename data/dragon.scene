@@ -1,6 +1,8 @@
 {
     "load_meshes" : {
-        "dragon" : "dragon.obj.gz"
+        "dragon" : "dragon.obj.gz",
+        "plane"  : "plane.obj",
+        "lightcube"  : "lightcube.obj"
     },
     "world" : {
         "objects" : [
@@ -8,9 +10,30 @@
                 "kind" : "mesh",
                 "mesh_name" : "dragon",
                 "transform" : {
-                    "translate" : { "x" : -1, "y" : 2, "z" : -1},
-                    "rotate" : { "x" : 0, "y" : 40.00, "z" : 0.00},
+                    "translate" : { "x" : -1, "y" : 1, "z" : -1},
                     "scale" : { "x" : 10, "y" : 10.00, "z" : 10.00}
+                }
+            },{
+                "kind" : "mesh",
+                "mesh_name" : "plane",
+                "transform" : {
+                    "translate" : { "x" :  0, "y" : -2, "z" :  0},
+                    "scale" : { "x" : 20, "y" : 20, "z" : 20}
+                }
+            },{
+                "kind" : "mesh",
+                "mesh_name" : "lightcube",
+                "transform" : {
+                    "translate" : { "x" :  4, "y" : 4, "z" : 0},
+                    "rotate"    : { "x" : 90, "y" : 0, "z" : 0}
+                }
+            },{
+                "kind" : "mesh",
+                "mesh_name" : "lightcube",
+                "transform" : {
+                    "translate" : { "x" : -14, "y" : 2, "z" : 5},
+                    "rotate"    : { "x" : 30, "y" : 0, "z" : 10},
+                    "scale"     : { "x" : 3, "y" : 30, "z" : 3}
                 }
             }
         ],
@@ -24,6 +47,6 @@
         ]
         
     },
-    "camera" : {"fov":20,"look_angle":{"pitch":35,"yaw":-135},"origin":{"x":16.9118232727051,"y":19.7565879821777,"z":16.9118232727051}}
+"camera" : {"fov":40.0083961486816,"look_angle":{"pitch":1.71072483062744,"yaw":55.8203086853027},"origin":{"x":-17.8165893554688,"y":3.53516030311584,"z":-12.4933710098267}}
 }
 
