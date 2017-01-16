@@ -75,7 +75,7 @@ GuiAction handleEvents(Scene& s, float frameTime, Params& p)
                     // yes - it's "airplane" style at the moment - mouse down = view up.
                     // I'm going to get a cmdline working soon, make this an option
                     float yaw = (((float)e.motion.xrel)/5) * scale;
-                    float pitch = -(((float)e.motion.yrel)/5) * scale;
+                    float pitch = (((float)e.motion.yrel)/5) * scale;
                     s.camera.moveYawPitch(yaw, pitch);
                     break;
                 }
@@ -113,6 +113,10 @@ GuiAction handleEvents(Scene& s, float frameTime, Params& p)
         s.camera.moveRight(-2 * scale);
     if(kbd[SDL_SCANCODE_D])
         s.camera.moveRight(2 * scale);
+    if(kbd[SDL_SCANCODE_SPACE])
+        s.camera.moveUp(2 * scale);
+    if(kbd[SDL_SCANCODE_LSHIFT])
+        s.camera.moveUp(-2 * scale);
     if(kbd[SDL_SCANCODE_COMMA])
         p.decVisScale();
     if(kbd[SDL_SCANCODE_PERIOD])
