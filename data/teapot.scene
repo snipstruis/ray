@@ -10,7 +10,7 @@
                 "kind" : "mesh",
                 "mesh_name" : "teapot",
                 "transform" : {
-                    "translate" : { "x" : 5, "y" : 0, "z" : 5},
+                    "translate" : { "x" : 3, "y" : 0, "z" : 3},
                     "rotate" : { "x" : 0, "y" : -15.00, "z" : 0.00}
                 }
             },{
@@ -25,7 +25,7 @@
                 "mesh_name" : "light",
                 "transform" : {
                     "translate" : { "x" : 0, "y" : 4, "z" : 0},
-                    "scale"     : { "x" : 2, "y" : 1, "z" : 2}
+                    "scale"     : { "x" : 3, "y" : 1, "z" : 3}
                 }
             }
         ],
@@ -38,10 +38,6 @@
             }
         ]
     },
-    "camera" : {
-        "origin" : { "x" : 1, "y" : 4, "z" : 1},
-        "look_angle" : { "yaw" : -135, "pitch" : 30},
-        "fov" : 40
-    }
+    "camera" : {"fov":40,"look_angle":{"pitch":16.9151592254639,"yaw":-286.760955810547},"origin":{"x":0.08487057685852,"y":1.38247120380402,"z":2.27513694763184}}
 }
 

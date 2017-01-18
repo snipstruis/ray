@@ -85,7 +85,7 @@ GuiAction handleEvents(Scene& s, float frameTime, Params& p)
                     case SDL_SCANCODE_P: return GA_SCREENSHOT;
                     case SDL_SCANCODE_R: s.camera.resetView(); break;
                     case SDL_SCANCODE_C: printCamera(s.camera); break;
-                    case SDL_SCANCODE_M: p.flipSmoothing(); break;
+                    case SDL_SCANCODE_M: s.camera.setDirty(); p.flipSmoothing(); break;
                     case SDL_SCANCODE_B: p.nextBvhMethod(); break;
                     case SDL_SCANCODE_T: p.flipTraversalMode(); break;
                     case SDL_SCANCODE_0: p.setVisMode(VisMode::Default); break;
@@ -96,6 +96,7 @@ GuiAction handleEvents(Scene& s, float frameTime, Params& p)
                     case SDL_SCANCODE_5: p.setVisMode(VisMode::SplitsTraversed); break;
                     case SDL_SCANCODE_6: p.setVisMode(VisMode::LeavesChecked); break;
                     case SDL_SCANCODE_7: p.setVisMode(VisMode::NodeIndex); break;
+                    case SDL_SCANCODE_9: s.camera.setDirty(); p.setVisMode(VisMode::PathTrace); break;
                     default:
                         break;
                 }
@@ -156,8 +157,24 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
     ScreenBuffer clampedScreenBuffer;
 
     AvgTimer frameTimer;
+    int prev_width=0, prev_height=0;
     while(true){
+<<<<<<< HEAD:interactive.h
         SDL_GL_GetDrawableSize(win, &s.camera.width, &s.camera.height);
+=======
+        int width, height;
+        SDL_GL_GetDrawableSize(win, &width, &height);
+        if(prev_width!=width || prev_height!=height){
+            // camera resized! update errythang
+            s.camera.setScreenRes(width, height);
+            screenBuffer.resize(s.camera.width() * s.camera.height());
+            clampedScreenBuffer.resize(s.camera.width() * s.camera.height());
+
+            glViewport(0, 0, s.camera.width(), s.camera.height());
+            prev_width = width; prev_height = height;
+            s.camera.setDirty();
+        }
+>>>>>>> 6745255... now with importance sampling (cosine distribution):interactive.hpp
 
         BVHMethod oldMethod = p.bvhMethod;
         GuiAction a = handleEvents(s, frameTimer.timer.lastDiff, p);
@@ -179,6 +196,7 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
             std::cout << "resetting average frametime" << std::endl;
             p.clearDirty();
             frameTimer.reset();
+<<<<<<< HEAD:interactive.h
         }
 
         // FIXME: maybe save a bit of work by only doing this if camera's moved
@@ -189,6 +207,21 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
         glViewport(0, 0, s.camera.width, s.camera.height);
 
         renderFrame(s, *bvh, p, screenBuffer);
+=======
+            SDL_SetRelativeMouseMode(p.captureMouse ? SDL_TRUE : SDL_FALSE);
+        }
+
+        if(s.camera.dirty())
+        {
+            std::cout << "camera dirty" << std::endl;
+
+            s.camera.buildCamera();
+            passes = 0;
+            s.camera.clearDirty();
+        }
+
+        renderFrame(s, *bvh, p, screenBuffer, passes);
+>>>>>>> 6745255... now with importance sampling (cosine distribution):interactive.hpp
        
         // blit to screen
         for(int i=0; i<screenBuffer.size(); i++){

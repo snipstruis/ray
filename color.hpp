@@ -15,6 +15,16 @@ inline Color scaleColor(glm::vec3 v, float base, float div){
                  (base+v.y)/div,
                  (base+v.z)/div);
 }
+inline bool isFinite(Color const& c){
+    return std::isfinite(c.r) 
+        && std::isfinite(c.g) 
+        && std::isfinite(c.b);
+}
+inline bool isClamped(Color const& c){
+    return c.r>=0.f && c.r<=1.f
+        && c.g>=0.f && c.g<=1.f
+        && c.b>=0.f && c.b<=1.f;
+}
 const Color BLACK(0.0f, 0.0f, 0.0f);
 const Color WHITE(1.0f, 1.0f, 1.0f);
 const Color PURPLE(1.0f, 0.0f, 1.0f);

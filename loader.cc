@@ -471,6 +471,14 @@ bool setupScene(std::string const& inputDir, std::string const& filename, Scene&
         return false;
     }
 
+    // fill in the light array
+    for(int i=0; i<scene.primitives.extra.size(); i++){
+        auto const& e = scene.primitives.extra[i];
+        auto const& mat = scene.primitives.materials[e.mat];
+        if(mat.isEmissive()) 
+            scene.primitives.light_indices.push_back(i);
+    }
+
     return true;
 }
 

@@ -10,7 +10,7 @@
                 "kind" : "mesh",
                 "mesh_name" : "dragon",
                 "transform" : {
-                    "translate" : { "x" : -1, "y" : 1, "z" : -1},
+                    "translate" : { "x" : -1, "y" : 0.85, "z" : -1},
                     "scale" : { "x" : 10, "y" : 10.00, "z" : 10.00}
                 }
             },{
