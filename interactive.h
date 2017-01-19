@@ -74,8 +74,8 @@ GuiAction handleEvents(Scene& s, float frameTime, Params& p)
                 {
                     // yes - it's "airplane" style at the moment - mouse down = view up.
                     // I'm going to get a cmdline working soon, make this an option
-                    float yaw = (((float)e.motion.xrel)/5) * scale;
-                    float pitch = (((float)e.motion.yrel)/5) * scale;
+                    float yaw = (((float)e.motion.xrel)/5) * 0.01;
+                    float pitch = (((float)e.motion.yrel)/5) * 0.01;
                     s.camera.moveYawPitch(yaw, pitch);
                     break;
                 }

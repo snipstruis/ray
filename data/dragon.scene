@@ -24,13 +24,6 @@
                 "kind" : "mesh",
                 "mesh_name" : "lightcube",
                 "transform" : {
-                    "translate" : { "x" :  4, "y" : 4, "z" : 0},
-                    "rotate"    : { "x" : 90, "y" : 0, "z" : 0}
-                }
-            },{
-                "kind" : "mesh",
-                "mesh_name" : "lightcube",
-                "transform" : {
                     "translate" : { "x" : -14, "y" : 2, "z" : 5},
                     "rotate"    : { "x" : 30, "y" : 0, "z" : 10},
                     "scale"     : { "x" : 3, "y" : 30, "z" : 3}

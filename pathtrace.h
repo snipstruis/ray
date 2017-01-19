@@ -15,7 +15,8 @@ Color pathTrace(
         const Ray& ray,
         const BVH& bvh,
         const Scene& scene,
-        const Params& p);
+        const Params& p,
+        bool prevMirror);
 
 static Rng rng = Rng(1337);
 
@@ -81,24 +82,36 @@ Color directIllumination(Scene const& scene, FancyIntersection const& fancy,
 }
 
 Color indirectIllumination(Scene const& scene, FancyIntersection const& fancy, 
-        BVH const& bvh, Params const& p, Material const& mat, int ray_ttl){
+        BVH const& bvh, Params const& p, Material const& mat, Ray ray, bool prevMirror){
     // terminate if we hit a light source 
     if (mat.isEmissive()) {
-        if(ray_ttl==STARTING_TTL) // lights should look bright
+        if(prevMirror) // lights should look bright
             return mat.emissive();
         else return BLACK; // but not count towards indirect illumination
     }
 
+    float reflect_chance = (mat.reflective().r+mat.reflective().g+mat.reflective().b)/3.f;
+    
+    // handle mirrors
+    if(mat.isReflective()){
+        glm::vec3 refl = glm::reflect(ray.direction, fancy.normal);
+        Ray reflray = Ray(fancy.impact+fancy.normal*EPSILON, refl, ray.ttl-1);
+        return pathTrace(reflray, bvh, scene, p, prevMirror);
+    }
+
+    // rest: handle diffuse
+
+    prevMirror=false;
 
     // continue in random direction
     glm::vec3 direction = diffuseDirectionCos(fancy.normal);
     Ray newray(fancy.impact + EPSILON*fancy.normal,
                direction,
-               ray_ttl-1);
+               ray.ttl-1);
 
     glm::vec3 BRDF = mat.diffuse() * INVPI;
     float PDF = glm::dot(fancy.normal,direction)*INVPI;
-    Color ii = glm::dot(fancy.normal, direction) * pathTrace(newray, bvh, scene, p) / PDF;
+    Color ii = glm::dot(fancy.normal, direction) * pathTrace(newray, bvh, scene, p, prevMirror) / PDF;
     return BRDF * ii;
 }
         
@@ -106,7 +119,8 @@ Color pathTrace(
         const Ray& ray,
         const BVH& bvh,
         const Scene& scene,
-        const Params& p) {
+        const Params& p,
+        bool prevMirror = true) {
     if(ray.ttl == 0) return BLACK;
     
     const MiniIntersection mini = 
@@ -121,7 +135,7 @@ Color pathTrace(
 
     // direct illumination
     Color di = directIllumination(scene, fancy, bvh, p, mat);
-    Color ii = indirectIllumination(scene, fancy, bvh, p, mat, ray.ttl);
+    Color ii = indirectIllumination(scene, fancy, bvh, p, mat, ray, true);
     return di + ii;
 }
 

@@ -478,6 +478,7 @@ bool setupScene(std::string const& inputDir, std::string const& filename, Scene&
         if(mat.isEmissive()) 
             scene.primitives.light_indices.push_back(i);
     }
+    printf("light emmiting triangles: %d\n", scene.primitives.light_indices.size());
 
     return true;
 }
