@@ -91,13 +91,13 @@ Color indirectIllumination(Scene const& scene, FancyIntersection const& fancy,
 
 
     // continue in random direction
-    glm::vec3 direction = diffuseDirectionUni(fancy.normal);
+    glm::vec3 direction = diffuseDirectionCos(fancy.normal);
     Ray newray(fancy.impact + EPSILON*fancy.normal,
                direction,
                ray_ttl-1);
 
     glm::vec3 BRDF = mat.diffuse() * INVPI;
-    float PDF = 1.f/(2.f*PI);//glm::dot(fancy.normal,direction)*INVPI;
+    float PDF = glm::dot(fancy.normal,direction)*INVPI;
     Color ii = glm::dot(fancy.normal, direction) * pathTrace(newray, bvh, scene, p) / PDF;
     return BRDF * ii;
 }
