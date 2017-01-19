@@ -11,10 +11,16 @@
 #include <cmath>
 #include <vector>
 
+Color pathTrace(
+        const Ray& ray,
+        const BVH& bvh,
+        const Scene& scene,
+        const Params& p);
+
 static Rng rng = Rng(1337);
 
 // thanks Jacco!
-glm::vec3 diffuseDirection(const glm::vec3 norm){
+glm::vec3 diffuseDirectionCos(glm::vec3 const& norm){
     // random point on unit disk
     float rr = rng.floatRange(0.f,1.f);
     float r  = sqrt(rr);
@@ -26,6 +32,13 @@ glm::vec3 diffuseDirection(const glm::vec3 norm){
     // transform to tangent space
     glm::vec3 diff= glm::cross(glm::vec3(0,0,1),norm);
     return glm::rotate(v, glm::length(diff), glm::normalize(diff));
+}
+
+glm::vec3 diffuseDirectionUni(glm::vec3 const& norm){
+    float theta = rng.floatRange( 0.0f, 2.0f * PI);
+    float r = sqrt( rng.floatRange( 0.0f, 1.0f ) );
+    float z = sqrt( 1.0f - r*r ) * (rng.asUint()&1? 1.f:-1.f);
+    return glm::vec3( r * cos(theta), r * sin(theta), z );
 }
 
 inline glm::vec3 random_point_on_triangle(TrianglePos const& t){
@@ -44,7 +57,7 @@ Color directIllumination(Scene const& scene, FancyIntersection const& fancy,
     auto const& light_indices = scene.primitives.light_indices;
     int const  random_index = light_indices[rng.intRange(0,light_indices.size()-1)];
     TrianglePos const& random_triangle = scene.primitives.pos[random_index];
-    glm::vec3 l = random_point_on_triangle(random_triangle);
+    glm::vec3 l = random_point_on_triangle(random_triangle) - fancy.impact;
     float dist = glm::length(l);
     l /= dist;
 
@@ -62,11 +75,33 @@ Color directIllumination(Scene const& scene, FancyIntersection const& fancy,
 
     // calculate transport
     auto lightmat = scene.primitives.materials[scene.primitives.extra[random_index].mat];
-    float solidAngle = (cos_o*random_triangle.area())/(dist*dist);
     glm::vec3 BRDF = mat.diffuse() * INVPI;
-    return lightmat.emissive() * solidAngle * BRDF * cos_i;
+    float solidAngle = (cos_o*random_triangle.area()) / (dist*dist);
+    return BRDF * (float)light_indices.size() * lightmat.emissive() * solidAngle * cos_i;
 }
 
+Color indirectIllumination(Scene const& scene, FancyIntersection const& fancy, 
+        BVH const& bvh, Params const& p, Material const& mat, int ray_ttl){
+    // terminate if we hit a light source 
+    if (mat.isEmissive()) {
+        if(ray_ttl==STARTING_TTL) // lights should look bright
+            return mat.emissive();
+        else return BLACK; // but not count towards indirect illumination
+    }
+
+
+    // continue in random direction
+    glm::vec3 direction = diffuseDirectionUni(fancy.normal);
+    Ray newray(fancy.impact + EPSILON*fancy.normal,
+               direction,
+               ray_ttl-1);
+
+    glm::vec3 BRDF = mat.diffuse() * INVPI;
+    float PDF = 1.f/(2.f*PI);//glm::dot(fancy.normal,direction)*INVPI;
+    Color ii = glm::dot(fancy.normal, direction) * pathTrace(newray, bvh, scene, p) / PDF;
+    return BRDF * ii;
+}
+        
 Color pathTrace(
         const Ray& ray,
         const BVH& bvh,
@@ -84,26 +119,9 @@ Color pathTrace(
         FancyIntersect(mini, scene.primitives, ray, p.smoothing);
     const Material& mat = scene.primitives.materials[fancy.mat];
 
-    glm::vec3 BRDF = mat.diffuse() * INVPI;
-    
-    // terminate if we hit a light source 
-    if (mat.isEmissive()) {
-        //if(ray.ttl==STARTING_TTL) // lights should look bright
-            return mat.emissive();
-        //else return BLACK; // but not count towards indirect illumination
-    }
-
-    // continue in random direction
-    glm::vec3 direction = diffuseDirection(fancy.normal);
-    float PDF = glm::dot(fancy.normal,direction)/PI;
-
-    Ray newray(fancy.impact + EPSILON*fancy.normal,
-               direction,
-               ray.ttl-1);
-    Color ii = glm::dot(fancy.normal, direction) * pathTrace(newray, bvh, scene, p) / PDF;
-
     // direct illumination
-    //Color di = directIllumination(scene, fancy, bvh, p, mat);
-    return PI * 2.0f * BRDF * ii;// + di;
+    Color di = directIllumination(scene, fancy, bvh, p, mat);
+    Color ii = indirectIllumination(scene, fancy, bvh, p, mat, ray.ttl);
+    return di + ii;
 }
 

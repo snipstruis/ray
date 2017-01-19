@@ -55,6 +55,7 @@ struct Rng{
         assert(ret<=max);
         return ret;
     }
+    /*
     bool      asBool(){return asUint()&1;}
     glm::vec3 asUnitVector(){
        float theta = floatRange(0.f,2.f*PI);
@@ -62,6 +63,7 @@ struct Rng{
        float z = sqrt(1.f-r*r);// * (asBool()?-1.f:1.f);
        return glm::vec3(r*cos(theta), r*sin(theta), z);
     }
+    */
 };
 
 // check an angle is clamped -2pi < angle < 2pi (ie within one rotation either way)
