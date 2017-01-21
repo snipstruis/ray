@@ -1,10 +1,9 @@
 #pragma once
 
-#include "bvh_traverse.hpp"
-#include "color.hpp"
-#include "scene.hpp"
-#include "triangle.hpp"
-#include "utils.hpp"
+#include "bvh_traverse.h"
+#include "scene.h"
+#include "primitive.h"
+#include "utils.h"
 
 #include "glm/gtx/vector_query.hpp"
 
@@ -56,6 +55,7 @@ Color directIllumination(Scene const& scene, FancyIntersection const& fancy,
                          BVH const& bvh, Params const& p, Material const& mat){
     // picking random point on light
     auto const& light_indices = scene.primitives.light_indices;
+    assert(light_indices.size()>0);
     int const  random_index = light_indices[rng.intRange(0,light_indices.size()-1)];
     TrianglePos const& random_triangle = scene.primitives.pos[random_index];
     glm::vec3 l = random_point_on_triangle(random_triangle) - fancy.impact;
@@ -70,34 +70,35 @@ Color directIllumination(Scene const& scene, FancyIntersection const& fancy,
     if(cos_i<=0.f) return BLACK;
 
     // light not behind face, trace shadow ray
-    Ray shadowray = Ray(fancy.impact+EPSILON*l, l, 1);
+    Ray shadowray = Ray(fancy.impact+EPSILON*l, l, 0, 1);
     if(findAnyIntersectionBVH(bvh, scene.primitives, shadowray, 
                               dist-2*EPSILON, p.traversalMode)) return BLACK;
 
     // calculate transport
     auto lightmat = scene.primitives.materials[scene.primitives.extra[random_index].mat];
-    glm::vec3 BRDF = mat.diffuse() * INVPI;
+    glm::vec3 BRDF = mat.diffuseColor * INVPI;
     float solidAngle = (cos_o*random_triangle.area()) / (dist*dist);
-    return BRDF * (float)light_indices.size() * lightmat.emissive() * solidAngle * cos_i;
+    return BRDF * (float)light_indices.size() * lightmat.emissive * solidAngle * cos_i;
 }
 
 Color indirectIllumination(Scene const& scene, FancyIntersection const& fancy, 
         BVH const& bvh, Params const& p, Material const& mat, Ray ray, bool prevMirror){
     // terminate if we hit a light source 
-    if (mat.isEmissive()) {
+    if (mat.emissive!=BLACK) {
         if(prevMirror) // lights should look bright
-            return mat.emissive();
+            return mat.emissive;
         else return BLACK; // but not count towards indirect illumination
     }
 
-    float reflect_chance = (mat.reflective().r+mat.reflective().g+mat.reflective().b)/3.f;
     
     // handle mirrors
-    if(mat.isReflective()){
+    /*
+    if(mat.reflectiveness!=BLACK){
         glm::vec3 refl = glm::reflect(ray.direction, fancy.normal);
-        Ray reflray = Ray(fancy.impact+fancy.normal*EPSILON, refl, ray.ttl-1);
+        Ray reflray = Ray(fancy.impact+fancy.normal*EPSILON, refl, ray.mat, ray.ttl-1);
         return pathTrace(reflray, bvh, scene, p, prevMirror);
     }
+    */
 
     // rest: handle diffuse
 
@@ -107,9 +108,10 @@ Color indirectIllumination(Scene const& scene, FancyIntersection const& fancy,
     glm::vec3 direction = diffuseDirectionCos(fancy.normal);
     Ray newray(fancy.impact + EPSILON*fancy.normal,
                direction,
+               ray.mat,
                ray.ttl-1);
 
-    glm::vec3 BRDF = mat.diffuse() * INVPI;
+    glm::vec3 BRDF = mat.diffuseColor * INVPI;
     float PDF = glm::dot(fancy.normal,direction)*INVPI;
     Color ii = glm::dot(fancy.normal, direction) * pathTrace(newray, bvh, scene, p, prevMirror) / PDF;
     return BRDF * ii;
@@ -130,7 +132,8 @@ Color pathTrace(
     if(!mini.hit()) return BLACK;
 
     const FancyIntersection fancy = 
-        FancyIntersect(mini, scene.primitives, ray, p.smoothing);
+        FancyIntersect(mini.distance, scene.primitives.pos[mini.triangle], 
+                                      scene.primitives.extra[mini.triangle], ray, p.smoothing);
     const Material& mat = scene.primitives.materials[fancy.mat];
 
     // direct illumination

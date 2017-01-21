@@ -47,7 +47,7 @@ struct Camera{
         startingOrigin(1.0f, 1.0f, -1.0f),
         startingPitch(PI/6), 
         startingYaw(-PI/6), 
-        startingFov(DEFAULT_FOV) {
+        startingFov(DEFAULT_FOV){
 
         resetView();
         buildLookVectors();
@@ -81,7 +81,7 @@ struct Camera{
 
         // convert pixel space to percent across the screen
         float px = ((float)x)/width;
-        float py = ((float)y)/width;
+        float py = ((float)y)/height;
 
         // using pre-existing u & v vectors, get a point on the screen in world space
         glm::vec3 screenPoint = top_left + (px * u) + (py * v);
@@ -161,12 +161,20 @@ struct Camera{
     // TODO could optimise this - use a bool instead of multiplying by d
     // we only ever move either fwd or back (not varying distances)
     void moveForward(float d) {
+        float y = origin.y;
         origin += d * look_forward;
+        origin.y=y;
     }
 
     // move left/right (positive = right)
     void moveRight(float d) {
+        float y = origin.y;
         origin += d * look_right;
+        origin.y=y;
+    }
+
+    void moveUp(float d){
+        origin.y += d;
     }
 
     void moveYawPitch(float deltaYaw, float deltaPitch){

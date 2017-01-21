@@ -1,6 +1,5 @@
 #pragma once 
 #include "bvh_traverse.h"
-#include "color.h"
 #include "basics.h"
 #include "primitive.h"
 #include "scene.h"
@@ -20,9 +19,9 @@ inline Color calcLightOutput(PointLight const& light,
                      Material const& mat,
                      glm::vec3 const& lightDir) {
 
-    assert(mat.diffuseColor.isFinite());
-    assert(mat.specular_highlight.isFinite());
-    assert(light.color.isFinite());
+    assert(isFinite(mat.diffuseColor));
+    assert(isFinite(mat.specular_highlight));
+    assert(isFinite(light.color));
     assert(glm::isNormalized(hit.normal, EPSILON));
     assert(glm::isNormalized(lightDir, EPSILON));
 
@@ -32,9 +31,9 @@ inline Color calcLightOutput(PointLight const& light,
     assert(std::isfinite(falloff));
 
     Color ret = mat.diffuseColor * light.color * falloff * diff;
-    assert(ret.isFinite());
+    assert(isFinite(ret));
 
-    if(!mat.specular_highlight.isBlack()){
+    if(mat.specular_highlight!=BLACK){
         glm::vec3 refl = glm::reflect(lightDir,hit.normal);
         float dot = glm::dot(ray.direction,refl);
         if(dot>0.f){
@@ -42,7 +41,7 @@ inline Color calcLightOutput(PointLight const& light,
         } 
     }
 
-    assert(ret.isFinite());
+    assert(isFinite(ret));
     return ret;
 }
 
@@ -95,7 +94,7 @@ inline Color diffuse(Ray const& ray,
             color += calcLightOutput(light, light_distance, ray, hit, mat, light_direction);
         }
     }
-    assert(color.isFinite());
+    assert(isFinite(color));
     return color;
 }
 
@@ -112,7 +111,7 @@ inline Color calcTotalDiffuse(Ray const& ray,
     color += diffuse(ray, bvh, primitives, lights.pointLights, hit, mat, p);
     color += diffuse(ray, bvh, primitives, lights.spotLights, hit, mat, p);
 
-    assert(color.isFinite());
+    assert(isFinite(color));
     return color;
 }
 
@@ -122,7 +121,7 @@ Color trace(Ray const& ray,
             Lights const& lights,
             Color const& alpha,
             Params const& p){
-    assert(alpha.isFinite());
+    assert(isFinite(alpha));
 
     if(ray.ttl<=0) 
         return alpha;
@@ -151,11 +150,11 @@ Color trace(Ray const& ray,
     Color color = BLACK;
 
     // shadows and lighting
-    if(!mat.diffuseColor.isBlack()){
+    if(mat.diffuseColor!=BLACK){
         color += calcTotalDiffuse(ray, bvh, primitives, lights, fancy, mat, p);
     }
 
-    assert(color.isFinite());
+    assert(isFinite(color));
 
     // angle-depenent transparancy (for dielectric materials)
     Color reflectiveness = mat.reflectiveness;
@@ -185,7 +184,7 @@ Color trace(Ray const& ray,
     }
     
     // reflection (mirror)
-    if(!reflectiveness.isBlack()){
+    if(reflectiveness!=BLACK){
         Ray r = Ray(fancy.impact+fancy.normal*1e-4f,
                     glm::reflect(ray.direction, fancy.normal),
                     ray.mat,

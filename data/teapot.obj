@@ -2,8 +2,6 @@
 # object Teapot001
 #
 
-mtllib teapot.mtl
-usemtl BodyGlossMat
 v  33.647778 59.807484 4.662212
 v  33.322739 59.872997 4.617175
 v  34.018166 59.610893 4.713532

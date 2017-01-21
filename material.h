@@ -1,11 +1,8 @@
 #pragma once
 
 #include "basics.h"
-#include "color.h"
 
 #include <vector>
-
-const Color BLACK(0.f, 0.f, 0.f);
 
 struct Material{
     Material() = default;
@@ -16,15 +13,16 @@ struct Material{
              float ri=1.f, 
              int check=-1, 
              Color highlight=BLACK, 
-             float shi=20.0f) :
+             float shi=20.0f,
+             Color emis=BLACK) :
         diffuseColor(_diffuseColor),
         reflectiveness(_reflectiveness), 
         transparency(t),
         refraction_index(ri),
         checkered(check),
         specular_highlight(highlight),
-        shininess(shi){};
-
+        shininess(shi),
+        emissive(emis){};
     Color diffuseColor;
     Color reflectiveness;
     float transparency;
@@ -32,6 +30,7 @@ struct Material{
     int checkered;
     Color specular_highlight; // brightness of specular highlight
     float shininess;          // the power to which te spec. highlight is raised
+    Color emissive;
 };
 
 const int MATERIAL_AIR = 0;

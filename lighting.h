@@ -1,7 +1,6 @@
 #pragma once
 
 #include "basics.h"
-#include "color.h"
 #include "lighting.h"
 
 #include "glm/vec3.hpp"

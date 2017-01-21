@@ -166,7 +166,8 @@ int createMaterial(Scene& s, tinyobj::material_t const& m){
             m.ior,  // refractive index
             -1,     // no checkerboard
             Color(m.specular[0], m.specular[1], m.specular[2]), // specular highlight color
-            m.shininess);  // shininess
+            m.shininess,
+            Color(m.emission[0], m.emission[1], m.emission[2]));// shininess
 
     // return the index of this newly created material.
     auto globalMatId = s.primitives.materials.size() - 1;
@@ -475,10 +476,10 @@ bool setupScene(std::string const& inputDir, std::string const& filename, Scene&
     for(int i=0; i<scene.primitives.extra.size(); i++){
         auto const& e = scene.primitives.extra[i];
         auto const& mat = scene.primitives.materials[e.mat];
-        if(mat.isEmissive()) 
+        if(!(mat.emissive.r==0 && mat.emissive.g==0 && mat.emissive.b==0))
             scene.primitives.light_indices.push_back(i);
     }
-    printf("light emmiting triangles: %d\n", scene.primitives.light_indices.size());
+    printf("light emmiting triangles: %zu\n", scene.primitives.light_indices.size());
 
     return true;
 }

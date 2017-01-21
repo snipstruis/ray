@@ -57,7 +57,7 @@ enum GuiAction {
 
 // process input
 // returns action to be performed
-GuiAction handleEvents(Scene& s, float frameTime, Params& p)
+GuiAction handleEvents(Scene& s, float frameTime, Params& p, Uint8 const* kbd, bool& camera_dirty)
 {
     SDL_Event e;
     float scale = frameTime;
@@ -72,11 +72,10 @@ GuiAction handleEvents(Scene& s, float frameTime, Params& p)
                 break;
             case SDL_MOUSEMOTION:
                 {
-                    // yes - it's "airplane" style at the moment - mouse down = view up.
-                    // I'm going to get a cmdline working soon, make this an option
                     float yaw = (((float)e.motion.xrel)/5) * 0.01;
                     float pitch = (((float)e.motion.yrel)/5) * 0.01;
                     s.camera.moveYawPitch(yaw, pitch);
+                    camera_dirty=true;
                     break;
                 }
             case SDL_KEYDOWN:
@@ -85,9 +84,10 @@ GuiAction handleEvents(Scene& s, float frameTime, Params& p)
                     case SDL_SCANCODE_P: return GA_SCREENSHOT;
                     case SDL_SCANCODE_R: s.camera.resetView(); break;
                     case SDL_SCANCODE_C: printCamera(s.camera); break;
-                    case SDL_SCANCODE_M: s.camera.setDirty(); p.flipSmoothing(); break;
+                    case SDL_SCANCODE_M: camera_dirty=true; p.flipSmoothing(); break;
                     case SDL_SCANCODE_B: p.nextBvhMethod(); break;
                     case SDL_SCANCODE_T: p.flipTraversalMode(); break;
+                    case SDL_SCANCODE_Q: p.captureMouse=true; break;
                     case SDL_SCANCODE_0: p.setVisMode(VisMode::Default); break;
                     case SDL_SCANCODE_1: p.setVisMode(VisMode::Microseconds); break;
                     case SDL_SCANCODE_2: p.setVisMode(VisMode::Normal); break;
@@ -96,7 +96,7 @@ GuiAction handleEvents(Scene& s, float frameTime, Params& p)
                     case SDL_SCANCODE_5: p.setVisMode(VisMode::SplitsTraversed); break;
                     case SDL_SCANCODE_6: p.setVisMode(VisMode::LeavesChecked); break;
                     case SDL_SCANCODE_7: p.setVisMode(VisMode::NodeIndex); break;
-                    case SDL_SCANCODE_9: s.camera.setDirty(); p.setVisMode(VisMode::PathTrace); break;
+                    case SDL_SCANCODE_9: camera_dirty=true; p.setVisMode(VisMode::PathTrace); break;
                     default:
                         break;
                 }
@@ -104,24 +104,15 @@ GuiAction handleEvents(Scene& s, float frameTime, Params& p)
         };
     }
 
-    Uint8 const * kbd = SDL_GetKeyboardState(NULL);
 
-    if(kbd[SDL_SCANCODE_S])
-        s.camera.moveForward(-2 * scale);
-    if(kbd[SDL_SCANCODE_W]) 
-        s.camera.moveForward(2 * scale);
-    if(kbd[SDL_SCANCODE_A])
-        s.camera.moveRight(-2 * scale);
-    if(kbd[SDL_SCANCODE_D])
-        s.camera.moveRight(2 * scale);
-    if(kbd[SDL_SCANCODE_SPACE])
-        s.camera.moveUp(2 * scale);
-    if(kbd[SDL_SCANCODE_LSHIFT])
-        s.camera.moveUp(-2 * scale);
-    if(kbd[SDL_SCANCODE_COMMA])
-        p.decVisScale();
-    if(kbd[SDL_SCANCODE_PERIOD])
-        p.incVisScale();
+    if(kbd[SDL_SCANCODE_S]){camera_dirty=true; s.camera.moveForward(-2 * scale);}
+    if(kbd[SDL_SCANCODE_W]){camera_dirty=true; s.camera.moveForward(2 * scale);}
+    if(kbd[SDL_SCANCODE_A]){camera_dirty=true; s.camera.moveRight(-2 * scale);}
+    if(kbd[SDL_SCANCODE_D]){camera_dirty=true; s.camera.moveRight(2 * scale);}
+    if(kbd[SDL_SCANCODE_SPACE]){camera_dirty=true; s.camera.moveUp(2 * scale);}
+    if(kbd[SDL_SCANCODE_LSHIFT]){camera_dirty=true; s.camera.moveUp(-2 * scale);}
+    if(kbd[SDL_SCANCODE_COMMA]){camera_dirty=true; p.decVisScale();}
+    if(kbd[SDL_SCANCODE_PERIOD]){camera_dirty=true; p.incVisScale();}
     
     return GA_NONE;
 }
@@ -153,31 +144,36 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
     // switch on relative mouse mode - hides the cursor, and kinda makes things... relative.
     SDL_SetRelativeMouseMode(SDL_TRUE);
 
-    ScreenBuffer screenBuffer; // will be sized on first loop
+    Uint8 const * kbd = SDL_GetKeyboardState(NULL);
+
+    // will be sized on first loop
+    ScreenBuffer screenBuffer; 
     ScreenBuffer clampedScreenBuffer;
+
+    // for path-tracing
+    bool camera_dirty = true;
+    int passes = 0;
+
 
     AvgTimer frameTimer;
     int prev_width=0, prev_height=0;
     while(true){
-<<<<<<< HEAD:interactive.h
-        SDL_GL_GetDrawableSize(win, &s.camera.width, &s.camera.height);
-=======
         int width, height;
         SDL_GL_GetDrawableSize(win, &width, &height);
         if(prev_width!=width || prev_height!=height){
             // camera resized! update errythang
-            s.camera.setScreenRes(width, height);
-            screenBuffer.resize(s.camera.width() * s.camera.height());
-            clampedScreenBuffer.resize(s.camera.width() * s.camera.height());
+            s.camera.width = width;
+            s.camera.height= height;
+            screenBuffer.resize(s.camera.width * s.camera.height);
+            clampedScreenBuffer.resize(s.camera.width * s.camera.height);
 
-            glViewport(0, 0, s.camera.width(), s.camera.height());
+            glViewport(0, 0, s.camera.width, s.camera.height);
             prev_width = width; prev_height = height;
-            s.camera.setDirty();
+            camera_dirty=true;
         }
->>>>>>> 6745255... now with importance sampling (cosine distribution):interactive.hpp
 
         BVHMethod oldMethod = p.bvhMethod;
-        GuiAction a = handleEvents(s, frameTimer.timer.lastDiff, p);
+        GuiAction a = handleEvents(s, frameTimer.timer.lastDiff, p, kbd, camera_dirty);
 
         if (a==GA_QUIT)
             break;
@@ -196,38 +192,22 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
             std::cout << "resetting average frametime" << std::endl;
             p.clearDirty();
             frameTimer.reset();
-<<<<<<< HEAD:interactive.h
-        }
-
-        // FIXME: maybe save a bit of work by only doing this if camera's moved
-        s.camera.buildCamera();
-        screenBuffer.resize(s.camera.width() * s.camera.height());
-        clampedScreenBuffer.resize(s.camera.width() * s.camera.height());
-
-        glViewport(0, 0, s.camera.width, s.camera.height);
-
-        renderFrame(s, *bvh, p, screenBuffer);
-=======
             SDL_SetRelativeMouseMode(p.captureMouse ? SDL_TRUE : SDL_FALSE);
         }
 
-        if(s.camera.dirty())
-        {
-            std::cout << "camera dirty" << std::endl;
-
+        if(camera_dirty) {
             s.camera.buildCamera();
             passes = 0;
-            s.camera.clearDirty();
+            camera_dirty = false;
         }
 
-        renderFrame(s, *bvh, p, screenBuffer, passes);
->>>>>>> 6745255... now with importance sampling (cosine distribution):interactive.hpp
+        renderFrame(s, *bvh, p, screenBuffer, passes++);
        
         // blit to screen
         for(int i=0; i<screenBuffer.size(); i++){
-            clampedScreenBuffer[i] = clamp(screenBuffer[i]);
+            clampedScreenBuffer[i] = colorClamp(screenBuffer[i]);
         }
-        glDrawPixels(s.camera.width(), s.camera.height(), GL_RGB, GL_FLOAT, screenBuffer.data());
+        glDrawPixels(s.camera.width, s.camera.height, GL_RGB, GL_FLOAT, screenBuffer.data());
 
         float frametimeAv = frameTimer.sample();
         if(frameTimer.timer.lastDiff > 1.0f)

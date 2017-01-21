@@ -43,6 +43,10 @@ struct TrianglePos{
     bool hasArea() const {
         return (v[0] != v[1]) && (v[1] != v[2]) && (v[2] != v[0]);
     }
+     
+    float area() const {
+        return 0.5f*glm::length(glm::cross(v[1]-v[0], v[2]-v[0]));
+    }
 
     glm::vec3 v[3];
 };
@@ -85,6 +89,7 @@ struct Primitives{
     // They are seperate to improve cache performance. Indicies must line up.
     TrianglePosSet pos;
     TriangleExtraSet extra;
+    std::vector<int> light_indices;
 };
 
 // result of an intersection calculation

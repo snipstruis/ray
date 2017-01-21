@@ -1,7 +1,7 @@
 {
     "load_meshes" : {
         "teapot" : "wt_teapot.obj",
-        "light" : "arealight.obj",
+        "light" : "light.obj",
         "plane" : "plane.obj"
     },
     "world" : {

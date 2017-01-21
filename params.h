@@ -8,7 +8,8 @@ enum class VisMode {
     SplitsTraversed,
     TrianglesChecked,
     LeavesChecked,
-    LeafDepth
+    LeafDepth,
+    PathTrace
 };
 
 const char* GetVisModeStr(VisMode m) {
@@ -21,6 +22,7 @@ const char* GetVisModeStr(VisMode m) {
         case VisMode::TrianglesChecked: return "triangles checked";
         case VisMode::LeavesChecked: return "leaves checked";
         case VisMode::LeafDepth: return "leaf depth";
+        case VisMode::PathTrace: return "path trace";
     }
 
 	return ""; // silence msvc warn
@@ -65,7 +67,8 @@ struct Params {
         bvhMethod(BVHMethod::SBVH),
         smoothing(true),
         dirty(true),
-        visScaleSetManually(false)
+        visScaleSetManually(false),
+        captureMouse(true)
     {}
 
     void flipSmoothing() {
@@ -117,6 +120,7 @@ struct Params {
 	TraversalMode traversalMode;
     BVHMethod bvhMethod;
     bool smoothing;
+    bool captureMouse;
     bool dirty; // has something changed recently?
     bool visScaleSetManually; // has the user explicitly adjusted vis scale? (ie pressed . or ,) ? 
 };
