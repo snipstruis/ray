@@ -90,15 +90,12 @@ Color indirectIllumination(Scene const& scene, FancyIntersection const& fancy,
         else return BLACK; // but not count towards indirect illumination
     }
 
-    
     // handle mirrors
-    /*
-    if(mat.reflectiveness!=BLACK){
+    if(mat.reflectiveness.r+mat.reflectiveness.g+mat.reflectiveness.b > rng.floatRange(0,3)){
         glm::vec3 refl = glm::reflect(ray.direction, fancy.normal);
         Ray reflray = Ray(fancy.impact+fancy.normal*EPSILON, refl, ray.mat, ray.ttl-1);
         return pathTrace(reflray, bvh, scene, p, prevMirror);
     }
-    */
 
     // rest: handle diffuse
 

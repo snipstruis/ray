@@ -82,7 +82,7 @@ GuiAction handleEvents(Scene& s, float frameTime, Params& p, Uint8 const* kbd, b
                 switch(e.key.keysym.scancode){
                     case SDL_SCANCODE_ESCAPE:  return GA_QUIT;
                     case SDL_SCANCODE_P: return GA_SCREENSHOT;
-                    case SDL_SCANCODE_R: s.camera.resetView(); break;
+                    case SDL_SCANCODE_R: camera_dirty=true; s.camera.resetView(); break;
                     case SDL_SCANCODE_C: printCamera(s.camera); break;
                     case SDL_SCANCODE_M: camera_dirty=true; p.flipSmoothing(); break;
                     case SDL_SCANCODE_B: p.nextBvhMethod(); break;
