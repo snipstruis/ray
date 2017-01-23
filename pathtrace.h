@@ -82,7 +82,9 @@ Color directIllumination(Scene const& scene, FancyIntersection const& fancy,
 }
 
 Color indirectIllumination(Scene const& scene, FancyIntersection const& fancy, 
-        BVH const& bvh, Params const& p, Material const& mat, Ray ray, bool prevMirror){
+        BVH const& bvh, Params const& p, Material const& mat, 
+        Ray ray, Material const& raymat, bool prevMirror){
+
     // terminate if we hit a light source 
     if (mat.emissive!=BLACK) {
         if(prevMirror) // lights should look bright
@@ -90,12 +92,41 @@ Color indirectIllumination(Scene const& scene, FancyIntersection const& fancy,
         else return BLACK; // but not count towards indirect illumination
     }
 
+    Color reflectiveness = mat.reflectiveness;
+    float transparency   = mat.transparency;
+
+    // angle-depenent transparancy (for dielectric materials)
+    if(mat.transparency > 0.f){
+        float n1 = raymat.refraction_index;
+        float n2 = mat.refraction_index;
+        float r0 = (n1-n2)/(n1+n2); r0*=r0;
+        float pow5 = 1.f-glm::dot(fancy.normal, -ray.direction);
+        float fr = r0+(1.f-r0)*pow5*pow5*pow5*pow5*pow5;
+        reflectiveness += transparency*fr;
+        transparency   -= transparency*fr;
+    }
+
+    // transparancy
+    if(transparency>rng.floatRange(0,1)){
+        glm::vec3 refract_direction = 
+            glm::refract(ray.direction, fancy.normal, 
+                    raymat.refraction_index/(fancy.internal?1.f:mat.refraction_index));
+        Ray refract_ray = Ray(fancy.impact-(fancy.normal*1e-4f),
+                refract_direction, 
+                //FIXME: exiting a primitive will set the material to air
+                fancy.internal ? MATERIAL_AIR : fancy.mat, 
+                ray.ttl-1);
+        return pathTrace(refract_ray, bvh, scene, p, prevMirror);
+    }
+
+
     // handle mirrors
-    if(mat.reflectiveness.r+mat.reflectiveness.g+mat.reflectiveness.b > rng.floatRange(0,3)){
+    if(reflectiveness.r+reflectiveness.g+reflectiveness.b > rng.floatRange(0,3)){
         glm::vec3 refl = glm::reflect(ray.direction, fancy.normal);
         Ray reflray = Ray(fancy.impact+fancy.normal*EPSILON, refl, ray.mat, ray.ttl-1);
         return pathTrace(reflray, bvh, scene, p, prevMirror);
     }
+
 
     // rest: handle diffuse
 
@@ -130,12 +161,14 @@ Color pathTrace(
 
     const FancyIntersection fancy = 
         FancyIntersect(mini.distance, scene.primitives.pos[mini.triangle], 
-                                      scene.primitives.extra[mini.triangle], ray, p.smoothing);
+                                      scene.primitives.extra[mini.triangle], 
+                                      ray, p.smoothing);
     const Material& mat = scene.primitives.materials[fancy.mat];
+    const Material& raymat = scene.primitives.materials[ray.mat];
 
     // direct illumination
     Color di = directIllumination(scene, fancy, bvh, p, mat);
-    Color ii = indirectIllumination(scene, fancy, bvh, p, mat, ray, true);
+    Color ii = indirectIllumination(scene, fancy, bvh, p, mat, ray, raymat, true);
     return di + ii;
 }
 

@@ -43,3 +43,13 @@ Ke 1.0 1.0 1.0
 Ni 1.000000
 d 1.000000
 illum 2
+
+newmtl Glass
+Ka 0.576471 0.647059 0.666667
+Kd 0.921569 0.945098 0.937255
+Ks 1 1 1
+illum 2
+Ns 147.033  #Shininess-Refraction value (multiplied by 0.128)
+d 0.21      #Alpha value
+Ni 1.5      #refraction
+
