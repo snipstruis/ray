@@ -23,17 +23,26 @@
                 }
             },{
                 "kind" : "mesh",
+                "mesh_name" : "plane",
+                "transform" : {
+                    "translate" : { "x" : 4, "y" : 0, "z" : 0},
+                    "scale"     : { "x" : 20, "y" : 1, "z" : 20},
+                    "rotate"    : { "x" : 0, "y" : 0, "z" : 90}
+                }
+            },{
+                "kind" : "mesh",
                 "mesh_name" : "sphere",
                 "transform" : {
-                    "translate" : { "x" : 0, "y" : 1, "z" : 0},
-                    "scale"     : { "x" : 0.01, "y" : 0.01, "z" : 0.01}
+                    "translate" : { "x" : 3, "y" : 1, "z" : 0},
+                    "scale"     : { "x" : 0.03, "y" : 0.05, "z" : 0.05}
                 }
             },{
                 "kind" : "mesh",
                 "mesh_name" : "light",
                 "transform" : {
-                    "translate" : { "x" : 0, "y" : 4, "z" : 0},
-                    "scale"     : { "x" : 3, "y" : 1, "z" : 3}
+                    "rotate"    : { "x" : 0, "y" : 0, "z" : 90},
+                    "translate" : { "x" : 0, "y" : 1, "z" : 0},
+                    "scale"     : { "x" : 1, "y" : 1, "z" : 5}
                 }
             }
         ],

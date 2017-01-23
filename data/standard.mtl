@@ -39,7 +39,7 @@ Ns 96.078431
 Ka 0.000000 0.000000 0.000000
 Kd 1.0 1.0 1.0
 Ks 0.015532 0.005717 0.002170
-Ke 1.0 1.0 1.0
+Ke 2.0 2.0 2.0
 Ni 1.000000
 d 1.000000
 illum 2
@@ -51,5 +51,5 @@ Ks 1 1 1
 illum 2
 Ns 147.033  #Shininess-Refraction value (multiplied by 0.128)
 d 0.21      #Alpha value
-Ni 1.5      #refraction
+Ni 1.52     #refraction
 

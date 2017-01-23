@@ -1,8 +1,8 @@
 # cube.obj
 #
  
-mtllib plane.mtl
-usemtl Grey
+mtllib standard.mtl
+usemtl Yellow
 
 g plane
  

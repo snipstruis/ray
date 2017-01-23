@@ -85,7 +85,7 @@ inline Color diffuse(Ray const& ray,
         float light_distance = glm::length(impact_to_light);
         glm::vec3 light_direction = glm::normalize(impact_to_light);
 
-        Ray shadow_ray = Ray(hit.impact + (hit.normal*1e-4f), light_direction, ray.mat, ray.ttl-1);
+        Ray shadow_ray = Ray(hit.impact + (hit.normal*EPSILON), light_direction, ray.mat, ray.ttl-1);
 
         // does this shadow ray hit any geometry?
         bool shadow_hit = findAnyIntersectionBVH(bvh, primitives, shadow_ray, light_distance, p.traversalMode);
@@ -175,7 +175,7 @@ Color trace(Ray const& ray,
         glm::vec3 refract_direction = 
             glm::refract(ray.direction, fancy.normal, 
                     raymat.refraction_index/(fancy.internal?1.f:mat.refraction_index));
-        Ray refract_ray = Ray(fancy.impact-(fancy.normal*1e-4f),
+        Ray refract_ray = Ray(fancy.impact-(fancy.normal*EPSILON),
                 refract_direction, 
                 //FIXME: exiting a primitive will set the material to air
                 fancy.internal ? MATERIAL_AIR : fancy.mat, 
@@ -185,7 +185,7 @@ Color trace(Ray const& ray,
     
     // reflection (mirror)
     if(reflectiveness!=BLACK){
-        Ray r = Ray(fancy.impact+fancy.normal*1e-4f,
+        Ray r = Ray(fancy.impact+fancy.normal*EPSILON,
                     glm::reflect(ray.direction, fancy.normal),
                     ray.mat,
                     ray.ttl-1);

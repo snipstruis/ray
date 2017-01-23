@@ -73,9 +73,9 @@ glm::mat4 handleTransform(json const& o) {
 
     if(o.find("rotate") != o.end()){
         auto const& rotate = readXYZ(o["rotate"]);
-        result = glm::rotate(result, rotate[0], glm::vec3(0.1f, 0.0f, 0.0f));
-        result = glm::rotate(result, rotate[1], glm::vec3(0.0f, 0.1f, 0.0f));
-        result = glm::rotate(result, rotate[2], glm::vec3(0.0f, 0.0f, 0.1f));
+        result = glm::rotate(result, glm::radians(rotate[0]), glm::vec3(0.1f, 0.0f, 0.0f));
+        result = glm::rotate(result, glm::radians(rotate[1]), glm::vec3(0.0f, 0.1f, 0.0f));
+        result = glm::rotate(result, glm::radians(rotate[2]), glm::vec3(0.0f, 0.0f, 0.1f));
     }
 
     // for now, we don't allow a zero scaling value. this could be legal if you wanted to

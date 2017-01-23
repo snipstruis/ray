@@ -111,7 +111,7 @@ Color indirectIllumination(Scene const& scene, FancyIntersection const& fancy,
         glm::vec3 refract_direction = 
             glm::refract(ray.direction, fancy.normal, 
                     raymat.refraction_index/(fancy.internal?1.f:mat.refraction_index));
-        Ray refract_ray = Ray(fancy.impact-(fancy.normal*1e-4f),
+        Ray refract_ray = Ray(fancy.impact-(fancy.normal*EPSILON),
                 refract_direction, 
                 //FIXME: exiting a primitive will set the material to air
                 fancy.internal ? MATERIAL_AIR : fancy.mat, 
