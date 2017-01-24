@@ -4,6 +4,11 @@
 
 #include <vector>
 
+struct Texture{
+    int w,h,channels;
+    float* pixels;
+};
+
 struct Material{
     Material() = default;
 
@@ -14,7 +19,8 @@ struct Material{
              int check=-1, 
              Color highlight=BLACK, 
              float shi=20.0f,
-             Color emis=BLACK) :
+             Color emis=BLACK,
+             int   diffuseTexture=-1) :
         diffuseColor(_diffuseColor),
         reflectiveness(_reflectiveness), 
         transparency(t),
@@ -24,6 +30,7 @@ struct Material{
         shininess(shi),
         emissive(emis){};
     Color diffuseColor;
+    int   diffuseTexture;
     Color reflectiveness;
     float transparency;
     float refraction_index;
@@ -38,7 +45,7 @@ const int MATERIAL_CHECKER = 1;
 const int MATERIAL_REFLECTIVE_BLUE= 2;
 
 // if a mesh doesn't have a material, it'll get this one
-const int DEFAULT_MATERIAL = MATERIAL_REFLECTIVE_BLUE;
+const int DEFAULT_MATERIAL = MATERIAL_CHECKER;
 
 inline void buildFixedMaterials(std::vector<Material>& v){
     // AIR
@@ -51,7 +58,7 @@ inline void buildFixedMaterials(std::vector<Material>& v){
     v.emplace_back(Color(0.6f, 0.6f, 0.6f), // diffuse col
                    BLACK,  // reflective
                    0.0f,  // transparency
-                   1.f,   // refractive indexx
+                   1.f,   // refractive index
                    MATERIAL_REFLECTIVE_BLUE);
 
     // REFLECTIVE BLUE

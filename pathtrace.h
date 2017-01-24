@@ -103,7 +103,11 @@ Color indirectIllumination(Scene const& scene, FancyIntersection const& fancy,
         float pow5 = 1.f-glm::dot(fancy.normal, -ray.direction);
         float fr = r0+(1.f-r0)*pow5*pow5*pow5*pow5*pow5;
         reflectiveness += transparency*fr;
+        assert(reflectiveness<=1.f);
+        assert(reflectiveness>=0.f);
         transparency   -= transparency*fr;
+        assert(  transparency<=1.f);
+        assert(  transparency>=0.f);
     }
 
     // transparancy
@@ -163,7 +167,14 @@ Color pathTrace(
         FancyIntersect(mini.distance, scene.primitives.pos[mini.triangle], 
                                       scene.primitives.extra[mini.triangle], 
                                       ray, p.smoothing);
-    const Material& mat = scene.primitives.materials[fancy.mat];
+    Material mat = scene.primitives.materials[fancy.mat];
+    if(mat.checkered >= 0){
+        int x = (int)(fancy.impact.x - EPSILON);
+        int y = (int)(fancy.impact.y - EPSILON);
+        int z = (int)(fancy.impact.z - EPSILON);
+        if((x&1)^(y&1)^(z&1)) 
+            mat = scene.primitives.materials[mat.checkered];
+    }
     const Material& raymat = scene.primitives.materials[ray.mat];
 
     // direct illumination

@@ -72,10 +72,9 @@ struct TriangleExtra{
         assert(glm::isNormalized(n[2], EPSILON));
     }
 
-    // per-vertex normal
-    glm::vec3 n[3];
-    // material
-    int mat; 
+    glm::vec3 n[3]; // per-vertex normal
+    glm::vec3 uv[3];
+    int mat; // material
 };
 
 // we pass these around a lot, so typedef them out
@@ -90,6 +89,7 @@ struct Primitives{
     TrianglePosSet pos;
     TriangleExtraSet extra;
     std::vector<int> light_indices;
+    std::vector<Texture> textures;
 };
 
 // result of an intersection calculation

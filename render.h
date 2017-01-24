@@ -33,6 +33,7 @@ struct NormalRenderer {
             // we intersected. calc normal and convert to a col
             TrianglePos const& pos = s.primitives.pos[hit.triangle];
             TriangleExtra const& extra = s.primitives.extra[hit.triangle];
+            //return value_to_color(hit.distance*p.visScale); // DIST CHECK
             auto fancy = FancyIntersect(hit.distance, pos, extra, r, p.smoothing);
             return Color((1.f+fancy.normal.x)/2.f, (1.f+fancy.normal.y)/2.f,  (1.f+fancy.normal.z)/2.f);
         } else {

@@ -10,6 +10,8 @@
 #include "glm/gtx/io.hpp"
 #include "glm/gtx/transform.hpp"
 #include "tiny_obj_loader.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 #include <fstream>
 #include <string>
@@ -158,6 +160,15 @@ TriangleExtra BuildTriangleExtra(
 }
 
 int createMaterial(Scene& s, tinyobj::material_t const& m){
+    // load the texture (does not check for duplicates
+    int difftx_id = -1;
+    if(m.diffuse_texopt.type != tinyobj::TEXTURE_TYPE_NONE){
+        printf("loading texture: %s\n", m.diffuse_texname.c_str());
+        Texture t;
+        t.pixels = stbi_loadf(m.diffuse_texname.c_str(), &t.w, &t.h, &t.channels, 3);
+        s.primitives.textures.push_back(t);
+        difftx_id = s.primitives.textures.size()-1;
+    }
     // create a new mat on the back of the existing array.
     s.primitives.materials.emplace_back(
             Color(m.diffuse[0], m.diffuse[1], m.diffuse[2]), // diffuse color
@@ -167,7 +178,10 @@ int createMaterial(Scene& s, tinyobj::material_t const& m){
             -1,     // no checkerboard
             Color(m.specular[0], m.specular[1], m.specular[2]), // specular highlight color
             m.shininess,
-            Color(m.emission[0], m.emission[1], m.emission[2]));// shininess
+            Color(m.emission[0], m.emission[1], m.emission[2]),
+            // diffuse texture id
+            difftx_id
+            );// shininess
 
     // return the index of this newly created material.
     auto globalMatId = s.primitives.materials.size() - 1;
