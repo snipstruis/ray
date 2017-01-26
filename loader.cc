@@ -142,28 +142,28 @@ TriangleExtra BuildTriangleExtra(
         tinyobj::shape_t const& shape, 
         int base, 
         int globalMatID) {
-
-    int i0 = shape.mesh.indices[base].normal_index;
-    int i1 = shape.mesh.indices[base + 1].normal_index;
-    int i2 = shape.mesh.indices[base + 2].normal_index;
-
-    auto n0 = makeVec3FromNormals(attrib, i0, pos);
-    auto n1 = makeVec3FromNormals(attrib, i1, pos);
-    auto n2 = makeVec3FromNormals(attrib, i2, pos);
-
-    // stupidity checking.. sigh
-    assert(glm::isNormalized(n0, EPSILON));
-    assert(glm::isNormalized(n1, EPSILON));
-    assert(glm::isNormalized(n2, EPSILON));
-
-    return TriangleExtra(n0, n1, n2, globalMatID);
+    TriangleExtra e;
+    e.mat = globalMatID;
+    // for every vertex
+    for(int i=0; i<3; i++){
+        // normals
+        int idx = shape.mesh.indices[base + i].normal_index;
+        e.n[i] = makeVec3FromNormals(attrib, idx, pos);
+        assert(glm::isNormalized(e.n[i], EPSILON));
+        // texture coordinates
+        int tex = shape.mesh.indices[base + i].texcoord_index;
+        if(tex>0)
+            e.t[i] = glm::vec2(attrib.texcoords[tex], attrib.texcoords[tex+1]);
+    }
+    return e;
 }
 
 int createMaterial(Scene& s, tinyobj::material_t const& m){
     // load the texture (does not check for duplicates
     int difftx_id = -1;
     if(m.diffuse_texopt.type != tinyobj::TEXTURE_TYPE_NONE){
-        printf("loading texture: %s\n", m.diffuse_texname.c_str());
+        printf("loading texture: %zu: %s\n", s.primitives.textures.size(),
+                m.diffuse_texname.c_str());
         Texture t;
         t.pixels = stbi_loadf(m.diffuse_texname.c_str(), &t.w, &t.h, &t.channels, 3);
         s.primitives.textures.push_back(t);

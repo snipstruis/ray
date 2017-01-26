@@ -61,6 +61,7 @@ inline std::ostream& operator<<(std::ostream& os, const TrianglePos& t) {
 
 // 3x per-vertex normals, and ref to a material. Separated from TrianglePos to improve cache performance
 struct TriangleExtra{
+    TriangleExtra(){}
     TriangleExtra(glm::vec3 const& n1, glm::vec3 const& n2, glm::vec3 const& n3, int _mat)
         : n{n1, n2, n3}, mat(_mat) {
             sanityCheck();
@@ -73,7 +74,7 @@ struct TriangleExtra{
     }
 
     glm::vec3 n[3]; // per-vertex normal
-    glm::vec3 uv[3];
+    glm::vec2 t[3];
     int mat; // material
 };
 

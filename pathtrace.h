@@ -103,8 +103,6 @@ Color indirectIllumination(Scene const& scene, FancyIntersection const& fancy,
         float pow5 = 1.f-glm::dot(fancy.normal, -ray.direction);
         float fr = r0+(1.f-r0)*pow5*pow5*pow5*pow5*pow5;
         reflectiveness += transparency*fr;
-        assert(reflectiveness<=1.f);
-        assert(reflectiveness>=0.f);
         transparency   -= transparency*fr;
         assert(  transparency<=1.f);
         assert(  transparency>=0.f);
