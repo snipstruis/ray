@@ -67,19 +67,19 @@ GuiAction handleEvents(Scene& s, float frameTime, Params& p, Uint8 const* kbd, b
             case SDL_QUIT:
                 return GA_QUIT;
             case SDL_MOUSEWHEEL:
-                s.camera.moveFov(glm::radians((float)-e.wheel.y * 10.f*scale));
-                camera_dirty=true;
+                if(p.captureMouse){
+                    s.camera.moveFov(glm::radians((float)-e.wheel.y * 10.f*scale));
+                    camera_dirty=true;
+                }
                 break;
             case SDL_MOUSEMOTION:
-                {
-                    if(p.captureMouse){
-                        float yaw = (((float)e.motion.xrel)/5) * 0.01;
-                        float pitch = (((float)e.motion.yrel)/5) * 0.01;
-                        s.camera.moveYawPitch(yaw, pitch);
-                        camera_dirty=true;
-                    }
-                    break;
+                if(p.captureMouse){
+                    float yaw = (((float)e.motion.xrel)/5) * 0.01;
+                    float pitch = (((float)e.motion.yrel)/5) * 0.01;
+                    s.camera.moveYawPitch(yaw, pitch);
+                    camera_dirty=true;
                 }
+                break;
             case SDL_KEYDOWN:
                 switch(e.key.keysym.scancode){
                     case SDL_SCANCODE_ESCAPE:  return GA_QUIT;
@@ -99,6 +99,7 @@ GuiAction handleEvents(Scene& s, float frameTime, Params& p, Uint8 const* kbd, b
                     case SDL_SCANCODE_5: p.setVisMode(VisMode::SplitsTraversed); break;
                     case SDL_SCANCODE_6: p.setVisMode(VisMode::LeavesChecked); break;
                     case SDL_SCANCODE_7: p.setVisMode(VisMode::NodeIndex); break;
+                    case SDL_SCANCODE_8: p.setVisMode(VisMode::PathMicroseconds); break;
                     case SDL_SCANCODE_9: camera_dirty=true; p.setVisMode(VisMode::PathTrace); break;
                     default:
                         break;

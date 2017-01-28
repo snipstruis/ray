@@ -56,6 +56,16 @@ struct PerformanceRenderer {
     }
 };
 
+struct PathPerformanceRenderer {
+    static Color renderPixel(Ray const& r, Scene const& s, BVH const& bvh, Params const& p, int _, Color const& __) {
+        auto start = std::chrono::high_resolution_clock::now();
+        (void)pathTrace(r, bvh, s, p);
+        auto end = std::chrono::high_resolution_clock::now();
+        auto frametime = std::chrono::duration_cast<std::chrono::duration<float,std::micro>>(end-start).count();
+        return value_to_color(0.01f * p.visScale * frametime);
+    }
+};
+
 struct BVHDiagRenderer {
     static Color renderPixel(Ray const& r, Scene const& s, BVH const& bvh, Params const& p, int _, Color const& __) {
         DiagnosticCollector diag;
@@ -67,7 +77,7 @@ struct BVHDiagRenderer {
             case VisMode::TrianglesChecked: intensity = diag.trianglesChecked; break;
             case VisMode::SplitsTraversed:  intensity = diag.splitsTraversed; break;
             case VisMode::LeavesChecked:    intensity = diag.leavesChecked; break;
-            case VisMode::LeafDepth:         intensity = diag.leafDepth; break;
+            case VisMode::LeafDepth:        intensity = diag.leafDepth; break;
             case VisMode::NodeIndex:
                 if(hit.distance < INFINITY)
                     intensity = diag.nodeIndex; 
@@ -121,11 +131,14 @@ inline void renderLoop(Scene const& s, BVH const& bvh, Params const& p, ScreenBu
 // select the appropriate pixel renderer and launch the main loop
 inline void renderFrame(Scene& s, BVH const& bvh, Params const& p, ScreenBuffer& screenBuffer, int passes){
     switch(p.visMode) {
+    case VisMode::PathTrace:
+        renderLoop<PathRenderer>(s, bvh, p, screenBuffer, passes);
+        break;
+    case VisMode::PathMicroseconds:
+        renderLoop<PathPerformanceRenderer>(s, bvh, p, screenBuffer, passes);
+        break;
     case VisMode::Default:
         renderLoop<StandardRenderer>(s, bvh, p, screenBuffer, passes);
-        break;
-     case VisMode::PathTrace:
-        renderLoop<PathRenderer>(s, bvh, p, screenBuffer, passes);
         break;
     case VisMode::Normal:
         renderLoop<NormalRenderer>(s, bvh, p, screenBuffer, passes);

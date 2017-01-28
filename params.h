@@ -3,6 +3,7 @@
 enum class VisMode {
     Default,
     Microseconds,
+    PathMicroseconds,
     Normal,
     NodeIndex,
     SplitsTraversed,
@@ -15,7 +16,8 @@ enum class VisMode {
 const char* GetVisModeStr(VisMode m) {
     switch(m) {
         case VisMode::Default: return "wooosh";
-        case VisMode::Microseconds: return "frametime";
+        case VisMode::Microseconds: return "whitted frametime";
+        case VisMode::PathMicroseconds: return "path frametime";
         case VisMode::Normal: return "normal";
         case VisMode::NodeIndex: return "node index";
         case VisMode::SplitsTraversed: return "splits traversed";
