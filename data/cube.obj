@@ -1,8 +1,8 @@
 # cube.obj
 #
  
-mtllib cube.mtl
-usemtl BodyGlossMat
+mtllib standard.mtl
+usemtl White
 
 g cube
  

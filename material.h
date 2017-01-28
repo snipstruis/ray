@@ -20,7 +20,7 @@ struct Material{
              Color highlight=BLACK, 
              float shi=20.0f,
              Color emis=BLACK,
-             int   diffuseTexture=-1) :
+             int   difftx=-1) :
         diffuseColor(_diffuseColor),
         reflectiveness(_reflectiveness), 
         transparency(t),
@@ -28,7 +28,8 @@ struct Material{
         checkered(check),
         specular_highlight(highlight),
         shininess(shi),
-        emissive(emis){};
+        emissive(emis),
+        diffuseTexture(difftx){};
     Color diffuseColor;
     int   diffuseTexture;
     Color reflectiveness;

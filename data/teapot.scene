@@ -3,6 +3,7 @@
         "teapot" : "wt_teapot.obj",
         "light" : "light.obj",
         "plane" : "plane.obj",
+        "pic" : "pic.obj",
         "sphere" : "geosphere_high.obj"
     },
     "world" : {
@@ -23,17 +24,17 @@
                 }
             },{
                 "kind" : "mesh",
-                "mesh_name" : "plane",
+                "mesh_name" : "pic",
                 "transform" : {
-                    "translate" : { "x" : 5, "y" : 0, "z" : 0},
-                    "scale"     : { "x" : 20, "y" : 1, "z" : 20},
+                    "translate" : { "x" : 3, "y" : 1, "z" : 0},
+                    "scale"     : { "x" : 1, "y" : 1, "z" : 1},
                     "rotate"    : { "x" : 0, "y" : 0, "z" : 90}
                 }
             },{
                 "kind" : "mesh",
                 "mesh_name" : "sphere",
                 "transform" : {
-                    "translate" : { "x" : 3, "y" : 1, "z" : 0},
+                    "translate" : { "x" : 3, "y" : 1, "z" : -3},
                     "scale"     : { "x" : 0.05, "y" : 0.05, "z" : 0.05}
                 }
             },{

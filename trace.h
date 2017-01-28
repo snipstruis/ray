@@ -132,7 +132,7 @@ Color trace(Ray const& ray,
 
     TrianglePos const& pos = primitives.pos[hit.triangle];
     TriangleExtra const& tri = primitives.extra[hit.triangle];
-    FancyIntersection fancy = FancyIntersect(hit.distance, pos, tri, ray, p.smoothing);
+    FancyIntersection fancy = FancyIntersect(hit.distance, pos, tri, ray, p.smoothing, primitives);
 
     assert(glm::isNormalized(fancy.normal, EPSILON));
 

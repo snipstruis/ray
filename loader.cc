@@ -150,18 +150,27 @@ TriangleExtra BuildTriangleExtra(
         int idx = shape.mesh.indices[base + i].normal_index;
         e.n[i] = makeVec3FromNormals(attrib, idx, pos);
         assert(glm::isNormalized(e.n[i], EPSILON));
+    }
+    /*
+    // load texcoords
+    for(int i=0; i<3; i++){
         // texture coordinates
         int tex = shape.mesh.indices[base + i].texcoord_index;
-        if(tex>0)
-            e.t[i] = glm::vec2(attrib.texcoords[tex], attrib.texcoords[tex+1]);
+        if(tex>=0){
+            e.t[i] = glm::vec2(attrib.texcoords[tex+1], attrib.texcoords[tex+2]);
+            printf("(%f,%f) ", e.t[i].x, e.t[i].y);
+            if(i==2) printf("\n");
+        }
     }
+    */
     return e;
 }
 
 int createMaterial(Scene& s, tinyobj::material_t const& m){
-    // load the texture (does not check for duplicates
+    // load the texture (does not check for duplicates)
     int difftx_id = -1;
-    if(m.diffuse_texopt.type != tinyobj::TEXTURE_TYPE_NONE){
+    /*
+    if(m.diffuse_texname.size()>0){
         printf("loading texture: %zu: %s\n", s.primitives.textures.size(),
                 m.diffuse_texname.c_str());
         Texture t;
@@ -169,6 +178,7 @@ int createMaterial(Scene& s, tinyobj::material_t const& m){
         s.primitives.textures.push_back(t);
         difftx_id = s.primitives.textures.size()-1;
     }
+    */
     // create a new mat on the back of the existing array.
     s.primitives.materials.emplace_back(
             Color(m.diffuse[0], m.diffuse[1], m.diffuse[2]), // diffuse color
@@ -180,13 +190,11 @@ int createMaterial(Scene& s, tinyobj::material_t const& m){
             m.shininess,
             Color(m.emission[0], m.emission[1], m.emission[2]),
             // diffuse texture id
-            difftx_id
-            );// shininess
+            difftx_id);
 
     // return the index of this newly created material.
     auto globalMatId = s.primitives.materials.size() - 1;
-    std::cout << "created new material " << m.name << " @ " << globalMatId << std::endl;
-
+    std::cout << "created new material " << m.name << " @ " << globalMatId << "tx:" << difftx_id << std::endl;
     return globalMatId;
 }
 
@@ -446,8 +454,7 @@ bool loadScene(std::string const& inputDir, std::string const& filename, Scene& 
             }
             meshMap[it.key()] = loadMesh(inputDir, it.value(), scene);
         }
-    }
-    else {
+    } else {
         std::cout << "no meshes specified in scene\n";
     }
 

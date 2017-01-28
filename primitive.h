@@ -74,7 +74,7 @@ struct TriangleExtra{
     }
 
     glm::vec3 n[3]; // per-vertex normal
-    glm::vec2 t[3];
+    glm::vec2 t[3]; // tex coords
     int mat; // material
 };
 
@@ -98,11 +98,16 @@ struct Primitives{
 // generally one of these will be built after deciding a specific triangle is the closest
 struct FancyIntersection{
     FancyIntersection() = default;
-    FancyIntersection(glm::vec3 _impact, int _mat, glm::vec3 _normal, bool _internal)
-        : impact(_impact), mat(_mat), normal(_normal), internal(_internal){};
+    FancyIntersection(glm::vec3 _impact, 
+                      int _mat, 
+                      Color color_at_point, 
+                      glm::vec3 _normal, 
+                      bool _internal)
+        : impact(_impact), mat(_mat), diffuse_at_point(color_at_point), normal(_normal), internal(_internal){};
 
     glm::vec3 impact;   // point of impact
     int mat;            // material at impact
+    Color diffuse_at_point;
     glm::vec3 normal;   // normal at impact
     bool internal;
 };
@@ -133,6 +138,20 @@ inline glm::vec3 barycentric(glm::vec3 p, TrianglePos const& tri) {
     return glm::vec3(u,v,w);
 }
 
+inline Color textureLookup(Texture const& t, glm::vec2 pixel){
+    assert(pixel.x>=0.f);
+    assert(pixel.x<=1.f);
+    assert(pixel.y>=0.f);
+    assert(pixel.y<=1.f);
+    assert(t.channels>=3);
+    int x = pixel.x*(float)t.w;
+    int y = pixel.y*(float)t.h;
+    int i = y*t.channels*t.w + x*t.channels;
+    return Color(t.pixels[i],
+                 t.pixels[i+1],
+                 t.pixels[i+2]);
+}
+
 // compute triangle/ray intersection
 // assumes there is an intersection between t & ray already calculated
 inline FancyIntersection FancyIntersect(
@@ -140,21 +159,35 @@ inline FancyIntersection FancyIntersect(
         TrianglePos const& p, 
         TriangleExtra const& t, 
         Ray const& ray,
-        bool smooth){
+        bool smooth,
+        Primitives const& prim){
     assert(dist < INFINITY);
     t.sanityCheck();
 
     glm::vec3 hit = ray.origin + ray.direction * dist;
-    glm::vec3 normal;
+    glm::vec3 bary = barycentric(hit, p);
+
     // smoothing
+    glm::vec3 normal;
     if(smooth){
-        glm::vec3 bary = barycentric(hit, p);
         normal = glm::normalize(bary.x*t.n[0] + bary.y*t.n[1] + bary.z*t.n[2]);
     }else{
-        // so we take the simple average normal of the 3 per-vertex normals.
-        // we could precalc this of course. This raises the whole question of how to store
-        // smoothed / non smoothed objects (etc)
         normal = glm::normalize((t.n[0] + t.n[1] + t.n[2]) / 3.0f);
+    }
+
+    // texture lookup
+    Material mat = prim.materials[t.mat];
+    Color diffColor;
+    if(mat.diffuseTexture>=0){
+        //printf("(%f,%f) ", t.t[0].x, t.t[0].y);
+        //printf("(%f,%f) ", t.t[1].x, t.t[1].y);
+        //printf("(%f,%f)\n", t.t[2].x, t.t[2].y);
+        //glm::vec2 uv = (bary.x*t.t[0] + bary.y*t.t[1] + bary.z*t.t[2])*(1.f/3.f);
+        //if(uv.x!=0.f || uv.y!=0.f) printf("(%f,%f)\n", uv.x, uv.y);
+        diffColor = textureLookup(prim.textures[mat.diffuseTexture], glm::vec2(bary.x, bary.y));
+        //diffColor = Color(bary.x,bary.y,bary.z);
+    }else{
+        diffColor = mat.diffuseColor;
     }
 
     assert(glm::isNormalized(normal, EPSILON));
@@ -163,7 +196,7 @@ inline FancyIntersection FancyIntersect(
     bool internal = glm::dot(ray.direction, normal) > 0;
     normal = internal? -normal : normal;
 
-    return FancyIntersection(hit, t.mat, normal, internal);
+    return FancyIntersection(hit, t.mat, diffColor, normal, internal);
 }
 
 // adapted from:

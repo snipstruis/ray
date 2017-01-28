@@ -1,14 +1,41 @@
 {
     "load_meshes" : {
-        "cube" : "cube.obj"
+        "whitebox"   : "cube.obj",
+        "redplane"   : "redplane.obj",
+        "greenplane" : "greenplane.obj",
+        "arealight"  : "light.obj"
     },
     "world" : {
         "objects" : [
             {
                 "kind" : "mesh",
-                "mesh_name" : "cube",
+                "mesh_name" : "whitebox",
                 "transform" : {
-                    "translate" : { "x" : -0, "y" : 0, "z" : 0}
+                    "scale"  : { "x" : 5, "y" : 5, "z" : 5}
+                }
+            },{
+                "kind" : "mesh",
+                "mesh_name" : "redplane",
+                "transform" : {
+                    "translate" : { "x" : 0, "y" : 0, "z" :-2 },
+                    "rotate"    : { "x" : 90,"y" : 0, "z" : 0 },
+                    "scale"     : { "x" : 10, "y" : 10, "z" : 10 }
+                }
+            },{
+                "kind" : "mesh",
+                "mesh_name" : "greenplane",
+                "transform" : {
+                    "translate" : { "x" : 0, "y" : 0, "z" : 2 },
+                    "rotate"    : { "x" : 90,"y" : 0, "z" : 0 },
+                    "scale"     : { "x" : 10, "y" : 10, "z" : 10 }
+                }
+            },{
+                "kind" : "mesh",
+                "mesh_name" : "arealight",
+                "transform" : {
+                    "translate" : { "x" : 0, "y" : 2, "z" : 0 },
+                    "rotate"    : { "x" : 0, "y" : 0, "z" : 0 },
+                    "scale"     : { "x" : 1, "y" : 1, "z" : 1 }
                 }
             }
         ],
@@ -32,7 +59,7 @@
         
     },
     "camera" : {
-        "origin" : { "x" : 4, "y" : 4, "z" : -1},
+        "origin" : { "x" : 0, "y" : 0, "z" : 0},
         "look_angle" : { "yaw" : -45, "pitch" : 30},
         "fov" : 90
     }
