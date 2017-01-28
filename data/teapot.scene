@@ -3,6 +3,7 @@
         "teapot" : "wt_teapot.obj",
         "light" : "light.obj",
         "plane" : "plane.obj",
+        "colorplane" : "colorplane.obj",
         "sphere" : "geosphere_high.obj"
     },
     "world" : {
@@ -23,9 +24,9 @@
                 }
             },{
                 "kind" : "mesh",
-                "mesh_name" : "plane",
+                "mesh_name" : "colorplane",
                 "transform" : {
-                    "translate" : { "x" : 4, "y" : 0, "z" : 0},
+                    "translate" : { "x" : 5, "y" : 0, "z" : 0},
                     "scale"     : { "x" : 20, "y" : 1, "z" : 20},
                     "rotate"    : { "x" : 0, "y" : 0, "z" : 90}
                 }
@@ -34,7 +35,7 @@
                 "mesh_name" : "sphere",
                 "transform" : {
                     "translate" : { "x" : 3, "y" : 1, "z" : 0},
-                    "scale"     : { "x" : 0.03, "y" : 0.05, "z" : 0.05}
+                    "scale"     : { "x" : 0.05, "y" : 0.05, "z" : 0.05}
                 }
             },{
                 "kind" : "mesh",

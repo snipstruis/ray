@@ -163,8 +163,17 @@ Color pathTrace(
         FancyIntersect(mini.distance, scene.primitives.pos[mini.triangle], 
                                       scene.primitives.extra[mini.triangle], 
                                       ray, p.smoothing);
-    const Material& mat = scene.primitives.materials[fancy.mat];
     const Material& raymat = scene.primitives.materials[ray.mat];
+    Material mat = scene.primitives.materials[fancy.mat];
+
+    // checkers!
+    if(mat.checkered >= 0){
+        int x = (int)(fancy.impact.x - EPSILON);
+        int y = (int)(fancy.impact.y - EPSILON);
+        int z = (int)(fancy.impact.z - EPSILON);
+        if((x&1)^(y&1)^(z&1)) 
+            mat = scene.primitives.materials[mat.checkered];
+    }
 
     // direct illumination
     Color di = directIllumination(scene, fancy, bvh, p, mat);
