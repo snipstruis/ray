@@ -113,10 +113,12 @@ struct Camera{
         assert(isAngleInOneRev(pitch));
         assert(isAngleInHalfRev(fov));
 
+        const float aspectRatio = (float)width / (float)height;
+
         // start with 3x points around the screen
-        auto tl = glm::vec3(-1, 1, 1);
-        auto bl = glm::vec3(-1, -1, 1);
-        auto tr = glm::vec3(1, 1, 1);
+        auto tl = glm::vec3(-aspectRatio, 1, 1);
+        auto bl = glm::vec3(-aspectRatio, -1, 1);
+        auto tr = glm::vec3(aspectRatio, 1, 1);
 
         // adjust for fov, keeping dist along z axis const
         float fov_ratio = glm::tan(fov/2); 

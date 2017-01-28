@@ -72,10 +72,12 @@ GuiAction handleEvents(Scene& s, float frameTime, Params& p, Uint8 const* kbd, b
                 break;
             case SDL_MOUSEMOTION:
                 {
-                    float yaw = (((float)e.motion.xrel)/5) * 0.01;
-                    float pitch = (((float)e.motion.yrel)/5) * 0.01;
-                    s.camera.moveYawPitch(yaw, pitch);
-                    camera_dirty=true;
+                    if(p.captureMouse){
+                        float yaw = (((float)e.motion.xrel)/5) * 0.01;
+                        float pitch = (((float)e.motion.yrel)/5) * 0.01;
+                        s.camera.moveYawPitch(yaw, pitch);
+                        camera_dirty=true;
+                    }
                     break;
                 }
             case SDL_KEYDOWN:
@@ -87,7 +89,7 @@ GuiAction handleEvents(Scene& s, float frameTime, Params& p, Uint8 const* kbd, b
                     case SDL_SCANCODE_M: camera_dirty=true; p.flipSmoothing(); break;
                     case SDL_SCANCODE_B: p.nextBvhMethod(); break;
                     case SDL_SCANCODE_T: p.flipTraversalMode(); break;
-                    case SDL_SCANCODE_Q: p.captureMouse=true; break;
+                    case SDL_SCANCODE_Q: p.captureMouse=!p.captureMouse; SDL_SetRelativeMouseMode(p.captureMouse ? SDL_TRUE : SDL_FALSE); break;
                     case SDL_SCANCODE_L: p.colorCorrection=!p.colorCorrection; break;
                     case SDL_SCANCODE_0: p.setVisMode(VisMode::Default); break;
                     case SDL_SCANCODE_1: p.setVisMode(VisMode::Microseconds); break;
@@ -155,20 +157,19 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
     bool camera_dirty = true;
     int passes = 0;
 
-
     AvgTimer frameTimer;
     int prev_width=0, prev_height=0;
     while(true){
         int width, height;
         SDL_GL_GetDrawableSize(win, &width, &height);
         if(prev_width!=width || prev_height!=height){
-            // camera resized! update errythang
+            //printf("window size change! %dx%d -> %dx%d\n",prev_width, prev_height, width, height);
             s.camera.width = width;
             s.camera.height= height;
             screenBuffer.resize(s.camera.width * s.camera.height);
             clampedScreenBuffer.resize(s.camera.width * s.camera.height);
-
             glViewport(0, 0, s.camera.width, s.camera.height);
+
             prev_width = width; prev_height = height;
             camera_dirty=true;
         }
@@ -188,12 +189,12 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
             bvh = buildBVH(s, p.bvhMethod);
         }
 
-        // if any params have changed, reset the average
+
+        // if any params have changed, reset the average frametime
         if(p.dirty) {
             std::cout << "resetting average frametime" << std::endl;
             p.clearDirty();
             frameTimer.reset();
-            SDL_SetRelativeMouseMode(p.captureMouse ? SDL_TRUE : SDL_FALSE);
         }
 
         if(camera_dirty) {
