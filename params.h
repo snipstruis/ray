@@ -68,7 +68,8 @@ struct Params {
         smoothing(true),
         dirty(true),
         visScaleSetManually(false),
-        captureMouse(true)
+        captureMouse(true),
+        colorCorrection(true)
     {}
 
     void flipSmoothing() {
@@ -123,5 +124,6 @@ struct Params {
     bool captureMouse;
     bool dirty; // has something changed recently?
     bool visScaleSetManually; // has the user explicitly adjusted vis scale? (ie pressed . or ,) ? 
+    bool colorCorrection;
 };
 

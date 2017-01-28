@@ -28,22 +28,21 @@ void setWindowTitle(Scene const& s, SDL_Window *win, float frametime, Params con
 
     snprintf(title, sizeof(title),
             "%s "
-            "@ %2.3fms(%0.0f) "
+            "%dx%d "
+            "@ %2.3fms(%0.0ffps) "
             "%s "
             "bvh=%s "
-            "o=(%0.3f, %0.3f, %0.3f) " 
-            "y=%0.0f "
-            "p=%0.0f "
-            "f=%0.0f "
-            "res %dx%d ",
+            "(%0.3f, %0.3f, %0.3f) " 
+            "fov=%0.0f "
+            "color: %s",
             GetVisModeStr(p.visMode), 
+            s.camera.width, s.camera.height,
             frametime*1000.0f, 1.0f/frametime,
             GetTraversalModeStr(p.traversalMode),
             GetBVHMethodStr(p.bvhMethod),
             s.camera.origin[0], s.camera.origin[1], s.camera.origin[2],
-            glm::degrees(s.camera.yaw), glm::degrees(s.camera.pitch), 
             glm::degrees(s.camera.fov),
-            s.camera.width, s.camera.height
+            p.colorCorrection?"corrected":"uncorrected"
             );
 
     SDL_SetWindowTitle(win, title);
@@ -68,7 +67,8 @@ GuiAction handleEvents(Scene& s, float frameTime, Params& p, Uint8 const* kbd, b
             case SDL_QUIT:
                 return GA_QUIT;
             case SDL_MOUSEWHEEL:
-                s.camera.moveFov(glm::radians((float)-e.wheel.y * scale));
+                s.camera.moveFov(glm::radians((float)-e.wheel.y * 10.f*scale));
+                camera_dirty=true;
                 break;
             case SDL_MOUSEMOTION:
                 {
@@ -88,6 +88,7 @@ GuiAction handleEvents(Scene& s, float frameTime, Params& p, Uint8 const* kbd, b
                     case SDL_SCANCODE_B: p.nextBvhMethod(); break;
                     case SDL_SCANCODE_T: p.flipTraversalMode(); break;
                     case SDL_SCANCODE_Q: p.captureMouse=true; break;
+                    case SDL_SCANCODE_L: p.colorCorrection=!p.colorCorrection; break;
                     case SDL_SCANCODE_0: p.setVisMode(VisMode::Default); break;
                     case SDL_SCANCODE_1: p.setVisMode(VisMode::Microseconds); break;
                     case SDL_SCANCODE_2: p.setVisMode(VisMode::Normal); break;
@@ -176,7 +177,7 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
         GuiAction a = handleEvents(s, frameTimer.timer.lastDiff, p, kbd, camera_dirty);
 
         if (a==GA_QUIT)
-            break;
+            return 0;
         else if (a==GA_SCREENSHOT)
             WriteTgaImage(imgDir, s.camera.width, s.camera.height, screenBuffer);
 
@@ -204,10 +205,16 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
         renderFrame(s, *bvh, p, screenBuffer, passes++);
        
         // blit to screen
-        for(int i=0; i<screenBuffer.size(); i++){
-            clampedScreenBuffer[i] = colorClamp(screenBuffer[i]);
+        if(p.colorCorrection){
+            for(int i=0; i<screenBuffer.size(); i++){
+                clampedScreenBuffer[i] = colorClamp(colorCorrect(screenBuffer[i]));
+            }
+        }else{
+            for(int i=0; i<screenBuffer.size(); i++){
+                clampedScreenBuffer[i] = colorClamp(screenBuffer[i]);
+            }
         }
-        glDrawPixels(s.camera.width, s.camera.height, GL_RGB, GL_FLOAT, screenBuffer.data());
+        glDrawPixels(s.camera.width, s.camera.height, GL_RGB, GL_FLOAT, clampedScreenBuffer.data());
 
         float frametimeAv = frameTimer.sample();
         if(frameTimer.timer.lastDiff > 1.0f)

@@ -44,5 +44,9 @@ inline Color colorClamp(Color c, float min=0.f, float max=1.f) {
     return Color(clamp(c.r, min, max), clamp(c.g, min, max), clamp(c.b, min, max));
 }
 
-inline Color BLACK(0,0,0);
+inline Color colorCorrect(Color const& c){
+    return Color(sqrtf(c.r),sqrtf(c.g),sqrtf(c.b));
+}
+
+#define BLACK Color(0,0,0)
 
