@@ -1,0 +1,4 @@
+
+INCLUDE(UseLATEX.cmake)
+
+ADD_LATEX_DOCUMENT(main.tex)
