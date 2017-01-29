@@ -181,7 +181,7 @@ int interactiveLoop(Scene& s, std::string const& imgDir, int width, int height) 
         if (a==GA_QUIT)
             return 0;
         else if (a==GA_SCREENSHOT)
-            WriteTgaImage(imgDir, s.camera.width, s.camera.height, screenBuffer);
+            WriteTgaImage(imgDir, s.camera.width, s.camera.height, clampedScreenBuffer);
 
         if(oldMethod != p.bvhMethod) {
             std::cout << "BVH method " << GetBVHMethodStr(oldMethod) << "->";

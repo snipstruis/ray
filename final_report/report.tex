@@ -1,5 +1,5 @@
 
-\includegraphics[width=0.5\textwidth]{img/buddha.png}
+\includegraphics[width=0.5\textwidth]{img/teapot-in-front-of-sphere.png}
 
 \section{About the team}
 The first two assignments were done with Nick Begg.
@@ -110,7 +110,7 @@ It should be a matter of simply loading the solution file into Visual Studio, an
 NOTE: only 32bit (ie x86) builds have been tested. Make sure this is selected when building.
 
 \subsection{Building with Cmake}
-The source can be built using the standard CMake envirnonment. This will work on Windows, macOS and Linux. 
+The source can be built using the standard CMake environment. This will work on Windows, macOS and Linux. 
 
 For example, on unix systems this command will perform a release build -
 
@@ -118,7 +118,6 @@ For example, on unix systems this command will perform a release build -
 \verb|make|
 
 A similar command should work with Visual Studio, although the \verb|CMAKE_BUILD_TYPE| is not required - this is set in the Visual Studio gui.
-
 
 Boost is required for the test tree, but not the main system.
 
@@ -128,7 +127,7 @@ On Windows, SDL2.dll must be available somewhere on the path or in the same dir 
 
 There is a collection of test scenes, objects and materials in the data directory. To avoid fighting with relative paths, it works best to cd to this directory before running the system. For example, on windows, assuming the binary is in the Release directory under the root source tree - 
 
-\verb|cd <source_root>\data| \\
+\verb|cd <source_root>| \\
 \verb|..\Release\ray.exe teapot-plane.scene|
 
 \section{Controls}
@@ -171,7 +170,6 @@ The following external packages were used
     \item glm --- \url{https://glm.g-truc.net/0.9.8/index.html}
     \item JSON for Modern C++ --- \url{https://github.com/nlohmann/json}
     \item SDL2 --- \url{https://www.libsdl.org/download-2.0.php}
-    \item boost (test tree only) --- \url{https://www.boost.org/}
     \item CMake --- \url{https://cmake.org}
 \end{enumerate}
 
@@ -183,40 +181,40 @@ The following external packages were used
 \captionof*{figure}{dragon.scene}
 \end{minipage}
 \begin{minipage}{0.48\linewidth}
-\includegraphics[width=\linewidth]{img/dragon-plane.png}
-\captionof*{figure}{dragon-plane.scene}
+\includegraphics[width=\linewidth]{img/fatty.png}
+\captionof*{figure}{buddha.scene}
 \end{minipage}
 \end{center}
 
 \begin{center}
 \begin{minipage}{0.48\linewidth}
-\includegraphics[width=\linewidth]{img/dragon-traversal-ordered.png}
-\captionof*{figure}{Nodes intersected in ordered mode}
-\end{minipage}
-\begin{minipage}{0.48\linewidth}
-\includegraphics[width=\linewidth]{img/dragon-traversal-unordered.png}
-\captionof*{figure}{Nodes intersected in unordered mode}
-\end{minipage}
-\end{center}
-
-\begin{center}
-\begin{minipage}{0.48\linewidth}
-\includegraphics[width=\linewidth]{img/hairball.png}
-\captionof*{figure}{hairball.scene}
-\end{minipage}
-\begin{minipage}{0.48\linewidth}
-\includegraphics[width=\linewidth]{img/hairball-plane.png}
-\captionof*{figure}{hairball-plane.scene}
-\end{minipage}
-\end{center}
-
-\begin{center}
-\begin{minipage}{0.48\linewidth}
-\includegraphics[width=\linewidth]{img/teapot.png}
+\includegraphics[width=\linewidth]{img/teapot-in-front-of-sphere.png}
 \captionof*{figure}{teapot.scene}
 \end{minipage}
 \begin{minipage}{0.48\linewidth}
-\includegraphics[width=\linewidth]{img/teapot-plane.png}
-\captionof*{figure}{teapot-plane.scene}
+\includegraphics[width=\linewidth]{img/teapot-through-sphere.png}
+\captionof*{figure}{the teapot as seen through the glass sphere}
+\end{minipage}
+\end{center}
+
+\begin{center}
+\begin{minipage}{0.48\linewidth}
+\includegraphics[width=\linewidth]{img/teapot-top.png}
+\captionof*{figure}{teapot as seen from the top}
+\end{minipage}
+\begin{minipage}{0.48\linewidth}
+\includegraphics[width=\linewidth]{img/wall.png}
+\captionof*{figure}{such indirect lighting!}
+\end{minipage}
+\end{center}
+
+\begin{center}
+\begin{minipage}{0.48\linewidth}
+\includegraphics[width=\linewidth]{img/teapot-perf.png}
+\captionof*{figure}{performance view of teapot}
+\end{minipage}
+\begin{minipage}{0.48\linewidth}
+\includegraphics[width=\linewidth]{img/sphere-perf.png}
+\captionof*{figure}{performance view of teapot through the sphere}
 \end{minipage}
 \end{center}

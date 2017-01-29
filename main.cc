@@ -20,9 +20,11 @@ int main(int argc, char* argv[]){
     for(int i = 1; i < argc; i++)
         args.push_back(argv[i]);
 
+    Scene scene;
     if (args.size() < 2 || args.size() > 5) {
         showUsage(argv[0]);
-        return -1;
+        setupScene("data", "teapot.scene", scene);
+        return interactiveLoop(scene, "data", width, height);
     }
 
 	bool batch = false;
@@ -53,7 +55,6 @@ int main(int argc, char* argv[]){
 
     // setup scene first, so we can bail on error without flashing a window briefly (errors are stdout 
     // for now - maybe should be a dialog box in future).
-    Scene scene;
     if(!setupScene(inputDir, sceneFile, scene)) {
         std::cout << "ERROR: failed to setup scene, bailing" << std::endl;
         return -1;
