@@ -101,6 +101,9 @@ Both an ordered and unordered traversal mode is available (ordered is the defaul
     \end{enumerate}
 
 \section{Building}
+You don't have to build anything! 
+Just run \verb:ray.exe:.
+In case you do want to build, here are the instructions:
 
 \subsection{Building on Windows}
 A visual studio solution is provided (ray.sln). This project was tested and built under Visual Studio 2015 Community. 
@@ -119,16 +122,15 @@ For example, on unix systems this command will perform a release build -
 
 A similar command should work with Visual Studio, although the \verb|CMAKE_BUILD_TYPE| is not required - this is set in the Visual Studio gui.
 
-Boost is required for the test tree, but not the main system.
 
 \section{Running}
 
 On Windows, SDL2.dll must be available somewhere on the path or in the same dir as the binary. 
+There is one included in the project.
 
-There is a collection of test scenes, objects and materials in the data directory. To avoid fighting with relative paths, it works best to cd to this directory before running the system. For example, on windows, assuming the binary is in the Release directory under the root source tree - 
+If you want to browse other scenes than the default, use the command line arguments:
 
-\verb|cd <source_root>| \\
-\verb|..\Release\ray.exe teapot-plane.scene|
+\verb|ray.exe data dragon.scene|
 
 \section{Controls}
     \begin{tabular}{ll}
@@ -152,7 +154,7 @@ There is a collection of test scenes, objects and materials in the data director
     8   & visualise per-pixel render time for the path tracer. \\
     0   & view whitted-style ray-traced image (obsolete and slightly broken) \\
     1   & visualise per-pixel render time for the whitted-style ray tracer. \\
-    2   & visualise surface normals (useful for debugging and verifying smoothed normals) \\
+    2   & visualise surface normals (useful for verifying geometry) \\
     3   & visualise BVH leaf nodes \\
     4   & visualise triangles checked \\
     5   & visualise BVH splits traversed \\
