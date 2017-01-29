@@ -115,9 +115,9 @@ inline void renderLoop(Scene const& s, BVH const& bvh, Params const& p, ScreenBu
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
 #else
+	#pragma omp parallel for
     for (int y = 0; y < height; y++) {
-	#pragma omp parallel
-	for (int x = 0; x < width; x++) {
+        for (int x = 0; x < width; x++) {
 #endif
             Ray r = s.camera.makeRay(x, y);
             unsigned int idx = (height-y-1) * width+ x;
